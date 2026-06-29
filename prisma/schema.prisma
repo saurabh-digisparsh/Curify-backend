@@ -424,6 +424,10 @@ model Lead {
   aiPersona    String?   // 'undecided' | 'cant_afford' | 'suffering' | 'researching'
   aiProcedure  String?   // extracted condition / procedure
   aiSummary    String?
+  // AI category for the lead-analytics dashboard (classified from the transcript)
+  category       LeadCategory? // null until classified
+  categoryReason String?
+  categorizedAt  DateTime?
   // Workflow
   status    LeadStatus @default(NEW)
   notes     String?
@@ -434,6 +438,7 @@ model Lead {
   @@index([source, status])
   @@index([region])
   @@index([intentScore])
+  @@index([category])
   @@map("leads")
 }
 

@@ -141,10 +141,10 @@ export class LeadsController {
 
   // ── Bright Data social capture (Reddit / Quora / Instagram / Facebook) ────────
 
-  @ApiOperation({ summary: 'Credit budget + capture funnel counts (Bright Data)' })
+  @ApiOperation({ summary: 'Credit budget + capture funnel counts (Bright Data; optional platform filter)' })
   @Get('brightdata/stats')
-  brightDataStats() {
-    return this.brightData.captureStats();
+  brightDataStats(@Query('platform') platform?: string) {
+    return this.brightData.captureStats(platform);
   }
 
   @ApiOperation({ summary: 'Recent Bright Data collection jobs' })
@@ -155,10 +155,10 @@ export class LeadsController {
 
   // ── Lead analytics (AI category breakdown + monthly volume) ───────────────────
 
-  @ApiOperation({ summary: 'Lead-analytics dashboard: AI category breakdown, per-platform matrix, monthly volume' })
+  @ApiOperation({ summary: 'Lead-analytics dashboard: AI category breakdown, per-platform matrix, volume per time bucket' })
   @Get('analytics')
-  analytics() {
-    return this.brightData.analytics();
+  analytics(@Query('bucket') bucket?: 'day' | 'month' | 'quarter' | 'year') {
+    return this.brightData.analytics(bucket);
   }
 
   @ApiOperation({ summary: 'Start an AI run that classifies captures into Lead/Marketing/News/Other (async)' })
@@ -173,12 +173,29 @@ export class LeadsController {
     return this.brightData.categorizeStatus();
   }
 
+  @ApiOperation({ summary: 'Drill-down post list for analytics (social captures + YouTube leads), filtered by category/platform' })
+  @Get('analytics/posts')
+  analyticsPosts(
+    @Query('category') category?: string,
+    @Query('platform') platform?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+  ) {
+    return this.brightData.analyticsPosts({
+      category, platform, q,
+      page: page ? +page : 1,
+      pageSize: pageSize ? +pageSize : 25,
+    });
+  }
+
   @ApiOperation({ summary: 'Raw captured social posts (analysis dataset; soft-deleted hidden unless includeDeleted)' })
   @Get('brightdata/captures')
   captures(
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
     @Query('platform') platform?: string,
+    @Query('category') category?: string,
     @Query('temperature') temperature?: string,
     @Query('minSignals') minSignals?: string,
     @Query('q') q?: string,
@@ -189,7 +206,7 @@ export class LeadsController {
     return this.brightData.listCaptures({
       page: page ? +page : 1,
       pageSize: pageSize ? +pageSize : 50,
-      platform, temperature, q, sort,
+      platform, category, temperature, q, sort,
       minSignals: minSignals ? +minSignals : undefined,
       includeDeleted: includeDeleted === 'true',
       includeSpam: includeSpam === 'true',

@@ -416,7 +416,7 @@ export class BrightDataService {
 
   // ── Read / soft-delete APIs ───────────────────────────────────────────────────
   async listCaptures(params: {
-    page?: number; pageSize?: number; platform?: string;
+    page?: number; pageSize?: number; platform?: string; category?: string;
     temperature?: string; minSignals?: number; q?: string; includeDeleted?: boolean; includeSpam?: boolean; sort?: string;
   }) {
     const page = Math.max(1, Number(params.page) || 1);
@@ -425,6 +425,7 @@ export class BrightDataService {
     if (!params.includeDeleted) where.deletedAt = null; // soft-deleted hidden by default
     if (!params.includeSpam) where.isSpam = false; // spam hidden by default (still stored)
     if (params.platform) where.platform = params.platform as any;
+    if (params.category) where.category = params.category === 'UNCATEGORIZED' ? null : (params.category as any);
     if (params.temperature) where.temperature = params.temperature;
     if (params.minSignals) where.signalCount = { gte: Number(params.minSignals) };
     if (params.q) where.OR = [
@@ -443,20 +444,26 @@ export class BrightDataService {
     return { items, total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) };
   }
 
-  async captureStats() {
-    const live = { deletedAt: null, isSpam: false };
-    const [total, deleted, spam, byPlatform, byTemp, budget] = await Promise.all([
+  async captureStats(platform?: string) {
+    const pf = platform ? { platform: platform as any } : {};
+    const live = { deletedAt: null, isSpam: false, ...pf };
+    const [total, deleted, spam, byPlatform, byTemp, byCategory, budget] = await Promise.all([
       this.prisma.sourceCapture.count({ where: live }),
-      this.prisma.sourceCapture.count({ where: { deletedAt: { not: null } } }),
-      this.prisma.sourceCapture.count({ where: { isSpam: true, deletedAt: null } }),
-      this.prisma.sourceCapture.groupBy({ by: ['platform'], where: live, _count: true }),
+      this.prisma.sourceCapture.count({ where: { deletedAt: { not: null }, ...pf } }),
+      this.prisma.sourceCapture.count({ where: { isSpam: true, deletedAt: null, ...pf } }),
+      // platform breakdown stays global (so the all-platforms view still shows the split)
+      this.prisma.sourceCapture.groupBy({ by: ['platform'], where: { deletedAt: null, isSpam: false }, _count: true }),
       this.prisma.sourceCapture.groupBy({ by: ['temperature'], where: live, _count: true }),
+      this.prisma.sourceCapture.groupBy({ by: ['category'], where: live, _count: true }),
       this.budget(),
     ]);
+    const categoryTotals: Record<string, number> = { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
+    for (const g of byCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] = g._count;
     return {
-      total, softDeleted: deleted, spam, budget,
+      total, softDeleted: deleted, spam, budget, platform: platform ?? null,
       byPlatform: Object.fromEntries(byPlatform.map((p) => [p.platform, p._count])),
       byTemperature: Object.fromEntries(byTemp.map((t) => [t.temperature ?? 'cold', t._count])),
+      byCategory: categoryTotals,
     };
   }
 
@@ -465,47 +472,68 @@ export class BrightDataService {
 
   /**
    * Dashboard data: how the captured posts break down by AI category, by platform,
-   * and how many were generated each month (by capture date). Soft-deleted rows are
-   * excluded; spam is kept (it's part of the marketing/other story).
+   * and how many were generated per time bucket (by capture date). `bucket` is one of
+   * day | month | quarter | year. Soft-deleted rows are excluded; spam is kept (it's
+   * part of the marketing/other story).
    */
-  async analytics() {
+  async analytics(bucket: 'day' | 'month' | 'quarter' | 'year' = 'month') {
+    const unit = ['day', 'month', 'quarter', 'year'].includes(bucket) ? bucket : 'month';
     const live: Prisma.SourceCaptureWhereInput = { deletedAt: null };
-    const [total, categorized, byCategory, byPlatformCat] = await Promise.all([
+    const [
+      capTotal, capCategorized, capByCategory, capByPlatformCat,
+      leadTotal, leadCategorized, leadByCategory,
+    ] = await Promise.all([
       this.prisma.sourceCapture.count({ where: live }),
       this.prisma.sourceCapture.count({ where: { ...live, category: { not: null } } }),
       this.prisma.sourceCapture.groupBy({ by: ['category'], where: live, _count: true }),
       this.prisma.sourceCapture.groupBy({ by: ['platform', 'category'], where: live, _count: true }),
+      this.prisma.lead.count(),
+      this.prisma.lead.count({ where: { category: { not: null } } }),
+      this.prisma.lead.groupBy({ by: ['category'], _count: true }),
     ]);
 
-    // Category totals (incl. an UNCATEGORIZED bucket for not-yet-classified rows).
-    const categoryTotals: Record<string, number> = { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
-    for (const g of byCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] = g._count;
+    const total = capTotal + leadTotal;
+    const categorized = capCategorized + leadCategorized;
 
-    // Per-platform category matrix.
+    // Category totals across BOTH sources (incl. an UNCATEGORIZED bucket).
+    const categoryTotals: Record<string, number> = { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
+    for (const g of capByCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] += g._count;
+    for (const g of leadByCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] += g._count;
+
+    // Per-platform category matrix (social platforms + a YOUTUBE row from the leads table).
     const byPlatform: Record<string, Record<string, number>> = {};
-    for (const g of byPlatformCat) {
-      const p = (byPlatform[g.platform] ??= { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0, total: 0 });
+    const blank = () => ({ LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0, total: 0 });
+    for (const g of capByPlatformCat) {
+      const p = (byPlatform[g.platform] ??= blank());
       p[g.category ?? 'UNCATEGORIZED'] += g._count;
       p.total += g._count;
     }
+    if (leadTotal > 0) {
+      const yt = (byPlatform.YOUTUBE ??= blank());
+      for (const g of leadByCategory) {
+        yt[g.category ?? 'UNCATEGORIZED'] += g._count;
+        yt.total += g._count;
+      }
+    }
 
-    // Monthly volume by capture date, split by category (raw SQL for date_trunc).
-    const rows = await this.prisma.$queryRaw<{ month: string; category: string | null; count: number }[]>(Prisma.sql`
-      SELECT to_char(date_trunc('month', "createdAt"), 'YYYY-MM') AS month,
-             "category"::text AS category,
-             COUNT(*)::int AS count
-      FROM "source_captures"
-      WHERE "deletedAt" IS NULL
-      GROUP BY 1, 2
-      ORDER BY 1 ASC`);
-    const monthMap = new Map<string, any>();
-    for (const r of rows) {
-      const m = monthMap.get(r.month) ?? { month: r.month, total: 0, LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
+    // Volume per time bucket by creation date, split by category — unioned across both
+    // tables (raw SQL for date_trunc). `period` is the bucket's start date (YYYY-MM-DD).
+    const [capRows, leadRows] = await Promise.all([
+      this.prisma.$queryRaw<{ period: string; category: string | null; count: number }[]>(Prisma.sql`
+        SELECT to_char(date_trunc(${unit}, "createdAt"), 'YYYY-MM-DD') AS period, "category"::text AS category, COUNT(*)::int AS count
+        FROM "source_captures" WHERE "deletedAt" IS NULL GROUP BY 1, 2 ORDER BY 1 ASC`),
+      this.prisma.$queryRaw<{ period: string; category: string | null; count: number }[]>(Prisma.sql`
+        SELECT to_char(date_trunc(${unit}, "createdAt"), 'YYYY-MM-DD') AS period, "category"::text AS category, COUNT(*)::int AS count
+        FROM "leads" GROUP BY 1, 2 ORDER BY 1 ASC`),
+    ]);
+    const periodMap = new Map<string, any>();
+    for (const r of [...capRows, ...leadRows]) {
+      const m = periodMap.get(r.period) ?? { period: r.period, total: 0, LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
       m[r.category ?? 'UNCATEGORIZED'] += r.count;
       m.total += r.count;
-      monthMap.set(r.month, m);
+      periodMap.set(r.period, m);
     }
-    const monthly = Array.from(monthMap.values());
+    const series = Array.from(periodMap.values()).sort((a, b) => a.period.localeCompare(b.period));
 
     return {
       total,
@@ -514,9 +542,76 @@ export class BrightDataService {
       categories: BrightDataService.CATEGORIES,
       byCategory: categoryTotals,
       byPlatform,
-      monthly,
+      bucket: unit,
+      series,
       classify: this.categorize,
     };
+  }
+
+  // Map a Lead / SourceCapture row to the common post shape used by the drill-down list.
+  private mapCapturePost = (r: any) => ({
+    id: r.id, platform: r.platform, url: r.url, title: r.title, body: r.body,
+    author: r.author, postedAt: r.postedAt, isSpam: r.isSpam,
+    category: r.category, categoryReason: r.categoryReason, createdAt: r.createdAt,
+  });
+  private mapLeadPost = (r: any) => ({
+    id: r.id, platform: 'YOUTUBE', url: r.url, title: r.title,
+    body: r.aiSummary || r.description || (r.transcript ? String(r.transcript).slice(0, 600) : ''),
+    author: r.channelTitle, postedAt: r.publishedAt, isSpam: false,
+    category: r.category, categoryReason: r.categoryReason, createdAt: r.createdAt,
+  });
+
+  /**
+   * Unified post list for the analytics drill-down: returns captured social posts
+   * AND YouTube leads, filtered by category (and optional platform). With no platform
+   * it merges both sources; platform=YOUTUBE returns leads, any other returns captures.
+   */
+  async analyticsPosts(params: { category?: string; platform?: string; q?: string; page?: number; pageSize?: number }) {
+    const page = Math.max(1, Number(params.page) || 1);
+    const pageSize = Math.min(100, Math.max(1, Number(params.pageSize) || 25));
+    const skip = (page - 1) * pageSize;
+    const q = params.q?.trim();
+    const catVal = params.category ? (params.category === 'UNCATEGORIZED' ? null : (params.category as any)) : undefined;
+
+    const capSelect = { id: true, platform: true, url: true, title: true, body: true, author: true, postedAt: true, isSpam: true, category: true, categoryReason: true, createdAt: true };
+    const leadSelect = { id: true, url: true, title: true, description: true, transcript: true, aiSummary: true, channelTitle: true, publishedAt: true, category: true, categoryReason: true, createdAt: true };
+
+    const capWhere: Prisma.SourceCaptureWhereInput = { deletedAt: null };
+    if (catVal !== undefined) capWhere.category = catVal;
+    if (params.platform && params.platform !== 'YOUTUBE') capWhere.platform = params.platform as any;
+    if (q) capWhere.OR = [{ title: { contains: q, mode: 'insensitive' } }, { body: { contains: q, mode: 'insensitive' } }];
+
+    const leadWhere: Prisma.LeadWhereInput = {};
+    if (catVal !== undefined) leadWhere.category = catVal;
+    if (q) leadWhere.OR = [{ title: { contains: q, mode: 'insensitive' } }, { transcript: { contains: q, mode: 'insensitive' } }, { description: { contains: q, mode: 'insensitive' } }];
+
+    const wantCaptures = !params.platform || params.platform !== 'YOUTUBE';
+    const wantLeads = !params.platform || params.platform === 'YOUTUBE';
+
+    const result = (items: any[], total: number) => ({ items, total, page, pageSize, pageCount: Math.max(1, Math.ceil(total / pageSize)) });
+
+    if (wantCaptures && !wantLeads) {
+      const [total, rows] = await Promise.all([
+        this.prisma.sourceCapture.count({ where: capWhere }),
+        this.prisma.sourceCapture.findMany({ where: capWhere, select: capSelect, orderBy: { createdAt: 'desc' }, skip, take: pageSize }),
+      ]);
+      return result(rows.map(this.mapCapturePost), total);
+    }
+    if (wantLeads && !wantCaptures) {
+      const [total, rows] = await Promise.all([
+        this.prisma.lead.count({ where: leadWhere }),
+        this.prisma.lead.findMany({ where: leadWhere, select: leadSelect, orderBy: { createdAt: 'desc' }, skip, take: pageSize }),
+      ]);
+      return result(rows.map(this.mapLeadPost), total);
+    }
+    // No platform filter → merge both sources, sort by createdAt desc, paginate in memory.
+    const [caps, leads] = await Promise.all([
+      this.prisma.sourceCapture.findMany({ where: capWhere, select: capSelect, orderBy: { createdAt: 'desc' } }),
+      this.prisma.lead.findMany({ where: leadWhere, select: leadSelect, orderBy: { createdAt: 'desc' } }),
+    ]);
+    const merged = [...caps.map(this.mapCapturePost), ...leads.map(this.mapLeadPost)]
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    return result(merged.slice(skip, skip + pageSize), merged.length);
   }
 
   /** Current progress of the AI classification run (for polling from the UI). */
@@ -531,31 +626,36 @@ export class BrightDataService {
    */
   async startCategorize(opts: { reclassify?: boolean; limit?: number } = {}) {
     if (this.categorize.running) return { ok: false, reason: 'already running', progress: this.categorize };
-    const where: Prisma.SourceCaptureWhereInput = { deletedAt: null };
-    if (!opts.reclassify) where.category = null;
-    const ids = (
-      await this.prisma.sourceCapture.findMany({
-        where,
-        select: { id: true },
-        orderBy: { createdAt: 'desc' },
-        take: opts.limit && opts.limit > 0 ? opts.limit : undefined,
-      })
-    ).map((r) => r.id);
+    const limit = opts.limit && opts.limit > 0 ? opts.limit : undefined;
+    const capWhere: Prisma.SourceCaptureWhereInput = { deletedAt: null };
+    const leadWhere: Prisma.LeadWhereInput = {};
+    if (!opts.reclassify) { capWhere.category = null; leadWhere.category = null; }
+
+    const [caps, leads] = await Promise.all([
+      this.prisma.sourceCapture.findMany({ where: capWhere, select: { id: true }, orderBy: { createdAt: 'desc' }, take: limit }),
+      this.prisma.lead.findMany({ where: leadWhere, select: { id: true }, orderBy: { createdAt: 'desc' }, take: limit }),
+    ]);
+    // Leads first (few, fast), then captures — so YouTube shows up early in the run.
+    let items: { kind: 'lead' | 'capture'; id: string }[] = [
+      ...leads.map((l) => ({ kind: 'lead' as const, id: l.id })),
+      ...caps.map((c) => ({ kind: 'capture' as const, id: c.id })),
+    ];
+    if (limit) items = items.slice(0, limit);
 
     this.categorize = {
-      running: ids.length > 0,
+      running: items.length > 0,
       processed: 0,
-      total: ids.length,
+      total: items.length,
       updated: 0,
       byCategory: {},
       error: null,
       startedAt: new Date().toISOString(),
-      finishedAt: ids.length ? null : new Date().toISOString(),
+      finishedAt: items.length ? null : new Date().toISOString(),
     };
-    if (!ids.length) return { ok: true, nothing: true, progress: this.categorize };
+    if (!items.length) return { ok: true, nothing: true, progress: this.categorize };
 
     // fire-and-forget; errors are captured into progress
-    this.runCategorize(ids).catch((e) => {
+    this.runCategorize(items).catch((e) => {
       this.categorize.running = false;
       this.categorize.error = e?.message || String(e);
       this.categorize.finishedAt = new Date().toISOString();
@@ -563,43 +663,49 @@ export class BrightDataService {
     return { ok: true, started: true, progress: this.categorize };
   }
 
-  private async runCategorize(ids: string[]) {
+  private async runCategorize(items: { kind: 'lead' | 'capture'; id: string }[]) {
     const BATCH = 15;
     try {
-      for (let i = 0; i < ids.length; i += BATCH) {
+      for (let i = 0; i < items.length; i += BATCH) {
         if (!this.categorize.running) break; // (defensive — no external cancel yet)
-        const batchIds = ids.slice(i, i + BATCH);
-        const rows = await this.prisma.sourceCapture.findMany({
-          where: { id: { in: batchIds } },
-          select: { id: true, platform: true, title: true, body: true },
-        });
+        const batch = items.slice(i, i + BATCH);
+        const capIds = batch.filter((b) => b.kind === 'capture').map((b) => b.id);
+        const leadIds = batch.filter((b) => b.kind === 'lead').map((b) => b.id);
 
-        // Posts with no usable text can't be classified by the model — mark OTHER cheaply.
-        const empty = rows.filter((r) => !((r.title || '') + (r.body || '')).trim());
-        const fillable = rows.filter((r) => ((r.title || '') + (r.body || '')).trim());
+        const [caps, leads] = await Promise.all([
+          capIds.length ? this.prisma.sourceCapture.findMany({ where: { id: { in: capIds } }, select: { id: true, platform: true, title: true, body: true } }) : Promise.resolve([] as any[]),
+          leadIds.length ? this.prisma.lead.findMany({ where: { id: { in: leadIds } }, select: { id: true, title: true, description: true, transcript: true, aiSummary: true } }) : Promise.resolve([] as any[]),
+        ]);
 
-        const verdicts = fillable.length
-          ? await this.ai.classifyCategories(
-              fillable.map((r) => ({ id: r.id, platform: r.platform, title: r.title, body: r.body })),
-            )
-          : {};
-
-        for (const r of empty) {
-          verdicts[r.id] = { category: 'OTHER', reason: 'no text content' };
+        // Build classification inputs (namespaced ids so the two tables can't collide).
+        const inputs: { id: string; platform?: string; title?: string | null; body?: string | null }[] = [];
+        const verdicts: Record<string, { category: any; reason: string }> = {};
+        for (const r of caps) {
+          const text = ((r.title || '') + (r.body || '')).trim();
+          if (!text) verdicts[`capture:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
+          else inputs.push({ id: `capture:${r.id}`, platform: r.platform, title: r.title, body: r.body });
         }
+        for (const r of leads) {
+          const body = r.transcript || r.aiSummary || r.description || '';
+          const text = ((r.title || '') + body).trim();
+          if (!text) verdicts[`lead:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
+          else inputs.push({ id: `lead:${r.id}`, platform: 'YOUTUBE', title: r.title, body });
+        }
+        if (inputs.length) Object.assign(verdicts, await this.ai.classifyCategories(inputs));
 
         const now = new Date();
-        for (const r of rows) {
-          const v = verdicts[r.id];
+        for (const b of batch) {
+          const v = verdicts[`${b.kind}:${b.id}`];
           if (!v) continue;
-          await this.prisma.sourceCapture.update({
-            where: { id: r.id },
-            data: { category: v.category as any, categoryReason: v.reason, categorizedAt: now },
-          });
+          if (b.kind === 'capture') {
+            await this.prisma.sourceCapture.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
+          } else {
+            await this.prisma.lead.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
+          }
           this.categorize.updated++;
           this.categorize.byCategory[v.category] = (this.categorize.byCategory[v.category] || 0) + 1;
         }
-        this.categorize.processed = Math.min(ids.length, i + BATCH);
+        this.categorize.processed = Math.min(items.length, i + BATCH);
       }
     } finally {
       this.categorize.running = false;
