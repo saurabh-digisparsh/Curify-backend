@@ -1,0 +1,882 @@
+{
+  "ChIJWbvfzGpmUjoRL23gpRAbDS4": {
+    "status": "DONE",
+    "name": "Apollo Hospital Greams Lane | Best Hospital in Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 39,
+    "skipped": 0
+  },
+  "ChIJ344eNLV3AjoR4XJiiRSjC2I": {
+    "status": "DONE",
+    "name": "Apollo Multispeciality Hospitals | Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "chain": "Apollo Hospitals",
+    "created": 12,
+    "skipped": 0
+  },
+  "ChIJNyplNGaXyzsRv9XdgLqPd-s": {
+    "status": "DONE",
+    "name": "Apollo Hospitals | Best Hospital in Jubilee Hills Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Apollo Hospitals",
+    "created": 24,
+    "skipped": 0
+  },
+  "ChIJocj7BfwRrjsRZhaB8omuyNQ": {
+    "status": "DONE",
+    "name": "Manipal Hospital Whitefield",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ9RESECWbXjkRRJNC2yNKNy8": {
+    "status": "DONE",
+    "name": "Shalby Multi-Specialty Hospitals",
+    "city": "Ahmedabad",
+    "chain": "Shalby Hospitals",
+    "created": 17,
+    "skipped": 0
+  },
+  "ChIJEbUhJ8aj2zsROYVLeEdg110": {
+    "status": "DONE",
+    "name": "Medicover Hospitals - Best Hospital in Chh. Sambhaji Nagar",
+    "city": "Chhatrapati Sambhajinagar",
+    "chain": "Medicover Hospitals",
+    "created": 4,
+    "skipped": 0
+  },
+  "ChIJl5I8OpDD5zsRBWCFNF2iWLg": {
+    "status": "DONE",
+    "name": "Apollo Hospital Navi Mumbai - Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "chain": "Apollo Hospitals",
+    "created": 18,
+    "skipped": 0
+  },
+  "ChIJayDGwMATrjsR3ceXkcPU2BI": {
+    "status": "DONE",
+    "name": "Manipal Hospitals",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 13,
+    "skipped": 0
+  },
+  "ChIJ56jk8S2HXjkRNItmRh8wGrc": {
+    "status": "DONE",
+    "name": "Shalby Hospital",
+    "city": "Ahmedabad",
+    "chain": "Shalby Hospitals",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJk2qqtMqQyzsRWsnz04V7Hkw": {
+    "status": "DONE",
+    "name": "Rainbow Children’s Hospital - Best Pediatric Hospital in Banjara Hills, Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Rainbow Children's Hospital",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJKxBDpixxAjoR-xFiMonJ7a8": {
+    "status": "DONE",
+    "name": "Manipal Hospitals - Dhakuria",
+    "city": "Kolkata",
+    "chain": "Manipal Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJ42Ok9N0XrjsRyGYL-4uYWkE": {
+    "status": "DONE",
+    "name": "Apollo Hospital | Best Hospital in Seshadripuram",
+    "city": "Bengaluru",
+    "chain": "Apollo Hospitals",
+    "created": 8,
+    "skipped": 0
+  },
+  "ChIJSxo6HfYNrjsRu4rk-Jxt-CQ": {
+    "status": "DONE",
+    "name": "Manipal Hospital Varthur Road",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJSd03gtJ1AjoRC84nsvCYTLI": {
+    "status": "DONE",
+    "name": "Manipal Hospitals Broadway",
+    "city": "Kolkata",
+    "chain": "Manipal Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJ9-3GUiEVrjsRhxoikQoujIM": {
+    "status": "DONE",
+    "name": "Apollo Hospitals | Best Hospital in Bannerghatta Road, Bengaluru",
+    "city": "Bengaluru",
+    "chain": "Apollo Hospitals",
+    "created": 16,
+    "skipped": 0
+  },
+  "ChIJVVVVVSoWrjsRBXAJZI0ibYg": {
+    "status": "DONE",
+    "name": "Manipal Hospital Yeshwanthpur",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJEfRVcCMVrjsRJZ6qMWbCCHM": {
+    "status": "DONE",
+    "name": "Fortis Hospital, Bannerghatta Road - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "chain": "Fortis Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJxatUrvDO5zsRbXpEagVP2ts": {
+    "status": "DONE",
+    "name": "Gleneagles Hospital - Top Multi Speciality Hospital in Mumbai",
+    "city": "Mumbai",
+    "chain": "Gleneagles Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ7UDMkl9xAjoR6hQmPDygLfk": {
+    "status": "DONE",
+    "name": "Manipal Hospital EM Bypass",
+    "city": "Kolkata",
+    "chain": "Manipal Hospital",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJMXKoEOBzAjoRec8B2wUFRSg": {
+    "status": "DONE",
+    "name": "Manipal Hospitals - Mukundapur",
+    "city": "Kolkata",
+    "chain": "Manipal Hospital",
+    "created": 81,
+    "skipped": 0
+  },
+  "ChIJZyT5_umTyzsR1xWsZCiId4s": {
+    "status": "DONE",
+    "name": "AIG Hospitals",
+    "city": "Hyderabad",
+    "chain": "AIG Hospitals",
+    "created": 82,
+    "skipped": 0
+  },
+  "ChIJy6Lb3diBXjkRsuw-XSlQSqc": {
+    "status": "DONE",
+    "name": "Apollo Hospital International Ahmedabad | Best Hospital in Ahmedabad",
+    "city": "Ahmedabad",
+    "chain": "Apollo Hospitals",
+    "created": 56,
+    "skipped": 0
+  },
+  "ChIJIa-2M5YCDTkRiMG8YzsyZ5o": {
+    "status": "DONE",
+    "name": "BLK-Max Super Speciality Hospital Delhi",
+    "city": "New Delhi",
+    "chain": "Max Hospital",
+    "created": 27,
+    "skipped": 0
+  },
+  "ChIJb0_P4DobDTkRbVLBAy9VVew": {
+    "status": "DONE",
+    "name": "Manipal Hospital Delhi",
+    "city": "Delhi",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJpX3mkwJnUjoRZ3JCpOe-enE": {
+    "status": "DONE",
+    "name": "Apollo Children's Hospital Chennai - Best Children's Hospital in Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 12,
+    "skipped": 0
+  },
+  "ChIJdwmjhrXBwjsR5NVuBvruOwg": {
+    "status": "DONE",
+    "name": "Sahyadri Super Speciality Hospital Nagar Road",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 17,
+    "skipped": 0
+  },
+  "ChIJ-d2lJo8XrjsRlge4yFlLCpM": {
+    "status": "DONE",
+    "name": "Manipal Hospital Hebbal",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJUbDFFnthUjoRcPMlouiEc6Y": {
+    "status": "DONE",
+    "name": "Apollo Speciality Hospitals | Best Hospital in Vanagaram",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 19,
+    "skipped": 0
+  },
+  "ChIJ-bdozjoXrjsRdNsuZM6ecaQ": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital, Bengaluru",
+    "city": "Bengaluru",
+    "chain": "Rainbow Children's Hospital",
+    "created": 14,
+    "skipped": 0
+  },
+  "ChIJ1b_L7d2TyzsRcmghZhoAyVM": {
+    "status": "DONE",
+    "name": "Medicover Hospitals - Best Hospital in Hyderabad - Hitech City",
+    "city": "Hyderabad",
+    "chain": "Medicover Hospitals",
+    "created": 13,
+    "skipped": 0
+  },
+  "ChIJq6qqmuYZDTkRq8WkAJdnDtQ": {
+    "status": "DONE",
+    "name": "Manipal Hospital, Palam Vihar, Gurugram",
+    "city": "Gurugram",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJH1XCpYm_wjsRi58ExuGvoeU": {
+    "status": "DONE",
+    "name": "Sahyadri Super Speciality Hospital, Deccan Gymkhana, Pune",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 17,
+    "skipped": 0
+  },
+  "ChIJmarqE63mDDkRd228dtR6wDs": {
+    "status": "DONE",
+    "name": "Indraprastha Apollo Hospital | Best Hospital in Delhi",
+    "city": "New Delhi",
+    "chain": "Apollo Hospitals",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJfwlxH37BwjsROeG41SeLErg": {
+    "status": "DONE",
+    "name": "Manipal Hospital, Kharadi - Pune",
+    "city": "Pune",
+    "chain": "Manipal Hospital",
+    "created": 6,
+    "skipped": 0
+  },
+  "ChIJMzXuqCfD5zsRKeGBmJs_ZAk": {
+    "status": "DONE",
+    "name": "Medicover Hospitals - Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "chain": "Medicover Hospitals",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ13jtbPfBwjsRq-ooUa9y-u8": {
+    "status": "DONE",
+    "name": "Sahyadri Super Speciality Hospital Hadapsar",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 23,
+    "skipped": 0
+  },
+  "ChIJaWKSEAAVrjsRxivsUN0_7wU": {
+    "status": "DONE",
+    "name": "Apollo Speciality Hospital | Best Hospital in Jayanagar",
+    "city": "Bengaluru",
+    "chain": "Apollo Hospitals",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJr7tpuJLjDDkRsnHyphu3XYY": {
+    "status": "DONE",
+    "name": "Fortis Escorts Heart Institute - Heart Hospital Okhla",
+    "city": "New Delhi",
+    "chain": "Fortis Hospital",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJYdMKQV645zsRluAWkv57qWw": {
+    "status": "DONE",
+    "name": "Fortis Hospital Mulund | Best Hospital in Mumbai",
+    "city": "Mumbai",
+    "chain": "Fortis Hospital",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJL7ZvITo_rjsRzxi2W6kFUhk": {
+    "status": "DONE",
+    "name": "Gleneagles BGS Hospital - Top Multi Speciality Hospital in Kengeri, Bengaluru",
+    "city": "Bengaluru",
+    "chain": "Gleneagles Hospital",
+    "created": 30,
+    "skipped": 0
+  },
+  "ChIJYbankXATrjsRKSv7Mz8Xw-0": {
+    "status": "DONE",
+    "name": "Manipal Hospitals Sarjapur Road",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJs1fP4e4YDTkR1JkT33Kmbxk": {
+    "status": "DONE",
+    "name": "Fortis Hospital Gurgaon - Best Hospital in Gurugram",
+    "city": "Gurugram",
+    "chain": "Fortis Hospital",
+    "created": 19,
+    "skipped": 0
+  },
+  "ChIJz3GebiACDTkRtGjNGCZUlrA": {
+    "status": "DONE",
+    "name": "Fortis Hospital, Shalimar Bagh - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "chain": "Fortis Hospital",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJ6YOG6P5zAjoRmpCWayzrM7s": {
+    "status": "DONE",
+    "name": "Fortis Hospital, Anandapur - Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "chain": "Fortis Hospital",
+    "created": 10,
+    "skipped": 0
+  },
+  "ChIJ376MRgkVrjsRJgxt284scaU": {
+    "status": "DONE",
+    "name": "Manipal Hospitals Jayanagar",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 1,
+    "skipped": 0
+  },
+  "ChIJEevu9DLB5zsRM7zvXH-O-rs": {
+    "status": "DONE",
+    "name": "Fortis Hiranandani Hospital, Vashi | Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "chain": "Fortis Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJVVVVVWrmDDkRRMvnsvw60ew": {
+    "status": "DONE",
+    "name": "Max Super Speciality Hospital, Sector 128, Noida",
+    "city": "Noida",
+    "chain": "Max Hospital",
+    "created": 9,
+    "skipped": 0
+  },
+  "ChIJc2UgFw9dUjoRITlYPo2ZXts": {
+    "status": "DONE",
+    "name": "Apollo Speciality Hospital | Best Hospital in OMR Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJachKp6fH5zsRarJmdOryU_I": {
+    "status": "DONE",
+    "name": "Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",
+    "city": "Mumbai",
+    "chain": "Shalby Hospitals",
+    "created": 3,
+    "skipped": 0
+  },
+  "ChIJ-0d-o9CTyzsR4aDotaHSCNQ": {
+    "status": "DONE",
+    "name": "Medicover Outpatient Center - Best Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Medicover Hospitals",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJD6E7ZwpcUjoRQxH1tCr6p8s": {
+    "status": "DONE",
+    "name": "Gleneagles Hospitals - Top Multi Speciality Hospital in Chennai",
+    "city": "Chennai",
+    "chain": "Gleneagles Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ7UL4ix2SyzsRz5BciHgDkfA": {
+    "status": "DONE",
+    "name": "Rainbow Children’s Hospital - Best Pediatric Hospital in Hyder Nagar, Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Rainbow Children's Hospital",
+    "created": 1,
+    "skipped": 0
+  },
+  "ChIJfd1DFBIVrjsRilR8_HDs7kQ": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Bannerghatta",
+    "city": "Bengaluru",
+    "chain": "Rainbow Children's Hospital",
+    "created": 1,
+    "skipped": 0
+  },
+  "ChIJG3WfyG4YDTkRrFxnxC-zKtw": {
+    "status": "DONE",
+    "name": "Medanta - The Medicity, Gurugram",
+    "city": "Gurugram",
+    "chain": "Medanta",
+    "created": 33,
+    "skipped": 0
+  },
+  "ChIJ7Y5UPHcWrjsRaWlLJh77AP8": {
+    "status": "DONE",
+    "name": "Fortis Hospital, Nagarbhavi - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "chain": "Fortis Hospital",
+    "created": 6,
+    "skipped": 0
+  },
+  "ChIJw7Gym_NnUjoRwyr_XUH-z0k": {
+    "status": "DONE",
+    "name": "Rainbow Children’s Hospital, Guindy , Chennai - Best Pediatric Hospital",
+    "city": "Chennai",
+    "chain": "Rainbow Children's Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ-8XUJ_ThDDkRwQuX9LtHLVg": {
+    "status": "DONE",
+    "name": "Max Super Speciality Hospital, Saket (Max Saket)",
+    "city": "New Delhi",
+    "chain": "Max Hospital",
+    "created": 70,
+    "skipped": 0
+  },
+  "ChIJe4nnk97A5zsRm-hEdyMXGYs": {
+    "status": "DONE",
+    "name": "Kokilaben Dhirubhai Ambani Hospital",
+    "city": "Navi Mumbai",
+    "chain": "Kokilaben Dhirubhai Ambani Hospital",
+    "created": 24,
+    "skipped": 0
+  },
+  "ChIJbx53lGpmUjoRarOqQF5M378": {
+    "status": "DONE",
+    "name": "Apollo Women's Hospital - Best Women's Hospital in Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 26,
+    "skipped": 0
+  },
+  "ChIJyT7BhC_J5zsRNoVeG78cfIA": {
+    "status": "DONE",
+    "name": "Fortis S L Raheja Hospital - Best Hospital in Mumbai",
+    "city": "Mumbai",
+    "chain": "Fortis Hospital",
+    "created": 36,
+    "skipped": 0
+  },
+  "ChIJqbKnFPjhDDkRZ2uI0KoUQJg": {
+    "status": "DONE",
+    "name": "Madhukar Rainbow Children’s Hospital – Best Pediatric Hospital in Delhi",
+    "city": "New Delhi",
+    "chain": "Rainbow Children's Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJQTS66mkWrjsRDaVTOssE4S0": {
+    "status": "DONE",
+    "name": "Manipal Hospital Millers Road",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJDwuAR2gWrjsRyCp4aIz0cFY": {
+    "status": "DONE",
+    "name": "Fortis Hospital Bangalore | Cunningham Road - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "chain": "Fortis Hospital",
+    "created": 10,
+    "skipped": 0
+  },
+  "ChIJs_DznHHvDDkRSKfcT9pPTcI": {
+    "status": "DONE",
+    "name": "Fortis Hospital Noida - Best Hospital in Noida",
+    "city": "Noida",
+    "chain": "Fortis Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJq6qqGq3lDDkRaPwgMvH9ijo": {
+    "status": "DONE",
+    "name": "Apollo Hospitals Noida | Best Hospital In Noida",
+    "city": "Noida",
+    "chain": "Apollo Hospitals",
+    "created": 43,
+    "skipped": 0
+  },
+  "ChIJ8_qnyIqEXjkRv7qiBk3ozYI": {
+    "status": "DONE",
+    "name": "Krishna Shalby Multi-Specialty Hospital",
+    "city": "Ahmedabad",
+    "chain": "Shalby Hospitals",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ1xYU6p4BDTkRhgwBKNa8x8Q": {
+    "status": "DONE",
+    "name": "Max Super Speciality Hospital, Shalimar Bagh",
+    "city": "New Delhi",
+    "chain": "Max Hospital",
+    "created": 59,
+    "skipped": 0
+  },
+  "ChIJQQkWz0KXyzsR_Mj3udGVb00": {
+    "status": "DONE",
+    "name": "Gleneagles Hospital - Top Multi Speciality Hospital in Lakdikapul, Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Gleneagles Hospital",
+    "created": 14,
+    "skipped": 0
+  },
+  "ChIJAQAADAgdDTkRNYlw_8fraNw": {
+    "status": "DONE",
+    "name": "Fortis Flt Lt Rajan Dhall Hospital, Vasant Kunj - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "chain": "Fortis Hospital",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJnay1WDX7DDkRxaNyZzwOWY0": {
+    "status": "DONE",
+    "name": "Max Super Speciality Hospital, Patparganj",
+    "city": "Delhi",
+    "chain": "Max Hospital",
+    "created": 64,
+    "skipped": 0
+  },
+  "ChIJGQs9UcF1AjoRy-jOoJdVrw4": {
+    "status": "DONE",
+    "name": "Manipal Hospital, Salt Lake",
+    "city": "Kolkata",
+    "chain": "Manipal Hospital",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJYcI0nLrJ5zsRVYAvxUyzk64": {
+    "status": "DONE",
+    "name": "Nanavati Max Super Speciality Hospital Mumbai",
+    "city": "Mumbai",
+    "chain": "Max Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJse9bvrWZyzsR2p0v-0N7k1k": {
+    "status": "DONE",
+    "name": "Apollo Hospitals Hyderguda | Best Hospital in Hyderguda, Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Apollo Hospitals",
+    "created": 3,
+    "skipped": 0
+  },
+  "ChIJsXCptzjJ5zsRlS-bPoti--k": {
+    "status": "DONE",
+    "name": "Lilavati Hospital And Research Centre",
+    "city": "Mumbai",
+    "chain": "Lilavati Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJI_H6dN6TyzsRrSp6bLxXKnE": {
+    "status": "DONE",
+    "name": "Medicover Hospitals | Best Women & Child Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Medicover Hospitals",
+    "created": 8,
+    "skipped": 0
+  },
+  "ChIJQz1rsEgRrjsR3hOTTeUK9Kk": {
+    "status": "DONE",
+    "name": "Medicover Hospitals - Best Hospital in Whitefield, Bangalore",
+    "city": "Bengaluru",
+    "chain": "Medicover Hospitals",
+    "created": 1,
+    "skipped": 0
+  },
+  "ChIJPzOUEOYYDTkR4piY0Iy6IxE": {
+    "status": "DONE",
+    "name": "Max Hospital, Gurgaon | Best Hospital in Gurugram",
+    "city": "Gurugram",
+    "chain": "Max Hospital",
+    "created": 27,
+    "skipped": 0
+  },
+  "ChIJaUzg1x625zsRJCynVxLFYDg": {
+    "status": "DONE",
+    "name": "Kokilaben Dhirubhai Ambani Hospital and Medical Research Institute",
+    "city": "Mumbai",
+    "chain": "Kokilaben Dhirubhai Ambani Hospital",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJxytoD7U9rjsRTbKpinu3EAQ": {
+    "status": "DONE",
+    "name": "Fortis Hospital Rajajinagar, Bangalore - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "chain": "Fortis Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJZRSfo2mTyzsR3IEEw8xf6FM": {
+    "status": "DONE",
+    "name": "Medicover Hospitals | Best Cancer Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Medicover Hospitals",
+    "created": 16,
+    "skipped": 0
+  },
+  "ChIJAyTM23uZyzsRM1IGZeWW-TA": {
+    "status": "DONE",
+    "name": "Apollo Hospitals | Best Hospital in DRDO Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Apollo Hospitals",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJARq6BXdmUjoRoDB9LgeBl7U": {
+    "status": "DONE",
+    "name": "Apollo First Med Hospitals | Best Hospital in Kilpauk, Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 16,
+    "skipped": 0
+  },
+  "ChIJIewEV-caDTkRkk2Zq9D4Oto": {
+    "status": "DONE",
+    "name": "Max Super Speciality Hospital Dwarka",
+    "city": "Delhi",
+    "chain": "Max Hospital",
+    "created": 63,
+    "skipped": 0
+  },
+  "ChIJs_je5Cx3AjoRgBlLe-8Q9lM": {
+    "status": "DONE",
+    "name": "Fortis Hospital and Kidney Institute, Rash Behari, Kolkata - Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "chain": "Fortis Hospital",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJ__ghuWGRyzsRNlcmVgic6Lw": {
+    "status": "DONE",
+    "name": "BirthRight Maternity Hospital by Rainbow Hospitals, Hydernagar, Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Rainbow Children's Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJq-ChCFKZyzsRlmFgzfJPt_o": {
+    "status": "DONE",
+    "name": "Rainbow Childrens Hospital - Himayat Nagar, Hyderabad | Best Pediatric Hospital",
+    "city": "Hyderabad",
+    "chain": "Rainbow Children's Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJiwnwLPddUjoRAkRe6yGHimU": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Sholinganallur",
+    "city": "Chennai",
+    "chain": "Rainbow Children's Hospital",
+    "created": 6,
+    "skipped": 0
+  },
+  "ChIJpWqi2OPBwjsRFM9ummQ5tQY": {
+    "status": "DONE",
+    "name": "Sahyadri Hospitals Momstory, Hadapsar",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 1,
+    "skipped": 0
+  },
+  "ChIJEQGwpBUZrjsRtUz7saRRfHE": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital, Hebbal, Bengaluru - Best Pediatric Hospital",
+    "city": "Bengaluru",
+    "chain": "Rainbow Children's Hospital",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJCyF64WUTrjsRcSfT5oCa5_w": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital Sarjapur, Bangalore - Best Pediatric & Gyne Hospital",
+    "city": "Bengaluru",
+    "chain": "Rainbow Children's Hospital",
+    "created": 14,
+    "skipped": 0
+  },
+  "ChIJsw5pff3hDDkRbfDSH73qdd8": {
+    "status": "DONE",
+    "name": "Max Smart Super Speciality Hospital, Saket (Max Smart)",
+    "city": "New Delhi",
+    "chain": "Max Hospital",
+    "created": 14,
+    "skipped": 0
+  },
+  "ChIJ5fYZmxrO5zsRrokKoLjCucg": {
+    "status": "DONE",
+    "name": "Saifee Hospital",
+    "city": "Mumbai",
+    "chain": "Saifee Hospital",
+    "created": 15,
+    "skipped": 0
+  },
+  "ChIJf0PFktvjDDkRJgzo_9hrdwU": {
+    "status": "DONE",
+    "name": "Fortis C-Doc Hospital - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "chain": "Fortis Hospital",
+    "created": 7,
+    "skipped": 0
+  },
+  "ChIJhb0gaCgWrjsRfgsZxHqNSr8": {
+    "status": "DONE",
+    "name": "Manipal Hospital Malleshwaram IP Block",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ_XJDAiM9DTkRhtw8EOrQK5M": {
+    "status": "DONE",
+    "name": "Fortis Hospital, Manesar - Best Hospital in Manesar",
+    "city": "Gurugram",
+    "chain": "Fortis Hospital",
+    "created": 16,
+    "skipped": 0
+  },
+  "ChIJezSCgDKXyzsRAtgESjKpjOs": {
+    "status": "DONE",
+    "name": "Rainbow Children's Heart Institute, Banjara Hills, Hyderabad - Best Pediatric Cardiology Hospital",
+    "city": "Hyderabad",
+    "chain": "Rainbow Children's Hospital",
+    "created": 5,
+    "skipped": 0
+  },
+  "ChIJfZgY0ntvUjoRuTuNrOFus3c": {
+    "status": "DONE",
+    "name": "Apollo Hospitals | Best Hospital in Tondiarpet",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 2,
+    "skipped": 0
+  },
+  "ChIJtaDpdWbBwjsRXhkPYuCYIAE": {
+    "status": "DONE",
+    "name": "Sahyadri Hospitals Momstory, Nagar road",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJizXfUaMXrjsRBlf-ZLiEECE": {
+    "status": "DONE",
+    "name": "Manipal Hospital Malleshwaram OP Block",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 4,
+    "skipped": 0
+  },
+  "ChIJnY9ksvFnUjoRjWLFNFGg-uA": {
+    "status": "DONE",
+    "name": "Apollo Hospital, Greams Road Canteen",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 42,
+    "skipped": 0
+  },
+  "ChIJ910jqZkVrjsRgWwkrmelWUM": {
+    "status": "DONE",
+    "name": "Manipal Hospital Kanakapura road",
+    "city": "Bengaluru",
+    "chain": "Manipal Hospital",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJ6ZFP16LqwjsRFh3sJz75rn4": {
+    "status": "DONE",
+    "name": "Sahyadri Hospital, Bibwewadi, Pune",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 3,
+    "skipped": 0
+  },
+  "ChIJXZnIsFeRyzsRdyIOX_Fkofs": {
+    "status": "DONE",
+    "name": "Medicover Robotic Surgical Center | Best Robotic Surgery Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "chain": "Medicover Hospitals",
+    "created": 17,
+    "skipped": 0
+  },
+  "ChIJb8gPBYrlDDkRcPJYnngIy9Q": {
+    "status": "TIMEOUT",
+    "name": "Medanta Super Speciality Hospital | Best Hospital in Noida",
+    "city": "Noida",
+    "chain": "Medanta",
+    "created": 0,
+    "skipped": 0
+  },
+  "ChIJTdnW9llnUjoRV1EKFa8Hztw": {
+    "status": "DONE",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Anna Nagar, Chennai",
+    "city": "Chennai",
+    "chain": "Rainbow Children's Hospital",
+    "created": 6,
+    "skipped": 0
+  },
+  "ChIJE_ZhTgDBwjsR6z1wNm-mdfM": {
+    "status": "DONE",
+    "name": "Sahyadri Hospitals Momstory, Shivajinagar",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 23,
+    "skipped": 0
+  },
+  "ChIJZXzKtBDiDDkRTn40GtvibaM": {
+    "status": "DONE",
+    "name": "Rosewalk by Rainbow Hospitals - Premium Maternity Hospital in Panchsheel Park",
+    "city": "New Delhi",
+    "chain": "Rainbow Children's Hospital",
+    "created": 4,
+    "skipped": 0
+  },
+  "ChIJFaPSqWuFXjkRXTVrRC7ZUM0": {
+    "status": "DONE",
+    "name": "Apollo Speciality Hospitals City Centre - Ahmedabad | Best Hospital in Ahmedabad",
+    "city": "Ahmedabad",
+    "chain": "Apollo Hospitals",
+    "created": 3,
+    "skipped": 0
+  },
+  "ChIJ02vPUbe_wjsRaePS-V0YndI": {
+    "status": "DONE",
+    "name": "Sahyadri Hospital Kothrud",
+    "city": "Pune",
+    "chain": "Sahyadri Hospitals",
+    "created": 11,
+    "skipped": 0
+  },
+  "ChIJoaofe0BnUjoReTLBxctc5qc": {
+    "status": "DONE",
+    "name": "Apollo One Greams Road Chennai - Best Hospital in Chennai",
+    "city": "Chennai",
+    "chain": "Apollo Hospitals",
+    "created": 1,
+    "skipped": 0
+  }
+}

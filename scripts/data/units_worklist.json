@@ -1,0 +1,992 @@
+[
+  {
+    "placeId": "ChIJWbvfzGpmUjoRL23gpRAbDS4",
+    "name": "Apollo Hospital Greams Lane | Best Hospital in Chennai",
+    "city": "Chennai",
+    "address": "Greams Lane, 21, Greams Rd, Thousand Lights West, Thousand Lights, Chennai, Tamil Nadu 600006",
+    "rating": 4.7,
+    "userRatingCount": 55627,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJ344eNLV3AjoR4XJiiRSjC2I",
+    "name": "Apollo Multispeciality Hospitals | Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "address": "58, Canal Circular Rd, Kadapara, Phoolbagan, Kankurgachi, Kolkata, West Bengal 700054",
+    "rating": 4.7,
+    "userRatingCount": 47866,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJNyplNGaXyzsRv9XdgLqPd-s",
+    "name": "Apollo Hospitals | Best Hospital in Jubilee Hills Hyderabad",
+    "city": "Hyderabad",
+    "address": "Road No 72, opp. Bharatiya Vidya Bhavan School, Film Nagar, Jubilee Hills, Hyderabad, Telangana 500033",
+    "rating": 4.8,
+    "userRatingCount": 36291,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJocj7BfwRrjsRZhaB8omuyNQ",
+    "name": "Manipal Hospital Whitefield",
+    "city": "Bengaluru",
+    "address": "ITPL Main Rd, opposite PRESTIGE SHANTINIKETAN, KIADB Export Promotion Industrial Area, Whitefield, Bengaluru, Karnataka 560066",
+    "rating": 4.7,
+    "userRatingCount": 35318,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ9RESECWbXjkRRJNC2yNKNy8",
+    "name": "Shalby Multi-Specialty Hospitals",
+    "city": "Ahmedabad",
+    "address": "Shalby Hospitals, Sarkhej - Gandhinagar Hwy, opp. Karnavati Club, Ramdev Nagar, Ahmedabad, Gujarat 380015",
+    "rating": 4.8,
+    "userRatingCount": 29396,
+    "chain": "Shalby Hospitals"
+  },
+  {
+    "placeId": "ChIJEbUhJ8aj2zsROYVLeEdg110",
+    "name": "Medicover Hospitals - Best Hospital in Chh. Sambhaji Nagar",
+    "city": "Chhatrapati Sambhajinagar",
+    "address": "near, Chistiya Police Chowki, N-6, Cidco, Chhatrapati Sambhajinagar, Maharashtra 431003",
+    "rating": 4.9,
+    "userRatingCount": 28255,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJl5I8OpDD5zsRBWCFNF2iWLg",
+    "name": "Apollo Hospital Navi Mumbai - Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "address": "Plot no 13, Parsik Hill Rd, off Uran Road, Sector 23, CBD Belapur, Navi Mumbai, Maharashtra 400614",
+    "rating": 4.7,
+    "userRatingCount": 27528,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJayDGwMATrjsR3ceXkcPU2BI",
+    "name": "Manipal Hospitals",
+    "city": "Bengaluru",
+    "address": "98, HAL Old Airport Rd, Kodihalli, Bengaluru, Karnataka 560017",
+    "rating": 4.6,
+    "userRatingCount": 26735,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ56jk8S2HXjkRNItmRh8wGrc",
+    "name": "Shalby Hospital",
+    "city": "Ahmedabad",
+    "address": "Shalby Hospitals, Kathawada Rd, New India Colony, Naroda, Ahmedabad, Gujarat 382330",
+    "rating": 4.8,
+    "userRatingCount": 26563,
+    "chain": "Shalby Hospitals"
+  },
+  {
+    "placeId": "ChIJk2qqtMqQyzsRWsnz04V7Hkw",
+    "name": "Rainbow Children’s Hospital - Best Pediatric Hospital in Banjara Hills, Hyderabad",
+    "city": "Hyderabad",
+    "address": "Road No. 2, near Hotel Park Hyatt, Sri Nagar Colony, Kamalapuri Colony, Banjara Hills, Hyderabad, Telangana 500034",
+    "rating": 4.7,
+    "userRatingCount": 26483,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJKxBDpixxAjoR-xFiMonJ7a8",
+    "name": "Manipal Hospitals - Dhakuria",
+    "city": "Kolkata",
+    "address": "C.I.T Scheme, Gariahat Rd, Dhakuria, LXXII Block A, P-4 & 5, Kolkata, West Bengal 700029",
+    "rating": 4.7,
+    "userRatingCount": 25618,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ42Ok9N0XrjsRyGYL-4uYWkE",
+    "name": "Apollo Hospital | Best Hospital in Seshadripuram",
+    "city": "Bengaluru",
+    "address": "Old No. 28, 1, Platform Rd, near Mantri square mall, VV Giri Colony, Seshadripuram, Bengaluru, Karnataka 560020",
+    "rating": 4.8,
+    "userRatingCount": 25256,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJSxo6HfYNrjsRu4rk-Jxt-CQ",
+    "name": "Manipal Hospital Varthur Road",
+    "city": "Bengaluru",
+    "address": "Survey No. 10P &, 12P, Whitefield Main Rd, Varthur Kodi, Palm Meadows, Ramagondanahalli, Whitefield, Bengaluru, Karnataka 560066",
+    "rating": 4.7,
+    "userRatingCount": 24805,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJSd03gtJ1AjoRC84nsvCYTLI",
+    "name": "Manipal Hospitals Broadway",
+    "city": "Kolkata",
+    "address": "JC-16 & 17, No. 3A, Broadway Rd, opp. to Stadium Gate, JC Block, Sector 3, Bidhannagar, Kolkata, West Bengal 700106",
+    "rating": 4.7,
+    "userRatingCount": 24713,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ9-3GUiEVrjsRhxoikQoujIM",
+    "name": "Apollo Hospitals | Best Hospital in Bannerghatta Road, Bengaluru",
+    "city": "Bengaluru",
+    "address": "IIM, 154/11, Bannerghatta Rd, opposite Krishnaraju Layout, Krishnaraju Layout, Amalodbhavi Naga, Panduranga Nagar, Bengaluru, Karnataka 560076",
+    "rating": 4.7,
+    "userRatingCount": 23936,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJVVVVVSoWrjsRBXAJZI0ibYg",
+    "name": "Manipal Hospital Yeshwanthpur",
+    "city": "Bengaluru",
+    "address": "26/4, BRIGADE GATEWAY, beside Metro, Yeswanthpur, Bengaluru, Karnataka 560055",
+    "rating": 4.7,
+    "userRatingCount": 23439,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJEfRVcCMVrjsRJZ6qMWbCCHM",
+    "name": "Fortis Hospital, Bannerghatta Road - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "address": "154, 9, Bannerghatta Rd, opposite IIM, Sahyadri Layout, Panduranga Nagar, Bengaluru, Karnataka 560076",
+    "rating": 4.7,
+    "userRatingCount": 23404,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJxatUrvDO5zsRbXpEagVP2ts",
+    "name": "Gleneagles Hospital - Top Multi Speciality Hospital in Mumbai",
+    "city": "Mumbai",
+    "address": "35, Dr Ernest Borges Rd, opp. Shirodkar High School, Parel East, Parel, Mumbai, Maharashtra 400012",
+    "rating": 4.8,
+    "userRatingCount": 22933,
+    "chain": "Gleneagles Hospital"
+  },
+  {
+    "placeId": "ChIJ7UDMkl9xAjoR6hQmPDygLfk",
+    "name": "Manipal Hospital EM Bypass",
+    "city": "Kolkata",
+    "address": "127, Eastern Metropolitan Bypass, Nitai Nagar, Mukundapur, Kolkata, West Bengal 700099",
+    "rating": 4.6,
+    "userRatingCount": 20749,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJMXKoEOBzAjoRec8B2wUFRSg",
+    "name": "Manipal Hospitals - Mukundapur",
+    "city": "Kolkata",
+    "address": "223 & 230, Pano Rd, behind Metro Cash & Carry, Purba Jadavpur, Landmark:, Kolkata, West Bengal 700099",
+    "rating": 4.8,
+    "userRatingCount": 20039,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJZyT5_umTyzsR1xWsZCiId4s",
+    "name": "AIG Hospitals",
+    "city": "Hyderabad",
+    "address": "1-66/AIG/2 to 5, Mindspace Rd, P Janardhan Reddy Nagar, Gachibowli, Hyderabad, Telangana 500032",
+    "rating": 4.2,
+    "userRatingCount": 19836,
+    "chain": "AIG Hospitals"
+  },
+  {
+    "placeId": "ChIJy6Lb3diBXjkRsuw-XSlQSqc",
+    "name": "Apollo Hospital International Ahmedabad | Best Hospital in Ahmedabad",
+    "city": "Ahmedabad",
+    "address": "Plot No, 1A, Ahmedabad - Gandhinagar Rd, GIDC Bhat, estate, Ahmedabad, Gujarat 382428",
+    "rating": 4.7,
+    "userRatingCount": 19366,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJIa-2M5YCDTkRiMG8YzsyZ5o",
+    "name": "BLK-Max Super Speciality Hospital Delhi",
+    "city": "New Delhi",
+    "address": "Pusa Rd, Radha Soami Satsang, Rajinder Nagar, New Delhi, Delhi, 110005",
+    "rating": 4.6,
+    "userRatingCount": 18870,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJb0_P4DobDTkRbVLBAy9VVew",
+    "name": "Manipal Hospital Delhi",
+    "city": "Delhi",
+    "address": "Manipal Hospital, Sector 6 Dwarka, Dwarka, Delhi, 110075",
+    "rating": 4.6,
+    "userRatingCount": 17672,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJpX3mkwJnUjoRZ3JCpOe-enE",
+    "name": "Apollo Children's Hospital Chennai - Best Children's Hospital in Chennai",
+    "city": "Chennai",
+    "address": "Apollo Children Hospital, 15, Shafee Mohammed Rd, Thousand Lights West, Thousand Lights, Chennai, Tamil Nadu 600006",
+    "rating": 4.9,
+    "userRatingCount": 17344,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJdwmjhrXBwjsR5NVuBvruOwg",
+    "name": "Sahyadri Super Speciality Hospital Nagar Road",
+    "city": "Pune",
+    "address": "Pune Nagar Rd, near HERMES HERITAGE, Hermes Heritage Society Phase 1, Shastrinagar, Yerawada, Pune, Maharashtra 411006",
+    "rating": 4.7,
+    "userRatingCount": 17212,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJ-d2lJo8XrjsRlge4yFlLCpM",
+    "name": "Manipal Hospital Hebbal",
+    "city": "Bengaluru",
+    "address": "Manipal Hospital, Kirloskar Business Park, Bellary Rd, Hebbal Kempapura, Bengaluru, Karnataka 560024",
+    "rating": 4.6,
+    "userRatingCount": 16837,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJUbDFFnthUjoRcPMlouiEc6Y",
+    "name": "Apollo Speciality Hospitals | Best Hospital in Vanagaram",
+    "city": "Chennai",
+    "address": "Plot No, 64, Vanagaram-Ambattur Rd, Ayanambakkam, Ambattur Industrial Estate, Chennai, Tamil Nadu 600095",
+    "rating": 4.8,
+    "userRatingCount": 16520,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJ-bdozjoXrjsRdNsuZM6ecaQ",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital, Bengaluru",
+    "city": "Bengaluru",
+    "address": "Survey No. 8/5, Marathahalli-KR Puram, Outer Ring Rd, Ferns City, Doddanekundi, Marathahalli, Bengaluru, Karnataka 560037",
+    "rating": 4.6,
+    "userRatingCount": 16045,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJ1b_L7d2TyzsRcmghZhoAyVM",
+    "name": "Medicover Hospitals - Best Hospital in Hyderabad - Hitech City",
+    "city": "Hyderabad",
+    "address": "Behind Cyber Towers, In, the Lane of IBIS Hotels, HUDA Techno Enclave, HITEC City, Hyderabad, Telangana 500082",
+    "rating": 4.6,
+    "userRatingCount": 15241,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJq6qqmuYZDTkRq8WkAJdnDtQ",
+    "name": "Manipal Hospital, Palam Vihar, Gurugram",
+    "city": "Gurugram",
+    "address": "Gol Chakkar, Carterpuri Rd, Block F, Palam Vihar, Gurugram, Haryana 122017",
+    "rating": 4.7,
+    "userRatingCount": 15143,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJH1XCpYm_wjsRi58ExuGvoeU",
+    "name": "Sahyadri Super Speciality Hospital, Deccan Gymkhana, Pune",
+    "city": "Pune",
+    "address": "Plot No. 30-C, Karve Rd, Kachare Colony, Deccan Gymkhana, Pune, Maharashtra 411004",
+    "rating": 4.7,
+    "userRatingCount": 15104,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJmarqE63mDDkRd228dtR6wDs",
+    "name": "Indraprastha Apollo Hospital | Best Hospital in Delhi",
+    "city": "New Delhi",
+    "address": "NH-19, Jasola Vihar, New Delhi, Delhi 110020",
+    "rating": 4.7,
+    "userRatingCount": 14890,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJfwlxH37BwjsROeG41SeLErg",
+    "name": "Manipal Hospital, Kharadi - Pune",
+    "city": "Pune",
+    "address": "22/2A, Mundhwa - Kharadi Rd, near Nyati Empire, Santipur, Thite Nagar, Kharadi, Pune, Maharashtra 411014",
+    "rating": 4.6,
+    "userRatingCount": 14006,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJMzXuqCfD5zsRKeGBmJs_ZAk",
+    "name": "Medicover Hospitals - Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "address": "Sector 10, Kharghar, Navi Mumbai, Panvel, Maharashtra 410210",
+    "rating": 4.7,
+    "userRatingCount": 13426,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJ13jtbPfBwjsRq-ooUa9y-u8",
+    "name": "Sahyadri Super Speciality Hospital Hadapsar",
+    "city": "Pune",
+    "address": "SN 163, Bhosale Garden Rd, beside Bhosale Nagar, Aru Nagar, Laxmi Vihar, Hadapsar, Pune, Maharashtra 411028",
+    "rating": 4.7,
+    "userRatingCount": 13109,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJaWKSEAAVrjsRxivsUN0_7wU",
+    "name": "Apollo Speciality Hospital | Best Hospital in Jayanagar",
+    "city": "Bengaluru",
+    "address": "14th Cross Road, 212, Dr Parvathamma Rajkumar Rd, near Madhavan Park Circle, Bairasandra Extension, Jaya Nagar 1st Block, Jayanagar 3rd Block, Jayanagar, Bengaluru, Karnataka 560011",
+    "rating": 4.7,
+    "userRatingCount": 12720,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJr7tpuJLjDDkRsnHyphu3XYY",
+    "name": "Fortis Escorts Heart Institute - Heart Hospital Okhla",
+    "city": "New Delhi",
+    "address": "Metro Station, Okhla Rd, opposite Sukhdev Vihar, New Friends Colony, New Delhi, Delhi 110025",
+    "rating": 4.7,
+    "userRatingCount": 12541,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJYdMKQV645zsRluAWkv57qWw",
+    "name": "Fortis Hospital Mulund | Best Hospital in Mumbai",
+    "city": "Mumbai",
+    "address": "Mulund - Goregaon Link Rd Nahur West, Industrial Area, Bhandup West, Nahur West, Industrial Area, Mulund West, Mumbai, Maharashtra 400078",
+    "rating": 4.7,
+    "userRatingCount": 12530,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJL7ZvITo_rjsRzxi2W6kFUhk",
+    "name": "Gleneagles BGS Hospital - Top Multi Speciality Hospital in Kengeri, Bengaluru",
+    "city": "Bengaluru",
+    "address": "67, Uttarahalli Main Rd, Sunkalpalya, Bengaluru, Karnataka 560060",
+    "rating": 4.7,
+    "userRatingCount": 12487,
+    "chain": "Gleneagles Hospital"
+  },
+  {
+    "placeId": "ChIJYbankXATrjsRKSv7Mz8Xw-0",
+    "name": "Manipal Hospitals Sarjapur Road",
+    "city": "Bengaluru",
+    "address": "Survey no 45/2, ward. 150, Sarjapur - Marathahalli Rd, opposite Iblur, Amblipura, PWD Quarters, Ambalipura, Bellandur, Bengaluru, Karnataka 560102",
+    "rating": 4.5,
+    "userRatingCount": 12392,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJs1fP4e4YDTkR1JkT33Kmbxk",
+    "name": "Fortis Hospital Gurgaon - Best Hospital in Gurugram",
+    "city": "Gurugram",
+    "address": "Sector - 44, Opposite HUDA City Centre, Sector 44, Gurugram, Haryana 122003",
+    "rating": 4.6,
+    "userRatingCount": 12349,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJz3GebiACDTkRtGjNGCZUlrA",
+    "name": "Fortis Hospital, Shalimar Bagh - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "address": "AA-299, Shaheed Udham Singh Marg, AA Block, Poorbi Shalimar Bag, Shalimar Bagh, New Delhi, Delhi, 110088",
+    "rating": 4.6,
+    "userRatingCount": 12135,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJ6YOG6P5zAjoRmpCWayzrM7s",
+    "name": "Fortis Hospital, Anandapur - Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "address": "730, Eastern Metropolitan Bypass, Anandapur, East Kolkata Twp, Kolkata, West Bengal 700107",
+    "rating": 4.3,
+    "userRatingCount": 12079,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJ376MRgkVrjsRJgxt284scaU",
+    "name": "Manipal Hospitals Jayanagar",
+    "city": "Bengaluru",
+    "address": "27th Cross Road, opp. Bangalore, Kottapalya, Jayanagara 9th Block, Jayanagar, Bengaluru, Karnataka 560069",
+    "rating": 4.7,
+    "userRatingCount": 11727,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJEevu9DLB5zsRM7zvXH-O-rs",
+    "name": "Fortis Hiranandani Hospital, Vashi | Best Hospital in Navi Mumbai",
+    "city": "Navi Mumbai",
+    "address": "Mini, Seashore Rd, Juhu Nagar, Sector 10A, Vashi, Navi Mumbai, Maharashtra 400703",
+    "rating": 4.7,
+    "userRatingCount": 11217,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJVVVVVWrmDDkRRMvnsvw60ew",
+    "name": "Max Super Speciality Hospital, Sector 128, Noida",
+    "city": "Noida",
+    "address": "Jaypee Hospital Rd, Goberdhanpur, Sector 128, Noida, Uttar Pradesh 201304",
+    "rating": 4.4,
+    "userRatingCount": 11110,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJc2UgFw9dUjoRITlYPo2ZXts",
+    "name": "Apollo Speciality Hospital | Best Hospital in OMR Chennai",
+    "city": "Chennai",
+    "address": "5/639, Rajiv Gandhi Salai, Tirumalai Nagar, Perungudi, Chennai, Tamil Nadu 600096",
+    "rating": 4.6,
+    "userRatingCount": 11077,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJachKp6fH5zsRarJmdOryU_I",
+    "name": "Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",
+    "city": "Mumbai",
+    "address": "CTS 1900-1917, Lal Bahadur Shastri Marg, Gandhi Nagar, Kirti Vihar, Ghatkopar West, Mumbai, Maharashtra 400086",
+    "rating": 4.8,
+    "userRatingCount": 10786,
+    "chain": "Shalby Hospitals"
+  },
+  {
+    "placeId": "ChIJ-0d-o9CTyzsR4aDotaHSCNQ",
+    "name": "Medicover Outpatient Center - Best Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "address": "Medicover Out Patient Center, HUDA Techno Enclave, HITEC City, Hyderabad, Telangana 500081",
+    "rating": 4.9,
+    "userRatingCount": 10687,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJD6E7ZwpcUjoRQxH1tCr6p8s",
+    "name": "Gleneagles Hospitals - Top Multi Speciality Hospital in Chennai",
+    "city": "Chennai",
+    "address": "439, Cheran Nagar, Sholinganallur, Perumbakkam, Chennai, Tamil Nadu 600100",
+    "rating": 4.7,
+    "userRatingCount": 10232,
+    "chain": "Gleneagles Hospital"
+  },
+  {
+    "placeId": "ChIJ7UL4ix2SyzsRz5BciHgDkfA",
+    "name": "Rainbow Children’s Hospital - Best Pediatric Hospital in Hyder Nagar, Hyderabad",
+    "city": "Hyderabad",
+    "address": "Plot No. 1, Mumbai Hwy, opposite Chermas Cinemas, Block 5, Hyder Nagar, Kukatpally, Hyderabad, Telangana 500085",
+    "rating": 4.5,
+    "userRatingCount": 10142,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJfd1DFBIVrjsRilR8_HDs7kQ",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Bannerghatta",
+    "city": "Bengaluru",
+    "address": "178/1 & 178/2, Bannerghatta Rd, opposite Janardhan Towers, Dollars Colony, Phase 4, Bilekahalli, Bengaluru, Karnataka 560078",
+    "rating": 4.5,
+    "userRatingCount": 10100,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJG3WfyG4YDTkRrFxnxC-zKtw",
+    "name": "Medanta - The Medicity, Gurugram",
+    "city": "Gurugram",
+    "address": "Medanta- The Medicity, CH Baktawar Singh Rd, Medicity, Islampur Colony, Sector 38, Gurugram, Haryana 122001",
+    "rating": 4.2,
+    "userRatingCount": 9753,
+    "chain": "Medanta"
+  },
+  {
+    "placeId": "ChIJ7Y5UPHcWrjsRaWlLJh77AP8",
+    "name": "Fortis Hospital, Nagarbhavi - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "address": "Survey No 23, Building, 119, 80 Feet Main Rd, NGEF Layout, Nagarbhavi, Bengaluru, Karnataka 560072",
+    "rating": 4.7,
+    "userRatingCount": 9559,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJw7Gym_NnUjoRwyr_XUH-z0k",
+    "name": "Rainbow Children’s Hospital, Guindy , Chennai - Best Pediatric Hospital",
+    "city": "Chennai",
+    "address": "Metro Station, 157, Anna Salai, near Little Mount, Gotha Medu Housing Board, Guindy, Chennai, Tamil Nadu 600015",
+    "rating": 4.7,
+    "userRatingCount": 9348,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJ-8XUJ_ThDDkRwQuX9LtHLVg",
+    "name": "Max Super Speciality Hospital, Saket (Max Saket)",
+    "city": "New Delhi",
+    "address": "1 2, Press Enclave Marg, Saket Institutional Area, Saket, New Delhi, Delhi 110017",
+    "rating": 4.2,
+    "userRatingCount": 8992,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJe4nnk97A5zsRm-hEdyMXGYs",
+    "name": "Kokilaben Dhirubhai Ambani Hospital",
+    "city": "Navi Mumbai",
+    "address": "X8 &, X8, 1, Thane - Belapur Rd, opp. Kopar Khairane Ghansoli Station Road, Dhirubhai Ambani Knowledge City, MIDC Industrial Area, Kopar Khairane, Navi Mumbai, Maharashtra 400709",
+    "rating": 4.6,
+    "userRatingCount": 8643,
+    "chain": "Kokilaben Dhirubhai Ambani Hospital"
+  },
+  {
+    "placeId": "ChIJbx53lGpmUjoRarOqQF5M378",
+    "name": "Apollo Women's Hospital - Best Women's Hospital in Chennai",
+    "city": "Chennai",
+    "address": "16/7, Shafee Mohammed Rd, Thousand Lights West, Thousand Lights, Chennai, Tamil Nadu 600006",
+    "rating": 4.8,
+    "userRatingCount": 8559,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJyT7BhC_J5zsRNoVeG78cfIA",
+    "name": "Fortis S L Raheja Hospital - Best Hospital in Mumbai",
+    "city": "Mumbai",
+    "address": "Raheja Rugnalaya Marg, Mahim West, Mahim, Mumbai, Maharashtra 400016",
+    "rating": 4.8,
+    "userRatingCount": 7864,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJqbKnFPjhDDkRZ2uI0KoUQJg",
+    "name": "Madhukar Rainbow Children’s Hospital – Best Pediatric Hospital in Delhi",
+    "city": "New Delhi",
+    "address": "FC-29 5, Geetanjali Marg, near Malviya Nagar, Block A, Shivalik Colony, Malviya Nagar, New Delhi, Delhi 110017",
+    "rating": 4.8,
+    "userRatingCount": 7549,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJQTS66mkWrjsRDaVTOssE4S0",
+    "name": "Manipal Hospital Millers Road",
+    "city": "Bengaluru",
+    "address": "71/1, Millers Rd, opp. to St. Anne's College, Vasanth Nagar, Bengaluru, Karnataka 560001",
+    "rating": 4.5,
+    "userRatingCount": 7511,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJDwuAR2gWrjsRyCp4aIz0cFY",
+    "name": "Fortis Hospital Bangalore | Cunningham Road - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "address": "14, Cunningham Rd, near Sigma Central Mall, Vasanth Nagar, Bengaluru, Karnataka 560001",
+    "rating": 4.6,
+    "userRatingCount": 7414,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJs_DznHHvDDkRSKfcT9pPTcI",
+    "name": "Fortis Hospital Noida - Best Hospital in Noida",
+    "city": "Noida",
+    "address": "Vishwakarma Rd, Rasoolpur Nawada, D Block, Sector 62, Noida, Uttar Pradesh 201301",
+    "rating": 4.2,
+    "userRatingCount": 7335,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJq6qqGq3lDDkRaPwgMvH9ijo",
+    "name": "Apollo Hospitals Noida | Best Hospital In Noida",
+    "city": "Noida",
+    "address": "E 2, Apollo Hospitals Rd, Block E, Sector 26, Noida, Uttar Pradesh 201301",
+    "rating": 4.7,
+    "userRatingCount": 6935,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJ8_qnyIqEXjkRv7qiBk3ozYI",
+    "name": "Krishna Shalby Multi-Specialty Hospital",
+    "city": "Ahmedabad",
+    "address": "Green City, 319, Ghuma Rd, Bopal, Ahmedabad, Gujarat 380058",
+    "rating": 4.8,
+    "userRatingCount": 6795,
+    "chain": "Shalby Hospitals"
+  },
+  {
+    "placeId": "ChIJ1xYU6p4BDTkRhgwBKNa8x8Q",
+    "name": "Max Super Speciality Hospital, Shalimar Bagh",
+    "city": "New Delhi",
+    "address": "FC 50, Max Wali Rd, C and D Block, Shalimar Place Site, Shalimar Bagh, New Delhi, Delhi, 110088",
+    "rating": 4.3,
+    "userRatingCount": 6697,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJQQkWz0KXyzsR_Mj3udGVb00",
+    "name": "Gleneagles Hospital - Top Multi Speciality Hospital in Lakdikapul, Hyderabad",
+    "city": "Hyderabad",
+    "address": "6-1-1040/1 to 4, Lakdikapul, Hyderabad, Telangana 500004",
+    "rating": 4.8,
+    "userRatingCount": 6564,
+    "chain": "Gleneagles Hospital"
+  },
+  {
+    "placeId": "ChIJAQAADAgdDTkRNYlw_8fraNw",
+    "name": "Fortis Flt Lt Rajan Dhall Hospital, Vasant Kunj - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "address": "Fortis Flt. Lt. Rajan Dhall Hospital, Aruna Asaf Ali Marg, Pocket 1, Sector B, Vasant Kunj, New Delhi, Delhi 110070",
+    "rating": 4.5,
+    "userRatingCount": 6501,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJnay1WDX7DDkRxaNyZzwOWY0",
+    "name": "Max Super Speciality Hospital, Patparganj",
+    "city": "Delhi",
+    "address": "108A, IP Extension, I.P.Extension, Patparganj, Delhi, 110092",
+    "rating": 4.2,
+    "userRatingCount": 6409,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJGQs9UcF1AjoRy-jOoJdVrw4",
+    "name": "Manipal Hospital, Salt Lake",
+    "city": "Kolkata",
+    "address": "IB-193, Broadway Rd, IB Block, Sector 3, Bidhannagar, Kolkata, West Bengal 700106",
+    "rating": 4.5,
+    "userRatingCount": 5619,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJYcI0nLrJ5zsRVYAvxUyzk64",
+    "name": "Nanavati Max Super Speciality Hospital Mumbai",
+    "city": "Mumbai",
+    "address": "Nanavati Max Super Speciality Hospital, Swami Vivekanand Rd, next to Suresh Colony, LIC Colony, Suresh Colony, Vile Parle West, Mumbai, Maharashtra 400056",
+    "rating": 4.5,
+    "userRatingCount": 5610,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJse9bvrWZyzsR2p0v-0N7k1k",
+    "name": "Apollo Hospitals Hyderguda | Best Hospital in Hyderguda, Hyderabad",
+    "city": "Hyderabad",
+    "address": "Plot No. 3-5-836 to 838, Hyderguda-Basheerbagh Rd, Old MLA Quarters, King Koti, Hyderabad, Hyderguda, Telangana 500029",
+    "rating": 4.7,
+    "userRatingCount": 5320,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJsXCptzjJ5zsRlS-bPoti--k",
+    "name": "Lilavati Hospital And Research Centre",
+    "city": "Mumbai",
+    "address": "A-791, Bandra Reclamation Rd, General Arunkumar Vaidya Nagar, Bandra West, Mumbai, Maharashtra 400050",
+    "rating": 4.5,
+    "userRatingCount": 5265,
+    "chain": "Lilavati Hospital"
+  },
+  {
+    "placeId": "ChIJI_H6dN6TyzsRrSp6bLxXKnE",
+    "name": "Medicover Hospitals | Best Women & Child Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "address": "beside SHILPARAMAM, opp. Hitex Charminar, Jubilee Enclave, HITEC City, Hyderabad, Telangana 500081",
+    "rating": 4.7,
+    "userRatingCount": 5252,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJQz1rsEgRrjsR3hOTTeUK9Kk",
+    "name": "Medicover Hospitals - Best Hospital in Whitefield, Bangalore",
+    "city": "Bengaluru",
+    "address": "351 ITPL Main Road, Whitefield Road, ITPL Main Road Hoodi Village, Krishnarajapura, Hobli, Hoodi, Krishnappa Garden, Krishnarajapuram, Bengaluru, Karnataka 560048",
+    "rating": 4.6,
+    "userRatingCount": 5141,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJPzOUEOYYDTkR4piY0Iy6IxE",
+    "name": "Max Hospital, Gurgaon | Best Hospital in Gurugram",
+    "city": "Gurugram",
+    "address": "B Block, Sushant Lok 1, Near Huda City Centre MF Husain Marg Near Huda City Centre, Sushant Lok Phase I, Sector 43, Gurugram, Haryana 122009",
+    "rating": 4.5,
+    "userRatingCount": 4893,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJaUzg1x625zsRJCynVxLFYDg",
+    "name": "Kokilaben Dhirubhai Ambani Hospital and Medical Research Institute",
+    "city": "Mumbai",
+    "address": "Rao Saheb Achutrao Patwardhan Marg, Four Bungalows, Andheri West, Mumbai, Maharashtra 400053",
+    "rating": 3.8,
+    "userRatingCount": 4892,
+    "chain": "Kokilaben Dhirubhai Ambani Hospital"
+  },
+  {
+    "placeId": "ChIJxytoD7U9rjsRTbKpinu3EAQ",
+    "name": "Fortis Hospital Rajajinagar, Bangalore - Best Hospital in Bangalore",
+    "city": "Bengaluru",
+    "address": "111, Chord Rd, opp. Rajajinagar, 1st Block, 2nd Stage, Junction, Bengaluru, Karnataka 560086",
+    "rating": 4.7,
+    "userRatingCount": 4375,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJZRSfo2mTyzsR3IEEw8xf6FM",
+    "name": "Medicover Hospitals | Best Cancer Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "address": "opposite Cyber Gateway, beside IBIS Hotel, HUDA Techno Enclave, HITEC City, Hyderabad, Telangana 500081",
+    "rating": 4.8,
+    "userRatingCount": 3862,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJAyTM23uZyzsRM1IGZeWW-TA",
+    "name": "Apollo Hospitals | Best Hospital in DRDO Hyderabad",
+    "city": "Hyderabad",
+    "address": "DMRL Cross Rd, Kanchanbagh, Hyderabad, Telangana 500058",
+    "rating": 4.6,
+    "userRatingCount": 3814,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJARq6BXdmUjoRoDB9LgeBl7U",
+    "name": "Apollo First Med Hospitals | Best Hospital in Kilpauk, Chennai",
+    "city": "Chennai",
+    "address": "Apollo First Med Hospital, 154, Poonamallee High Rd, New Bupathy Nagar, Kilpauk, Chennai, Tamil Nadu 600010",
+    "rating": 4.8,
+    "userRatingCount": 3807,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJIewEV-caDTkRkk2Zq9D4Oto",
+    "name": "Max Super Speciality Hospital Dwarka",
+    "city": "Delhi",
+    "address": "Plot No. 1, Sector 10 Dwarka, Dwarka, Delhi, 110075",
+    "rating": 4.5,
+    "userRatingCount": 3493,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJs_je5Cx3AjoRgBlLe-8Q9lM",
+    "name": "Fortis Hospital and Kidney Institute, Rash Behari, Kolkata - Best Hospital in Kolkata",
+    "city": "Kolkata",
+    "address": "111A, Rash Behari Ave, Dover Terrace, Gariahat, Kolkata, West Bengal 700029",
+    "rating": 4.5,
+    "userRatingCount": 3319,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJ__ghuWGRyzsRNlcmVgic6Lw",
+    "name": "BirthRight Maternity Hospital by Rainbow Hospitals, Hydernagar, Hyderabad",
+    "city": "Hyderabad",
+    "address": "Jai Bharat Nagar, 65-2-115, National Highway, Kukatpally Housing Board Colony, Dharma Reddy Colony Phase II, RamNaresh Nagar, Kukatpally, Hyderabad, Telangana 500085",
+    "rating": 4.9,
+    "userRatingCount": 3120,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJq-ChCFKZyzsRlmFgzfJPt_o",
+    "name": "Rainbow Childrens Hospital - Himayat Nagar, Hyderabad | Best Pediatric Hospital",
+    "city": "Hyderabad",
+    "address": "Old MLA Quarters Rd, AP State Housing Board, Himayatnagar, Hyderabad, Telangana 500029",
+    "rating": 4.8,
+    "userRatingCount": 3024,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJiwnwLPddUjoRAkRe6yGHimU",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Sholinganallur",
+    "city": "Chennai",
+    "address": "493, OMR - ECR Link road Toll 4A2B, Kalaignar Karunanidhi Salai, Ezhil Nagar, Sholinganallur, Chennai, Tamil Nadu 600119",
+    "rating": 4.7,
+    "userRatingCount": 2815,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJpWqi2OPBwjsRFM9ummQ5tQY",
+    "name": "Sahyadri Hospitals Momstory, Hadapsar",
+    "city": "Pune",
+    "address": "First Floor, 163A/1A/6, 163A/1A/7, Near, Bhosale Garden Rd, Laxmi Vihar, Hadapsar, Pune, Maharashtra 411028",
+    "rating": 4.9,
+    "userRatingCount": 2801,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJEQGwpBUZrjsRtUz7saRRfHE",
+    "name": "Rainbow Children's Hospital, Hebbal, Bengaluru - Best Pediatric Hospital",
+    "city": "Bengaluru",
+    "address": "International Airport Road, BIAL Road, Chandra Mouleshwara Swamy Temple Rd, opp. to Kodandarama, Sneha Nagar, Byatarayanapura, Byatarayanapura CMC and OG Part, Bengaluru, Karnataka 560092",
+    "rating": 4.5,
+    "userRatingCount": 2770,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJCyF64WUTrjsRcSfT5oCa5_w",
+    "name": "Rainbow Children's Hospital Sarjapur, Bangalore - Best Pediatric & Gyne Hospital",
+    "city": "Bengaluru",
+    "address": "3/2, Sarjapur Main Rd, next to Aishwarya Hyper City, Bellandur, Bengaluru, Karnataka 560102",
+    "rating": 4.7,
+    "userRatingCount": 2622,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJsw5pff3hDDkRbfDSH73qdd8",
+    "name": "Max Smart Super Speciality Hospital, Saket (Max Smart)",
+    "city": "New Delhi",
+    "address": "Press Enclave Marg, Saket District Centre, Saket, New Delhi, Delhi 110017",
+    "rating": 4.3,
+    "userRatingCount": 2456,
+    "chain": "Max Hospital"
+  },
+  {
+    "placeId": "ChIJ5fYZmxrO5zsRrokKoLjCucg",
+    "name": "Saifee Hospital",
+    "city": "Mumbai",
+    "address": "Saifee Hospital, Maharshi Karve Rd, opp. Charni Road, Charni Road East, Opera House, Girgaon, Mumbai, Maharashtra 400004",
+    "rating": 4.3,
+    "userRatingCount": 2297,
+    "chain": "Saifee Hospital"
+  },
+  {
+    "placeId": "ChIJf0PFktvjDDkRJgzo_9hrdwU",
+    "name": "Fortis C-Doc Hospital - Best Hospital in New Delhi",
+    "city": "New Delhi",
+    "address": "B-16, Nehru Place Flyover, opp. Devika Tower, Chirag Enclave, Greater Kailash, New Delhi, Delhi 110048",
+    "rating": 4.7,
+    "userRatingCount": 2291,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJhb0gaCgWrjsRfgsZxHqNSr8",
+    "name": "Manipal Hospital Malleshwaram IP Block",
+    "city": "Bengaluru",
+    "address": "71, 11th Main Rd, opp. Railway Station, Malleshwaram, Bengaluru, Karnataka 560003",
+    "rating": 4.7,
+    "userRatingCount": 2271,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ_XJDAiM9DTkRhtw8EOrQK5M",
+    "name": "Fortis Hospital, Manesar - Best Hospital in Manesar",
+    "city": "Gurugram",
+    "address": "Plot No. 2, Sector 5, Imt Manesar, Gurugram, Haryana 122052",
+    "rating": 4.7,
+    "userRatingCount": 2271,
+    "chain": "Fortis Hospital"
+  },
+  {
+    "placeId": "ChIJezSCgDKXyzsRAtgESjKpjOs",
+    "name": "Rainbow Children's Heart Institute, Banjara Hills, Hyderabad - Best Pediatric Cardiology Hospital",
+    "city": "Hyderabad",
+    "address": "Plot No, 22, Road No. 10, Avenue 4, Banjara Hills, Hyderabad, Telangana 500034",
+    "rating": 4.7,
+    "userRatingCount": 2149,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJfZgY0ntvUjoRuTuNrOFus3c",
+    "name": "Apollo Hospitals | Best Hospital in Tondiarpet",
+    "city": "Chennai",
+    "address": "645, Thiruvottiyur High Rd, Tondiarpet, Chennai, Tamil Nadu 600081",
+    "rating": 4.8,
+    "userRatingCount": 1953,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJtaDpdWbBwjsRXhkPYuCYIAE",
+    "name": "Sahyadri Hospitals Momstory, Nagar road",
+    "city": "Pune",
+    "address": "1st Floor, Sahyadri Super Speciality Hospital, Pune Nagar Rd, near Hermes Heritage, Hermes Heritage Society Phase 1, Shastrinagar, Yerawada, Pune, Maharashtra 411006",
+    "rating": 4.9,
+    "userRatingCount": 1879,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJizXfUaMXrjsRBlf-ZLiEECE",
+    "name": "Manipal Hospital Malleshwaram OP Block",
+    "city": "Bengaluru",
+    "address": "8th Main Road, 5/2, 13th Cross Rd, Mount Layout, Malleshwaram, Bengaluru, Karnataka 560003",
+    "rating": 4.7,
+    "userRatingCount": 1806,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJnY9ksvFnUjoRjWLFNFGg-uA",
+    "name": "Apollo Hospital, Greams Road Canteen",
+    "city": "Chennai",
+    "address": "Rina Mandal Rd, 21, Greams Ln, Thousand Lights West, Gandhi Nagar, Chennai, Tamil Nadu 600006",
+    "rating": 4.4,
+    "userRatingCount": 1778,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJ910jqZkVrjsRgWwkrmelWUM",
+    "name": "Manipal Hospital Kanakapura road",
+    "city": "Bengaluru",
+    "address": "241/359/358/314/13/3, Konanakunte Village, Ward No.197, Vasanthapura, metro station, Kanakapura Main Rd, Yelachenahalli, Uttarahalli Hobli, Bengaluru, Karnataka 560062",
+    "rating": 4.8,
+    "userRatingCount": 1740,
+    "chain": "Manipal Hospital"
+  },
+  {
+    "placeId": "ChIJ6ZFP16LqwjsRFh3sJz75rn4",
+    "name": "Sahyadri Hospital, Bibwewadi, Pune",
+    "city": "Pune",
+    "address": "S. No. 573, City No.281, Plot No. 13, Swami Vivekananda Marg, Parshwanath Nagar, Ramyanagari Housing Society, Bibwewadi, Pune, Maharashtra 411037",
+    "rating": 4.5,
+    "userRatingCount": 1343,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJXZnIsFeRyzsRdyIOX_Fkofs",
+    "name": "Medicover Robotic Surgical Center | Best Robotic Surgery Hospital in Hyderabad",
+    "city": "Hyderabad",
+    "address": "C9WH+JGM, HUDA Techno Enclave, HITEC City, Hyderabad, Telangana 500081",
+    "rating": 4.9,
+    "userRatingCount": 1265,
+    "chain": "Medicover Hospitals"
+  },
+  {
+    "placeId": "ChIJb8gPBYrlDDkRcPJYnngIy9Q",
+    "name": "Medanta Super Speciality Hospital | Best Hospital in Noida",
+    "city": "Noida",
+    "address": "F Block, Sector 50, Noida, Uttar Pradesh 201303",
+    "rating": 4.6,
+    "userRatingCount": 1263,
+    "chain": "Medanta"
+  },
+  {
+    "placeId": "ChIJTdnW9llnUjoRV1EKFa8Hztw",
+    "name": "Rainbow Children's Hospital - Best Pediatric Hospital in Anna Nagar, Chennai",
+    "city": "Chennai",
+    "address": "Pillaiyar Koil St, Thirumangalam, Chennai, Tamil Nadu 600050",
+    "rating": 4.7,
+    "userRatingCount": 1227,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJE_ZhTgDBwjsR6z1wNm-mdfM",
+    "name": "Sahyadri Hospitals Momstory, Shivajinagar",
+    "city": "Pune",
+    "address": "opp. Sakhar Sankul, Anutej Atharv society, Narveer Tanaji Wadi, Shivajinagar, Pune, Maharashtra 411005",
+    "rating": 4.9,
+    "userRatingCount": 1199,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJZXzKtBDiDDkRTn40GtvibaM",
+    "name": "Rosewalk by Rainbow Hospitals - Premium Maternity Hospital in Panchsheel Park",
+    "city": "New Delhi",
+    "address": "N-88, Block N, Panchsheel Park North, Panchsheel Park, New Delhi, Delhi 110017",
+    "rating": 4.8,
+    "userRatingCount": 1092,
+    "chain": "Rainbow Children's Hospital"
+  },
+  {
+    "placeId": "ChIJFaPSqWuFXjkRXTVrRC7ZUM0",
+    "name": "Apollo Speciality Hospitals City Centre - Ahmedabad | Best Hospital in Ahmedabad",
+    "city": "Ahmedabad",
+    "address": "Akshara Complex, 12, Shanti Sadan Co-op Housing Soc limited, Bhagini Nivedita Railway Upas, near Parimal Garden, Shanti Sadan Society, Ellisbridge, Ahmedabad, Gujarat 380006",
+    "rating": 4.4,
+    "userRatingCount": 1052,
+    "chain": "Apollo Hospitals"
+  },
+  {
+    "placeId": "ChIJ02vPUbe_wjsRaePS-V0YndI",
+    "name": "Sahyadri Hospital Kothrud",
+    "city": "Pune",
+    "address": "S.No.1484A/B, Neena Co-op. Housing Society, Plot No. 9-B, Paud Rd, Off Vanaz Engineers Limited, Lokmanya Colony, Kothrud, Pune, Maharashtra 411038",
+    "rating": 4.2,
+    "userRatingCount": 1043,
+    "chain": "Sahyadri Hospitals"
+  },
+  {
+    "placeId": "ChIJoaofe0BnUjoReTLBxctc5qc",
+    "name": "Apollo One Greams Road Chennai - Best Hospital in Chennai",
+    "city": "Chennai",
+    "address": "Apollo Hospital, Enterprise Limited, 14, Greams Rd, Thousand Lights West, Thousand Lights, Chennai, Tamil Nadu 600006",
+    "rating": 4.8,
+    "userRatingCount": 1042,
+    "chain": "Apollo Hospitals"
+  }
+]

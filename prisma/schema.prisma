@@ -1,0 +1,638 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  country   String?
+  phone     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reports          Report[]
+  bookings         Booking[]
+  recoveryPlans    RecoveryPlan[]
+  familyLinks      FamilyLink[]   @relation("PatientFamily")
+  familyOf         FamilyLink[]   @relation("FamilyMember")
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+  AGENT
+}
+
+model Report {
+  id               String   @id @default(cuid())
+  userId           String?
+  reportRef        String   @unique
+  filename         String?
+  fileType         String?
+  language         String?
+  confidence       Int?
+  conditionName    String?
+  conditionMedical String?
+  conditionPlain   String?
+  severity         String?
+  patientAge       Int?
+  patientName      String?
+  scanType         String?
+  scanDate         String?
+  referringDoctor  String?
+  flags            Json?
+  rawAnalysis      Json?
+  treatment        String?
+  country          String?
+  urgency          String?
+  createdAt        DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id])
+  booking Booking?
+
+  @@map("reports")
+}
+
+model Hospital {
+  id                   String  @id
+  name                 String
+  city                 String
+  country              String
+  flag                 String?
+  imageUrl             String?
+  jciAccredited        Boolean @default(false)
+  fairnessScore        Int?
+  overallRating        Float?
+  quotedPriceUsd       Int?
+  localPriceUsd        Int?
+  localBenchmarkUsd    Int?
+  included             Json?
+  notIncluded          Json?
+  pros                 Json?
+  cons                 Json?
+  mysteryShopperScore  Int?
+  patientsPerYear      Int?
+  internationalPercent String?
+  surgeonId            String?
+  // Dynamic data fields
+  specialty            String?
+  procedures           Json?
+  intlOfficePhone      String?
+  intlOfficeEmail      String?
+  website              String?
+  // Location (Google Places)
+  address              String?
+  latitude             Float?
+  longitude            Float?
+  googleMapsUri        String?
+
+  createdAt            DateTime @default(now())
+
+  surgeon  Surgeon?  @relation(fields: [surgeonId], references: [id])
+  reviews  Review[]
+  bookings Booking[]
+
+  @@map("hospitals")
+}
+
+model Surgeon {
+  id              String   @id
+  name            String
+  title           String?
+  hospital        String?
+  country         String?
+  flag            String?
+  photoUrl        String?
+  specialization  String?
+  yearsExperience Int?
+  totalProcedures Int?
+  aclSpecific     Int?
+  successRate     Float?
+  complications   Float?
+  education       Json?
+  publications    Int?
+  languages       Json?
+  awards          Json?
+  patientRating   Float?
+  avgSurgeryTime  String?
+  nextAvailable   String?
+  createdAt       DateTime @default(now())
+
+  hospitals Hospital[]
+
+  @@map("surgeons")
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  hospitalId   String
+  surgeonId    String?
+  reviewerName String
+  nationality  String?
+  age          Int?
+  procedure    String?
+  rating       Int
+  reviewDate   String?
+  text         String
+  textEn       String?  // English translation (set only when lang != en); powers the review language toggle
+  region       String?  // derived from nationality via the canonical region map (persisted for queries)
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  // Dynamic data fields
+  lang         String?
+  totalReviews Int?
+  link         String?
+  tokens       Json?
+  flags        Json?
+  contentHash  String?
+
+  hospital Hospital @relation(fields: [hospitalId], references: [id])
+
+  @@map("reviews")
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  userId       String
+  reportId     String?       @unique
+  hospitalId   String
+  plan         Plan          @default(ESSENTIAL)
+  status       BookingStatus @default(PENDING)
+  totalAmount  Int?
+  currency     String        @default("USD")
+  paymentRef   String?
+  travelDate   DateTime?
+  surgeryDate  DateTime?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  report   Report?   @relation(fields: [reportId], references: [id])
+  hospital Hospital  @relation(fields: [hospitalId], references: [id])
+
+  recoveryPlan    RecoveryPlan?
+  familyLinks     FamilyLink[]
+  statusUpdates   BookingStatusUpdate[]
+  milestones      BookingMilestone[]
+
+  @@map("bookings")
+}
+
+enum Plan {
+  ESSENTIAL
+  COMFORT
+  PREMIUM
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model RecoveryPlan {
+  id             String   @id @default(cuid())
+  userId         String
+  bookingId      String   @unique
+  checkIns       Json?
+  tips           Json?
+  handoff        Json?
+  insuranceClaim Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("recovery_plans")
+}
+
+model FamilyLink {
+  id         String   @id @default(cuid())
+  patientId  String
+  memberId   String?
+  bookingId  String
+  email      String?
+  name       String?
+  relation   String?
+  accessCode String   @unique @default(cuid())
+  createdAt  DateTime @default(now())
+
+  patient User    @relation("PatientFamily", fields: [patientId], references: [id])
+  member  User?   @relation("FamilyMember", fields: [memberId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("family_links")
+}
+
+// ─── New Dynamic Data Models ──────────────────────────────────────────────────
+
+model StayOrGoTemplate {
+  id               String @id @default(cuid())
+  procedure        String
+  homeCountry      String
+  homeCost         String
+  homeWaitTime     String
+  homeSuccessRate  String
+  homeRisk         String
+  homeQuality      String
+  indiaCost        String
+  indiaWaitTime    String
+  indiaSuccessRate String
+  indiaRisk        String
+  indiaQuality     String
+  recommendation   String
+  reasoning        String
+  summary          Json
+  riskTimeline     Json
+
+  @@unique([procedure, homeCountry])
+  @@map("stay_or_go_templates")
+}
+
+model TripPlanTemplate {
+  id             String  @id @default(cuid())
+  procedure      String
+  destination    String
+  timeline       Json
+  costs          Json
+  totalEstimate  String
+  travelTips     Json
+  insuranceAlert String?
+
+  @@unique([procedure, destination])
+  @@map("trip_plan_templates")
+}
+
+model FlightOption {
+  id          String  @id @default(cuid())
+  origin      String
+  destination String
+  airline     String
+  price       Int
+  duration    String
+  stops       String?
+  label       String?
+  bookingUrl  String?
+
+  @@map("flight_options")
+}
+
+model InsurancePlan {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  tagline     String?
+  pricePerDay Int
+  coverage    String
+  features    Json
+  recommended Boolean @default(false)
+  bookingUrl  String?
+
+  @@map("insurance_plans")
+}
+
+model RecoveryProtocol {
+  id        String @id @default(cuid())
+  procedure String @unique
+  checkIns  Json
+  tips      Json
+  handoff   Json
+
+  @@map("recovery_protocols")
+}
+
+model BookingStatusUpdate {
+  id        String   @id @default(cuid())
+  bookingId String
+  status    String
+  message   String
+  icon      String   @default("⚕️")
+  postedBy  String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("booking_status_updates")
+}
+
+model BookingMilestone {
+  id        String  @id @default(cuid())
+  bookingId String
+  label     String
+  done      Boolean @default(false)
+  active    Boolean @default(false)
+  sequence  Int
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("booking_milestones")
+}
+
+// ─── Admin: Botasaurus scrape jobs ────────────────────────────────────────────
+
+model ScrapeJob {
+  id          String          @id @default(cuid())
+  target      String          // 'jci' | 'surgeons' | 'prices'
+  params      Json?           // { location?, hospitalName?, ... }
+  status      ScrapeStatus    @default(PENDING)
+  created     Int             @default(0)
+  updated     Int             @default(0)
+  skipped     Int             @default(0)
+  stages      Json?           // per-stage breakdown for combined ('full') jobs
+  summary     Json?           // run summary: combination + fetched/foreign/new/updated
+  logPath     String?
+  output      String?         // tail of stdout/stderr for the admin to inspect
+  error       String?
+  triggeredBy String?         // admin user id
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("scrape_jobs")
+}
+
+enum ScrapeStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+// ─── Leads: medical-tourism prospecting (YouTube now; Reddit/Quora later) ──────
+
+enum LeadSource {
+  YOUTUBE
+  REDDIT
+  QUORA
+}
+
+enum LeadRegion {
+  USA
+  MIDDLE_EAST
+  AFRICA
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  REVIEWED
+  CONTACTED
+  QUALIFIED
+  REJECTED
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  source       LeadSource @default(YOUTUBE)
+  externalId   String     // platform id (YouTube video id)
+  title        String
+  description  String?
+  url          String
+  thumbnailUrl String?
+  channelId    String?
+  channelTitle String?
+  publishedAt  DateTime?
+  isShort      Boolean    @default(false)
+  region       LeadRegion @default(OTHER)
+  regionCode   String?    // ISO country code used in search / detected from channel
+  lang         String?
+  viewCount    Int?
+  likeCount    Int?
+  commentCount Int?
+  // Heuristic scoring
+  intentScore     Int   @default(0) // 0-100
+  matchedKeywords Json?
+  query           String?           // the search query that surfaced it
+  // Transcript + AI analysis (AI reads the full transcript to qualify/score)
+  transcript   String?   @db.Text // fetched video transcript (captions)
+  aiLead       Boolean?  // genuine medical-tourism lead?
+  aiConfidence Int?      // 0-100 (transcript-based lead score)
+  aiPersona    String?   // 'undecided' | 'cant_afford' | 'suffering' | 'researching'
+  aiProcedure  String?   // extracted condition / procedure
+  aiSummary    String?
+  // Workflow
+  status    LeadStatus @default(NEW)
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([source, externalId])
+  @@index([source, status])
+  @@index([region])
+  @@index([intentScore])
+  @@map("leads")
+}
+
+// Raw capture of EVERY video returned from a source during a generation run —
+// kept for later analysis, regardless of whether it qualified as a Lead. The
+// `leads` table stays the qualified-only set shown in the admin UI; this table is
+// the full funnel (including videos dropped at the heuristic floor or by the AI
+// gate). No extra quota cost: snippet data comes free with the search we already
+// pay for; stats/AI fields are only filled for candidates we already enrich.
+model CapturedVideo {
+  id           String     @id @default(cuid())
+  source       LeadSource @default(YOUTUBE)
+  externalId   String     // platform id (YouTube video id)
+  title        String
+  description  String?
+  url          String
+  thumbnailUrl String?
+  channelId    String?
+  channelTitle String?
+  publishedAt  DateTime?
+  isShort      Boolean    @default(false)
+  region       LeadRegion @default(OTHER)
+  regionCode   String?
+  lang         String?
+  viewCount    Int?
+  likeCount    Int?
+  commentCount Int?
+  // Heuristic scoring (computed for every captured video)
+  intentScore     Int     @default(0) // 0-100
+  matchedKeywords Json?
+  query           String?            // the search query that surfaced it
+  // AI classification (only for candidates above the heuristic floor)
+  aiLead       Boolean?
+  aiConfidence Int?
+  aiPersona    String?
+  aiProcedure  String?
+  aiSummary    String?
+  // Capture/funnel metadata for analysis
+  scored     Boolean  @default(false) // passed the heuristic minScore floor (was enriched + AI-classified)
+  qualified  Boolean  @default(false) // passed every gate and became/updated a Lead
+  dropReason String?  // why not qualified: 'below_minscore' | 'ai_rejected' | 'duplicate' | null when qualified
+  lastJobId  String?  // the LeadJob that last saw it
+  timesSeen  Int      @default(1)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([source, qualified])
+  @@index([intentScore])
+  @@index([lastJobId])
+  @@map("captured_videos")
+}
+
+model LeadJob {
+  id           String     @id @default(cuid())
+  source       LeadSource @default(YOUTUBE)
+  status       String     @default("PENDING") // PENDING | RUNNING | DONE | FAILED
+  trigger      String?    // 'manual' | 'scheduled'
+  params       Json?      // { regions, queryGroup, maxSearches }
+  quotaUsed    Int        @default(0)
+  found        Int        @default(0)
+  created      Int        @default(0)
+  updated      Int        @default(0)
+  aiClassified Int        @default(0)
+  error        String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@map("lead_jobs")
+}
+
+// ─── Bright Data social capture (Reddit / Quora / Instagram / Facebook) ────────
+// Raw demand-discovery data scraped via Bright Data's Web Scraper API, kept for
+// lead analysis. We SAVE EVERYTHING (full raw record JSON) and NEVER hard-delete —
+// removal is a soft delete (deletedAt) so the historical dataset stays intact for
+// improving the scoring/AI system later.
+enum CapturePlatform {
+  REDDIT
+  QUORA
+  INSTAGRAM
+  FACEBOOK
+  X
+}
+
+// AI verdict on what a captured post actually is, for the lead-analytics dashboard.
+// LEAD = a real person seeking/discussing treatment abroad for their own situation;
+// MARKETING = promo/ads/self-promotion/spam selling services; NEWS = articles /
+// informational broadcast; OTHER = off-topic / irrelevant.
+enum LeadCategory {
+  LEAD
+  MARKETING
+  NEWS
+  OTHER
+}
+
+model SourceCapture {
+  id         String          @id @default(cuid())
+  platform   CapturePlatform
+  externalId String          // platform id (reddit post_id, quora url, etc.)
+  url        String?
+  title      String?
+  body       String?         @db.Text // post/answer/caption text
+  author     String?
+  postedAt   DateTime?       // when the post itself was published (from the raw record)
+  raw        Json            // FULL Bright Data record — nothing is dropped
+  // 3-Signal Qualifier (from the Curify query-pack): procedure + cost + origin
+  hasProcedure Boolean @default(false)
+  hasCost      Boolean @default(false)
+  hasOrigin    Boolean @default(false)
+  signalCount  Int     @default(0) // 0..3
+  temperature  String? // 'hot' (3) | 'warm' (2) | 'cold' (<2)
+  procedures   Json?   // matched procedure terms
+  origins      Json?   // matched origin-country terms
+  intentScore  Int     @default(0) // 0-100
+  isSpam       Boolean @default(false) // academic-cheating/service spam — saved but hidden by default
+  // AI category for the lead-analytics dashboard (classifyCategories, batched)
+  category       LeadCategory? // null until classified
+  categoryReason String?       // one-line AI rationale
+  categorizedAt  DateTime?
+  // provenance
+  datasetId  String?
+  snapshotId String?
+  jobId      String?
+  keyword    String? // the discovery keyword / search that surfaced it
+  // Comment thread (fetched on demand via the Reddit Comments dataset)
+  comments         Json?     // array of comment records
+  commentsStatus   String?   // null | 'fetching' | 'done' | 'failed'
+  commentsFetchedAt DateTime?
+  // soft delete — rows are never physically removed
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([platform, externalId])
+  @@index([platform, deletedAt])
+  @@index([temperature])
+  @@index([signalCount])
+  @@index([postedAt])
+  @@index([isSpam])
+  @@index([category])
+  @@map("source_captures")
+}
+
+// One row per Bright Data collection run (trigger → snapshot → download).
+model BrightDataJob {
+  id            String          @id @default(cuid())
+  platform      CapturePlatform
+  datasetId     String
+  snapshotId    String?
+  mode          String // 'discover_keyword' | 'discover_search_url' | 'url'
+  inputs        Json
+  status        String          @default("PENDING") // PENDING|RUNNING|READY|DONE|FAILED
+  records       Int             @default(0) // records delivered (≈ credits spent)
+  saved         Int             @default(0) // rows upserted into source_captures
+  creditsApprox Int             @default(0)
+  trigger       String?         // 'manual' | 'scheduled'
+  error         String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("brightdata_jobs")
+}
+
+// Tracks per-provider daily API quota consumption (resets per Pacific day) so we
+// can cap YouTube usage at a configured fraction (default 70%) of the free quota.
+model ApiQuotaUsage {
+  id        String   @id @default(cuid())
+  provider  String   // 'youtube'
+  day       String   // 'YYYY-MM-DD' in America/Los_Angeles
+  unitsUsed Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, day])
+  @@map("api_quota_usage")
+}
+
+// ─── Sentinel: anti-scrape security watch ─────────────────────────────────────
+// One row per client IP that has tripped a guard (rate limit) or been blocked.
+// Powers the admin "Sentinel" screen and the in-memory IP blocklist.
+
+model SecurityEvent {
+  id            String   @id @default(cuid())
+  ip            String   @unique
+  lastPath      String?  // last route the IP hit
+  lastMethod    String?
+  lastUserAgent String?
+  rateLimitHits Int      @default(0) // # of 429s (throttler blocks)
+  blockedHits   Int      @default(0) // # of requests rejected while IP was blocked
+  totalHits     Int      @default(0) // rateLimitHits + blockedHits
+  blocked       Boolean  @default(false)
+  blockReason   String?
+  blockedBy     String?  // admin user id/email who blocked it
+  blockedAt     DateTime?
+  firstSeen     DateTime @default(now())
+  lastSeen      DateTime @updatedAt
+
+  @@index([blocked])
+  @@map("security_events")
+}
