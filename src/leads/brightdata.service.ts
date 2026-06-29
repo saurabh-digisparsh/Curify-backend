@@ -100,11 +100,55 @@ export class BrightDataService {
     return agg._sum.records ?? 0;
   }
   async remainingCredits(): Promise<number> {
+    // Hard stop if Bright Data's real account funds are exhausted (when readable).
+    const account = await this.accountBalance();
+    if (account && account.available <= 0) return 0;
     return Math.max(0, BRIGHT_DATA_CREDIT_CAP - (await this.spentCredits()));
   }
   async budget() {
-    const spent = await this.spentCredits();
-    return { cap: BRIGHT_DATA_CREDIT_CAP, spent, remaining: Math.max(0, BRIGHT_DATA_CREDIT_CAP - spent) };
+    const [spent, account] = await Promise.all([this.spentCredits(), this.accountBalance()]);
+    return {
+      cap: BRIGHT_DATA_CREDIT_CAP,
+      spent,
+      remaining: Math.max(0, BRIGHT_DATA_CREDIT_CAP - spent),
+      // Real Bright Data account balance (USD) from the Account Management API.
+      account: account ?? { configured: false as const },
+    };
+  }
+
+  /**
+   * Live account balance from Bright Data's Account Management API
+   * (GET /customer/balance → { balance, pending_balance }). Cached 60s so the stats
+   * endpoint doesn't hit the API on every call. Returns null if the key is missing,
+   * the token lacks the "balance" permission (403), or the request fails — callers
+   * then fall back to the local record-count budget.
+   */
+  private balanceCache: { at: number; data: { configured: true; balance: number; pendingBalance: number; available: number } | null } | null = null;
+  async accountBalance() {
+    if (!this.key) return null;
+    const now = Date.now();
+    if (this.balanceCache && now - this.balanceCache.at < 60_000) return this.balanceCache.data;
+    try {
+      const res = await fetch('https://api.brightdata.com/customer/balance', {
+        headers: { Authorization: `Bearer ${this.key}` },
+      });
+      if (!res.ok) {
+        const hint = res.status === 403 ? 'token lacks the "balance" permission (enable it at brightdata.com/cp/setting/users)' : `HTTP ${res.status}`;
+        this.logger.warn(`Bright Data balance API unavailable — ${hint}`);
+        this.balanceCache = { at: now, data: null };
+        return null;
+      }
+      const j: any = await res.json();
+      const balance = Number(j.balance ?? 0);
+      const pendingBalance = Number(j.pending_balance ?? j.pending_costs ?? 0);
+      const data = { configured: true as const, balance, pendingBalance, available: balance - pendingBalance };
+      this.balanceCache = { at: now, data };
+      return data;
+    } catch (e: any) {
+      this.logger.warn(`Bright Data balance fetch failed: ${e.message}`);
+      this.balanceCache = { at: now, data: null };
+      return null;
+    }
   }
 
   // ── Low-level Bright Data API ─────────────────────────────────────────────────

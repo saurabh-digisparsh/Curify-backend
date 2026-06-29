@@ -208,8 +208,9 @@ export const PAST_SIGNALS = [
 ];
 
 // ── Bright Data social capture (Reddit / Quora / Instagram / Facebook) ────────
-// Hard cap on Bright Data spend (records delivered ≈ credits). Override via env.
-export const BRIGHT_DATA_CREDIT_CAP = parseInt(process.env.BRIGHT_DATA_CREDIT_CAP || '1000', 10);
+// Hard cap on Bright Data spend (records delivered ≈ credits). Defaults to Bright
+// Data's Web Scraper free tier (5,000 records/month). Override via env.
+export const BRIGHT_DATA_CREDIT_CAP = parseInt(process.env.BRIGHT_DATA_CREDIT_CAP || '5000', 10);
 // Bright Data SERP API zone (Google search) — used for Quora discovery via
 // `site:quora.com <keyword>`, since the Quora scraper dataset is broken.
 export const BRIGHT_DATA_SERP_ZONE = process.env.BRIGHT_DATA_SERP_ZONE || 'serp_api1';
