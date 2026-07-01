@@ -1,37 +1,37 @@
 {
     "place": {
-        "name": "Saifee Hospital",
+        "name": "Fortis Hospital, Anandapur - Best Hospital in Kolkata",
         "rating": 4.3,
-        "address": "Saifee Hospital, Maharshi Karve Rd, opp. Charni Road, Charni Road East, Opera House, Girgaon, Mumbai, Maharashtra 400004 "
+        "address": "730, Eastern Metropolitan Bypass, Anandapur, East Kolkata Twp, Kolkata, West Bengal 700107 "
     },
     "foreign": [
         {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2tzNGR6VlNMV2RRZEVad1UzVmlkV2gzUW13eGJGRRAB",
-            "name": "Krutika Pednekar",
+            "id": "ChdDSUhNMG9nS0VJQ0FnSUNlNDdYYm5BRRAB",
+            "name": "Someshwar Bose",
             "rating": 5,
-            "date": "8 months ago",
-            "text": "Saifee is an amazing Hospital.\n-The doctors, nurse and the housekeeping staff all are helpful and co-operative.\n-The food is also good for the patient as well as the attendee.\n-The billing process is smooth no hassle whatsoever.\n-TPA desk is proactive and responsive.\n-They have a very good provision for relatives/attendees of patient who are staying overnight. There are dedicated bunker beds separate for male and female.\n-We had selected twin sharing room and the facilities provided was excellent.\n-Only cons would be the waiting area near the reception is small and gets too crowded. Further Waiting for the lift is another nightmare.\nOverall, the experience here was good and we did not face much problem. Infact thanks to the nurses and housekeeping staff who are genuinely good.",
-            "profile": "https://www.google.com/maps/contrib/100156965276153881290/reviews?hl=en",
-            "country": "Maldives",
-            "region": "south_asia",
-            "flags": [],
-            "tokens": [
-                "Maldives"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT21GRmRIZFhSbDlDVlZGUE5YSktXa1ZvTldkVFdtYxAB",
-            "name": "Master Bayu",
-            "rating": 1,
-            "date": "9 months ago",
-            "text": "Initially a good hospital but now money making hospital with worst drs like dr hemal shah causing kidney failures in patients so he can get money of doing transplant on same patient..this is from international patient called ayub whom he gave 120 mg /day predisilone ..instead of solving his transplanted kidney issue he ended up ruining it!",
-            "profile": "https://www.google.com/maps/contrib/115603848582533979557/reviews?hl=en",
+            "date": "Edited 2 years ago",
+            "text": "This is a private hospital located ar Anandapur EM bypass, behind Kolkata international school. They provide high end medical services both OPD and IPD basis. It has radiology, gynaecology, international patient help desk, admission \u2026 More",
+            "profile": "https://www.google.com/maps/contrib/111512339079421825426/reviews?hl=en",
             "country": "international patient",
             "region": "phrase_signal",
             "flags": [],
             "tokens": [
                 "international patient"
+            ],
+            "lang": "en"
+        },
+        {
+            "id": "ChdDSUhNMG9nS0VJQ0FnSUREOGNibF9BRRAB",
+            "name": "Aritra Basu",
+            "rating": 3,
+            "date": "2 years ago",
+            "text": "Regular hospital in Kolkata. Female patient passed away in hospital, they mention male as the gender. Gastric Carcinoma patient is being given food laden with spices and oil. \u2026 More",
+            "profile": "https://www.google.com/maps/contrib/104721233567085412551/reviews?hl=en",
+            "country": "Maldives",
+            "region": "south_asia",
+            "flags": [],
+            "tokens": [
+                "Maldives"
             ],
             "lang": "en"
         }

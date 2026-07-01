@@ -1,0 +1,65 @@
+export declare const YT_DAILY_QUOTA: number;
+export declare const YT_QUOTA_PCT: number;
+export declare const YT_QUOTA_CAP: number;
+export declare const YT_SEARCH_COST = 100;
+export declare const YT_VIDEOS_COST = 1;
+export declare const AI_MIN_CONFIDENCE = 50;
+export type RegionKey = 'USA' | 'MIDDLE_EAST' | 'AFRICA';
+export declare const REGION_CONFIG: Record<RegionKey, {
+    label: string;
+    codes: string[];
+    langs: string[];
+}>;
+export declare const QUERY_GROUPS: Record<string, string[]>;
+export declare const ALL_QUERY_GROUPS: string[];
+export declare const INTENT_KEYWORDS: {
+    weight: number;
+    terms: string[];
+}[];
+export declare function regionFromCode(code?: string | null): 'USA' | 'MIDDLE_EAST' | 'AFRICA' | 'OTHER';
+export declare const PAST_SIGNALS: string[];
+export declare const BRIGHT_DATA_CREDIT_CAP: number;
+export declare const BRIGHT_DATA_SERP_ZONE: string;
+export declare const BRIGHTDATA_DATASETS: Record<'REDDIT' | 'QUORA' | 'INSTAGRAM' | 'FACEBOOK' | 'X', {
+    id: string;
+    mode: 'discover_keyword' | 'discover_search_url' | 'discover_url' | 'discover_profile_url' | 'url';
+}>;
+export declare const PROCEDURE_TERMS: string[];
+export declare const COST_TERMS: string[];
+export declare const ORIGIN_TERMS: string[];
+export declare const MEDTOURISM_TERMS: string[];
+export declare const PARTNER_TERMS: string[];
+export declare function hasPartnerSignal(text: string): boolean;
+export declare const BRAND_TERMS: string[];
+export declare function scoreSignals(text: string): {
+    hasProcedure: boolean;
+    hasCost: boolean;
+    hasOrigin: boolean;
+    hasMedTourism: boolean;
+    hasPartner: boolean;
+    partners: string[];
+    signalCount: number;
+    temperature: 'hot' | 'warm' | 'cold';
+    procedures: string[];
+    origins: string[];
+    intentScore: number;
+};
+export declare const SPAM_TERMS: string[];
+export declare function isSpam(text: string): boolean;
+export declare const BRIGHTDATA_KEYWORDS: string[];
+export declare const YT_KEYWORD_GROUP = "medtourism_keywords";
+export declare const BRIGHTDATA_HASHTAGS: string[];
+export declare const BRIGHTDATA_X_PHRASES: string[];
+export declare const FACEBOOK_GROUP_SEARCH_TERMS: string[];
+export declare const BRIGHTDATA_SERP_SITES: Record<'QUORA' | 'X' | 'INSTAGRAM' | 'FACEBOOK', string>;
+export declare function serpTermsFor(platform: string): string[];
+export declare const BRIGHTDATA_REDDIT_DATE = "Past month";
+export declare const BRIGHTDATA_REDDIT_SORT = "New";
+export declare const BRIGHTDATA_REDDIT_COMMENTS_DATASET = "gd_lvzdpsdlw09j6t702";
+export declare const BRIGHTDATA_COMMENTS_LIMIT = 50;
+export declare const BRIGHTDATA_IG_PROFILES: string[];
+export declare const BRIGHTDATA_X_PROFILES: string[];
+export declare function scoreIntent(text: string): {
+    score: number;
+    matched: string[];
+};
