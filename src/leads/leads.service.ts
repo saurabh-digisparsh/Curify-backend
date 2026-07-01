@@ -26,6 +26,9 @@ const DEFAULT_GROUPS = [
   'competitor',
   'western_affordability',
   'procedure_medtourism',
+  // The expanded medical-tourism keyword pack (same keywords used for Bright Data
+  // social capture) — interleaved into YouTube discovery alongside the persona groups.
+  'medtourism_keywords',
 ];
 
 export interface GenerateParams {
@@ -308,7 +311,34 @@ export class LeadsService {
     jobId: string,
     cfg: { global: boolean; regions: RegionKey[]; groups: string[]; maxSearches: number; minScore: number; aiClassify: boolean; order: 'date' | 'relevance'; targetCount?: number },
   ) {
-    const queries = cfg.groups.flatMap((g) => QUERY_GROUPS[g] || []);
+    // Round-robin interleave across the selected groups instead of concatenating, so
+    // a quota-capped run (the cron does only ~12 searches) samples EVERY group —
+    // including the medical-tourism keyword pack — rather than spending its whole
+    // budget on the first group's phrases. De-duped (groups can share a phrase).
+    const groupLists = cfg.groups.map((g) => QUERY_GROUPS[g] || []);
+    const maxLen = groupLists.reduce((m, a) => Math.max(m, a.length), 0);
+    const seenQ = new Set<string>();
+    const queries: string[] = [];
+    for (let i = 0; i < maxLen; i++) {
+      for (const list of groupLists) {
+        const q = list[i];
+        if (!q) continue;
+        const k = q.toLowerCase().trim();
+        if (seenQ.has(k)) continue;
+        seenQ.add(k);
+        queries.push(q);
+      }
+    }
+    // Rotate the query window by day so a quota-capped run (the cron does only ~12
+    // searches) samples a DIFFERENT slice of the large query+keyword set each day.
+    // Without this, date-ordered search keeps hitting the same top videos → they
+    // dedup to updates and the run creates 0 new leads. The window advances by
+    // maxSearches/day so the whole set is covered over time.
+    if (queries.length > cfg.maxSearches) {
+      const dayIdx = Math.floor(Date.now() / 86_400_000);
+      const offset = (dayIdx * cfg.maxSearches) % queries.length;
+      queries.push(...queries.splice(0, offset));
+    }
     const startQuota = (await this.yt.quotaStatus()).used;
     let searches = 0;
     let found = 0;

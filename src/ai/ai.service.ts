@@ -1,37 +1,93 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 
+/** One configured chat backend (an OpenAI-compatible client + the model to call). */
+interface AiProvider {
+  client: OpenAI;
+  model: string;
+  label: string;
+}
+
 @Injectable()
 export class AiService {
-  private client: OpenAI;
-  private readonly model = 'gpt-4.1-mini';
+  // Primary backend (Ollama when AI_BASE_URL is set; otherwise OpenAI). `fallback`
+  // is OpenAI and is tried automatically when a primary call fails.
+  private readonly primary: AiProvider;
+  private readonly fallback: AiProvider | null;
 
   constructor() {
+    const baseURL = process.env.AI_BASE_URL; // OpenAI-compatible gateway, e.g. https://host/v1 (Ollama)
+    const basicAuth = process.env.AI_BASIC_AUTH; // base64("user:pass") when the gateway sits behind HTTP basic auth
     const key = process.env.OPENAI_API_KEY;
-    if (!key || key === 'your_openai_api_key_here') {
-      console.warn('⚠️  OPENAI_API_KEY not configured — AI features will fail at runtime');
+    const hasOpenAiKey = !!key && key !== 'your_openai_api_key_here';
+
+    if (baseURL) {
+      // Primary = self-hosted OpenAI-compatible gateway (Ollama).
+      this.primary = {
+        client: new OpenAI({
+          // The gateway ignores the key, but the SDK requires a value.
+          apiKey: key || 'ollama',
+          baseURL,
+          // A Basic header overrides the SDK's default Bearer (defaultHeaders is
+          // spread last), so an nginx-basic-auth-protected endpoint authenticates.
+          ...(basicAuth ? { defaultHeaders: { Authorization: `Basic ${basicAuth}` } } : {}),
+        }),
+        model: process.env.AI_MODEL || 'qwen2.5vl:7b',
+        label: `ollama:${baseURL}`,
+      };
+      // Fallback = real OpenAI, used only when the gateway call fails and a key exists.
+      this.fallback = hasOpenAiKey
+        ? { client: new OpenAI({ apiKey: key }), model: process.env.AI_FALLBACK_MODEL || 'gpt-4.1-mini', label: 'openai' }
+        : null;
+      if (!this.fallback) {
+        console.warn('⚠️  Ollama gateway configured but no OPENAI_API_KEY — running without an AI fallback');
+      }
+    } else {
+      // No gateway → OpenAI is the only provider (original behaviour).
+      if (!hasOpenAiKey) {
+        console.warn('⚠️  No AI provider configured (set AI_BASE_URL for an OpenAI-compatible endpoint, or OPENAI_API_KEY) — AI features will fail at runtime');
+      }
+      this.primary = { client: new OpenAI({ apiKey: key || 'missing' }), model: process.env.AI_MODEL || 'gpt-4.1-mini', label: 'openai' };
+      this.fallback = null;
     }
-    this.client = new OpenAI({ apiKey: key });
+
+    console.log(
+      `🤖 AI provider: ${this.primary.label} (model ${this.primary.model})` +
+        (this.fallback ? ` · fallback: ${this.fallback.label} (model ${this.fallback.model})` : ' · no fallback'),
+    );
   }
 
+  /**
+   * Run a JSON-mode chat completion against the primary backend, transparently
+   * retrying on the OpenAI fallback if the primary errors OR returns unparseable
+   * JSON. Only after every backend fails do we use mockFallback (when provided).
+   */
   private async chat(messages: OpenAI.Chat.ChatCompletionMessageParam[], maxTokens = 1500, mockFallback?: () => any): Promise<any> {
-    try {
-      const res = await this.client.chat.completions.create({
-        model: this.model,
-        messages,
-        max_tokens: maxTokens,
-        temperature: 0.3,
-        response_format: { type: 'json_object' },
-      });
-      const text = res.choices[0].message.content?.trim() ?? '{}';
-      return JSON.parse(text);
-    } catch (err) {
-      if (mockFallback) {
-        console.warn(`⚠️  AI call failed (${err.message}) — using mock data`);
-        return mockFallback();
+    const providers = this.fallback ? [this.primary, this.fallback] : [this.primary];
+    let lastErr: any;
+    for (let i = 0; i < providers.length; i++) {
+      const p = providers[i];
+      try {
+        const res = await p.client.chat.completions.create({
+          model: p.model,
+          messages,
+          max_tokens: maxTokens,
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
+        });
+        const text = res.choices[0].message.content?.trim() ?? '{}';
+        return JSON.parse(text); // a parse failure also triggers the fallback below
+      } catch (err: any) {
+        lastErr = err;
+        const more = i < providers.length - 1;
+        console.warn(`⚠️  AI call via ${p.label} failed (${err.message})${more ? ` — falling back to ${providers[i + 1].label}` : ''}`);
       }
-      throw new Error(`AI call failed: ${err.message}`);
     }
+    if (mockFallback) {
+      console.warn('⚠️  All AI providers failed — using mock data');
+      return mockFallback();
+    }
+    throw new Error(`AI call failed: ${lastErr?.message}`);
   }
 
   async analyzeReport(params: {
@@ -329,7 +385,7 @@ Respond ONLY as JSON: {"results":[{"id":"<id>","isLead":true,"confidence":90,"pe
    */
   async classifyCategories(
     items: { id: string; platform?: string; title?: string | null; body?: string | null }[],
-  ): Promise<Record<string, { category: 'LEAD' | 'MARKETING' | 'NEWS' | 'OTHER'; reason: string }>> {
+  ): Promise<Record<string, { category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER'; reason: string }>> {
     if (!items.length) return {};
     const list = items
       .map((c, i) => {
@@ -342,20 +398,21 @@ Respond ONLY as JSON: {"results":[{"id":"<id>","isLead":true,"confidence":90,"pe
         {
           role: 'system',
           content: `You categorize social-media posts captured by a medical-tourism company (hospitals in INDIA, patients mostly from the USA, Middle East, and Africa). For EACH post, read its text and assign exactly ONE category:
- - "LEAD": a real INDIVIDUAL (a patient or a family member) talking about THEIR OWN medical situation — seeking treatment/surgery abroad, asking for help / advice / experiences / recommendations / costs, weighing options, or sharing their own medical-tourism journey. A genuine prospect we could help.
- - "MARKETING": promotional or advertising content — hospitals, clinics, agencies, facilitators, consultants, influencers, or spammers PROMOTING or SELLING services, packages, treatments, discounts, "contact/DM us", booking links, or unrelated commercial spam (e.g. exam-cheating, SEO link spam).
- - "NEWS": journalistic, informational, educational, or broadcast content — news articles, reports, statistics, "how-to"/guides/explainers, or general non-personal discussion about medical tourism as a topic.
- - "OTHER": off-topic, irrelevant, unintelligible, or not related to medical tourism / healthcare at all.
-KEY TEST: a real person speaking about THEIR OWN care need = LEAD; someone selling/promoting = MARKETING; impersonal reporting/education = NEWS; unrelated = OTHER. When a post is on-topic but is a business promoting itself, choose MARKETING (not LEAD).
-For EACH item return: id, category (one of LEAD|MARKETING|NEWS|OTHER), reason (short phrase, max ~12 words).
+ - "LEAD" (🟢 patient): a real INDIVIDUAL (a patient or a family member) talking about THEIR OWN medical situation — seeking treatment/surgery abroad, asking for help / advice / experiences / recommendations / costs ("I need", "looking for", "anyone recommend", "cost of", "how much", "best hospital for", "my father/mother/husband has <condition>"), weighing options, or sharing their own medical-tourism journey. A genuine patient prospect we could help.
+ - "PARTNER" (🔵 business partner): a person or organisation offering or seeking a B2B referral relationship — facilitators, agencies, coordinators, consultants or clinics talking about "referral", "commission", "partnership", "facilitator", "coordinator", "MOU", "we send patients", "patient pipeline", "looking for hospitals", "tie-up", "empanelment", "channel partner". They want to send/receive patients or partner — NOT a patient themselves. This is a WANTED lead type (do NOT mark these MARKETING).
+ - "MARKETING": promotional or advertising content with NO partnership intent — hospitals, clinics, agencies or influencers PROMOTING or SELLING services, packages, treatments, discounts, "contact/DM us", booking links, or unrelated commercial spam (e.g. exam-cheating, SEO link spam).
+ - "NEWS": journalistic, informational, educational, or broadcast content — news articles, reports, statistics, "how-to"/guides/explainers, academic/research, or general non-personal discussion about medical tourism as a topic.
+ - "OTHER": off-topic, irrelevant, unintelligible, generic wellness/spa/yoga, or not related to medical tourism / healthcare at all.
+KEY TEST: a real person speaking about THEIR OWN care need = LEAD; someone seeking/offering a referral or patient-pipeline partnership = PARTNER; someone merely selling/promoting = MARKETING; impersonal reporting/education = NEWS; unrelated = OTHER.
+For EACH item return: id, category (one of LEAD|PARTNER|MARKETING|NEWS|OTHER), reason (short phrase, max ~12 words).
 Respond ONLY as JSON: {"results":[{"id":"<id>","category":"LEAD","reason":"patient asking for knee surgery cost in India"}]}`,
         },
         { role: 'user', content: list },
       ],
       2000,
     );
-    const valid = new Set(['LEAD', 'MARKETING', 'NEWS', 'OTHER']);
-    const map: Record<string, { category: 'LEAD' | 'MARKETING' | 'NEWS' | 'OTHER'; reason: string }> = {};
+    const valid = new Set(['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER']);
+    const map: Record<string, { category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER'; reason: string }> = {};
     for (const r of result?.results || []) {
       const cat = String(r?.category || '').toUpperCase();
       if (r?.id && valid.has(cat)) {

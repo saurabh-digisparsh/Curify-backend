@@ -231,13 +231,28 @@ export const BRIGHTDATA_DATASETS: Record<
 // a post is a real ICP when it names a PROCEDURE + a COST cue + an ORIGIN country.
 // 3/3 = hot, 2/3 = warm, else cold.
 export const PROCEDURE_TERMS = [
+  // Cardiac
   'heart bypass', 'bypass surgery', 'cardiac', 'heart surgery', 'angioplasty',
+  'open heart', 'valve replacement', 'pacemaker',
+  // Orthopaedic
   'knee replacement', 'hip replacement', 'joint replacement',
-  'liver transplant', 'kidney transplant', 'bone marrow transplant', 'transplant',
+  // Transplants
+  'liver transplant', 'kidney transplant', 'bone marrow transplant', 'stem cell transplant',
+  'organ transplant', 'transplant', 'kidney failure', 'dialysis',
+  // Oncology
   'cancer', 'oncology', 'chemo', 'chemotherapy', 'tumor', 'tumour', 'immunotherapy',
-  'ivf', 'fertility', 'icsi', 'bariatric', 'weight loss surgery', 'gastric',
-  'spine surgery', 'spinal', 'neurosurgery', 'brain surgery', 'hair transplant',
-  'dental', 'cosmetic', 'plastic surgery', 'surgery', 'surgeries', 'treatment',
+  'proton therapy', 'car t', 'car-t', 'car-t cell', 'leukemia', 'lymphoma',
+  // Fertility
+  'ivf', 'fertility', 'icsi', 'surrogacy',
+  // Bariatric
+  'bariatric', 'weight loss surgery', 'gastric',
+  // Neuro / spine
+  'spine surgery', 'spinal', 'neurosurgery', 'brain surgery', 'epilepsy', 'stroke',
+  // Aesthetic / dental / eye
+  'hair transplant', 'dental', 'dental implant', 'cosmetic', 'plastic surgery',
+  'eye surgery', 'lasik',
+  // Generic
+  'surgery', 'surgeries', 'treatment',
   // generic procedure language — real inquiries often don't name the operation
   'procedure', 'procedures', 'operation', 'medical service', 'medical services', 'medical procedure',
 ];
@@ -248,11 +263,14 @@ export const COST_TERMS = [
   'rupee', 'usd', 'dollar', 'pay', 'payment',
 ];
 export const ORIGIN_TERMS = [
-  // Africa / GCC (original query-pack focus)
-  'nigeria', 'nigerian', 'kenya', 'kenyan', 'oman', 'omani', 'uae', 'emirates',
-  'dubai', 'abu dhabi', 'saudi', 'saudi arabia', 'riyadh', 'jeddah', 'qatar',
-  'qatari', 'doha', 'bahrain', 'ghana', 'ghanaian', 'tanzania', 'ethiopia',
-  'lagos', 'abuja', 'nairobi', 'muscat', 'accra', 'kuwait',
+  // GCC
+  'oman', 'omani', 'uae', 'emirates', 'dubai', 'abu dhabi', 'saudi', 'saudi arabia',
+  'riyadh', 'jeddah', 'qatar', 'qatari', 'doha', 'bahrain', 'kuwait', 'muscat', 'gcc',
+  // Africa — East & West
+  'nigeria', 'nigerian', 'kenya', 'kenyan', 'ghana', 'ghanaian', 'tanzania',
+  'ethiopia', 'uganda', 'lagos', 'abuja', 'nairobi', 'accra',
+  // Africa — Southern & Central (expanded to match the new keyword pack)
+  'south africa', 'zimbabwe', 'zambia', 'cameroon', 'rwanda', 'senegal', 'sudan', 'angola',
   // Major Western source countries (high-cost / long-wait healthcare → travel abroad)
   'canada', 'canadian', 'usa', 'u.s.', 'united states', 'america', 'american',
   'uk', 'u.k.', 'united kingdom', 'britain', 'british', 'england', 'scotland',
@@ -269,26 +287,55 @@ export const MEDTOURISM_TERMS = [
   'going to india for', 'come to india for', 'flying to india', 'go abroad for treatment',
 ];
 
+// 🔵 BUSINESS-PARTNER signals (from the BrightData query pack): people/orgs offering
+// or seeking a referral relationship — facilitators, agencies, coordinators looking
+// to send/receive patients. These are a WANTED lead type (category PARTNER), distinct
+// from a patient (🟢 LEAD) and from discard (🔴 MARKETING/NEWS/OTHER).
+export const PARTNER_TERMS = [
+  'referral', 'referrals', 'commission', 'partnership', 'partner with', 'facilitator',
+  'facilitators', 'agency', 'agencies', 'coordinator', 'mou', 'we send patients',
+  'send patients to', 'patient pipeline', 'patient referral', 'looking for hospitals',
+  'tie up', 'tie-up', 'empanelment', 'empanel', 'channel partner', 'b2b', 'collaborate',
+  'collaboration', 'business partnership', 'refer patients', 'patient leads',
+];
+export function hasPartnerSignal(text: string): boolean {
+  const t = (text || '').toLowerCase();
+  return PARTNER_TERMS.some((x) => t.includes(x));
+}
+
+// India hospital brands patients search by name — strong on-topic / corridor signal.
+export const BRAND_TERMS = [
+  'apollo', 'fortis', 'medanta', 'narayana', 'max hospital', 'max healthcare',
+  'kokilaben', 'manipal', 'wockhardt', 'artemis', 'aster', 'amrita',
+];
+
 export function scoreSignals(text: string): {
   hasProcedure: boolean; hasCost: boolean; hasOrigin: boolean; hasMedTourism: boolean;
+  hasPartner: boolean; partners: string[];
   signalCount: number; temperature: 'hot' | 'warm' | 'cold';
   procedures: string[]; origins: string[]; intentScore: number;
 } {
   const t = (text || '').toLowerCase();
   const procedures = PROCEDURE_TERMS.filter((x) => t.includes(x));
   const origins = ORIGIN_TERMS.filter((x) => t.includes(x));
+  const partners = PARTNER_TERMS.filter((x) => t.includes(x));
   const hasProcedure = procedures.length > 0;
   const hasCost = COST_TERMS.some((x) => t.includes(x));
   const hasOrigin = origins.length > 0;
-  // Medical-tourism relevance (incl. a bare "India" mention) — the corridor context.
-  const hasMedTourism = MEDTOURISM_TERMS.some((x) => t.includes(x)) || /\bindia\b/.test(t);
+  const hasPartner = partners.length > 0;
+  // Medical-tourism relevance — corridor context (incl. a bare "India" or brand mention).
+  const hasMedTourism =
+    MEDTOURISM_TERMS.some((x) => t.includes(x)) || BRAND_TERMS.some((x) => t.includes(x)) || /\bindia\b/.test(t);
   // The 3 hard ICP signals (procedure + cost + origin) still set temperature.
   const signalCount = [hasProcedure, hasCost, hasOrigin].filter(Boolean).length;
   const temperature = signalCount >= 3 ? 'hot' : signalCount === 2 ? 'warm' : 'cold';
   // Weighted 0-100: procedure 35, cost 25, origin 25, medical-tourism relevance 15.
+  // A business-partner signal adds 25 so referral/facilitator posts (which often carry
+  // no procedure/cost/origin) still surface instead of being buried as cold.
   const intentScore = Math.min(100,
-    (hasProcedure ? 35 : 0) + (hasCost ? 25 : 0) + (hasOrigin ? 25 : 0) + (hasMedTourism ? 15 : 0));
-  return { hasProcedure, hasCost, hasOrigin, hasMedTourism, signalCount, temperature, procedures, origins, intentScore };
+    (hasProcedure ? 35 : 0) + (hasCost ? 25 : 0) + (hasOrigin ? 25 : 0) +
+    (hasMedTourism ? 15 : 0) + (hasPartner ? 25 : 0));
+  return { hasProcedure, hasCost, hasOrigin, hasMedTourism, hasPartner, partners, signalCount, temperature, procedures, origins, intentScore };
 }
 
 // Academic-cheating / service spam that pollutes broad keyword searches (e.g.
@@ -310,42 +357,160 @@ export function isSpam(text: string): boolean {
 // Master keyword pack for Bright Data discovery (Reddit keyword-discovery + Quora/
 // Facebook SERP). The 3-signal scorer grades each captured post.
 export const BRIGHTDATA_KEYWORDS = [
-  // General
-  'medical tourism', 'medical tourism india', 'medical travel', 'health tourism',
-  'healthcare tourism', 'medical travel india', 'travel for treatment', 'treatment abroad',
-  'treatment in india', 'healthcare abroad', 'cross border healthcare', 'international patients',
-  'international healthcare', 'medical travel agency', 'medical travel facilitator', 'medical concierge',
-  // India
-  'india medical tourism', 'india healthcare', 'india hospitals', 'india for medical treatment',
-  'medical visa india', 'international patient india', 'best hospitals in india', 'affordable treatment india',
-  'medical packages india', 'healthcare in india', 'indian hospitals for foreigners',
-  // UAE / Dubai
+  // ── Core intent phrases ──
+  'medical tourism', 'medical tourism india', 'medical travel', 'medical travel india',
+  'treatment in india', 'travel for treatment', 'treatment abroad', 'going to india for surgery',
+  'need treatment in india', 'affordable surgery abroad', 'affordable surgery india',
+  'overseas medical treatment', 'hospital abroad for treatment', 'medical trip abroad',
+  'second opinion abroad', 'second opinion india hospital', 'india medical visa', 'medical visa india',
+  'health tourism', 'healthcare tourism', 'healthcare abroad', 'cross border healthcare', 'international patients',
+  // ── Partner / Facilitator discovery (🔵) ──
+  'medical travel agency', 'medical travel facilitator', 'medical concierge',
+  'international patient coordinator', 'healthcare concierge', 'medical tourism consultant',
+  'medical tourism partnership', 'patient referral india', 'hospital referral program india',
+  'medical tourism agent wanted', 'medical travel agent commission', 'medical tourism facilitator wanted',
+  'medical tourism tie up india',
+  // ── India — General ──
+  'india medical tourism', 'international patient india', 'best hospitals in india', 'affordable treatment india',
+  'jci accredited hospitals india', 'nabh hospital india', 'medical packages india',
+  'indian hospitals for foreigners', 'india treatment cost', 'india treatment cost vs usa',
+  'india treatment cost vs uk', 'india treatment cost vs europe', 'india healthcare', 'india hospitals',
+  // ── India — Top hospital brands (patients search by name) ──
+  'apollo hospitals international patients', 'fortis hospitals international patients',
+  'medanta hospital international patients', 'narayana health international patients',
+  'max hospital international patients', 'kokilaben hospital international patients',
+  'manipal hospitals international patients', 'wockhardt hospital international patients',
+  // ── Procedure-specific — Oncology ──
+  'cancer treatment india', 'cancer treatment india cost', 'cancer hospital india',
+  'cancer treatment in india affordable', 'bone marrow transplant india', 'bone marrow transplant cost india',
+  'stem cell transplant india', 'proton therapy india', 'car t cell therapy india',
+  'leukemia treatment india', 'lymphoma treatment india', 'breast cancer treatment india',
+  'cervical cancer treatment india', 'liver cancer treatment india', 'lung cancer treatment india',
+  // ── Procedure-specific — Cardiac ──
+  'cardiac surgery india', 'heart surgery india', 'heart bypass surgery india', 'open heart surgery india',
+  'valve replacement surgery india', 'angioplasty india', 'pacemaker surgery india',
+  // ── Procedure-specific — Transplants ──
+  'kidney transplant india', 'kidney transplant cost india', 'liver transplant india',
+  'liver transplant cost india', 'organ transplant india', 'kidney failure treatment india',
+  // ── Procedure-specific — Orthopaedic ──
+  'knee replacement india', 'knee replacement cost india', 'hip replacement india',
+  'spinal surgery india', 'spine surgery india cost', 'joint replacement india',
+  // ── Procedure-specific — Neurology ──
+  'brain surgery india', 'neurosurgery india', 'epilepsy treatment india', 'stroke treatment india',
+  // ── Procedure-specific — IVF / Fertility ──
+  'ivf treatment india', 'ivf cost india', 'fertility treatment india', 'surrogacy india',
+  // ── Procedure-specific — Other ──
+  'dialysis india', 'bariatric surgery india', 'weight loss surgery india', 'cosmetic surgery india',
+  'plastic surgery india', 'eye surgery india', 'lasik india', 'dental treatment india', 'dental implants india',
+  // ── UAE / Dubai ──
   'medical tourism uae', 'medical tourism dubai', 'medical travel dubai', 'treatment in india from dubai',
-  'dubai to india medical tourism', 'medical tourism abu dhabi', 'healthcare dubai', 'dubai medical travel',
-  'india treatment uae', 'dubai patient india',
-  // Africa
+  'dubai to india medical tourism', 'medical tourism abu dhabi', 'treatment abroad from uae',
+  'cancer treatment india from uae', 'kidney transplant from dubai', 'arabic speaking hospital india',
+  'hindi speaking doctor india', 'indian expat treatment india', 'indian expat hospital india',
+  'gcc patients india hospital',
+  // ── Saudi Arabia ──
+  'medical tourism saudi arabia', 'treatment in india from saudi arabia', 'treatment in india from riyadh',
+  'treatment in india from jeddah', 'saudi patients india hospital', 'affordable treatment saudi arabia',
+  // ── Other GCC countries ──
+  'medical tourism kuwait', 'medical tourism qatar', 'medical tourism bahrain', 'medical tourism oman',
+  'treatment in india from kuwait', 'treatment in india from qatar', 'treatment in india from muscat',
+  'treatment in india from doha',
+  // ── Africa — East & West ──
   'medical tourism africa', 'medical tourism nigeria', 'medical tourism kenya', 'medical tourism ghana',
   'medical tourism uganda', 'medical tourism tanzania', 'medical tourism ethiopia',
   'africa to india medical tourism', 'india hospital africa', 'treatment in india africa',
+  'nigerian patients india', 'africa to india treatment', 'affordable surgery india nigeria',
+  'affordable surgery india kenya', 'cancer treatment india from africa', 'cancer treatment india nigeria',
+  // ── Africa — Southern & Central ──
+  'medical tourism south africa', 'medical tourism zimbabwe', 'medical tourism zambia',
+  'medical tourism cameroon', 'medical tourism rwanda', 'medical tourism senegal',
+  'medical tourism sudan', 'medical tourism angola', 'treatment in india from africa',
+  'south africa to india medical treatment',
 ];
+
+// Feed the SAME expanded medical-tourism keyword pack into YouTube discovery, not
+// just Bright Data social capture. Registered here (after BRIGHTDATA_KEYWORDS is
+// defined) as a first-class, selectable query group so the admin form, the default
+// runs, and the daily cron can all search YouTube with these keywords.
+export const YT_KEYWORD_GROUP = 'medtourism_keywords';
+QUERY_GROUPS[YT_KEYWORD_GROUP] = BRIGHTDATA_KEYWORDS;
 
 // Instagram/Facebook hashtags — used for hashtag SERP discovery (site:instagram.com #tag).
 export const BRIGHTDATA_HASHTAGS = [
+  // ── Core ──
   '#MedicalTourism', '#MedicalTourismIndia', '#MedicalTravel', '#MedicalTravelIndia',
-  '#HealthcareTourism', '#HealthTourism', '#MedicalVisa', '#TreatmentInIndia',
+  '#HealthcareTourism', '#HealthTourism', '#MedicalVisa', '#MedicalVisaIndia',
+  '#TreatmentInIndia', '#TreatmentAbroad', '#MedicalAbroad', '#MedicalTrip',
+  '#TravelForTreatment', '#HealthTravel',
+  // ── India healthcare ──
   '#IndiaHealthcare', '#InternationalPatients', '#HospitalInIndia', '#HealthcareIndia',
-  '#MedicalTrip', '#TravelForTreatment', '#HealthTravel', '#MedicalFacilitator',
-  '#MedicalConcierge', '#PatientJourney', '#PatientExperience', '#MedicalAbroad',
+  '#IndiaHospital', '#PatientInIndia', '#AffordableHealthcareIndia', '#AffordableHealthcare',
+  '#AffordableSurgery',
+  // ── Facilitator / Partner signals (🔵) ──
+  '#MedicalFacilitator', '#MedicalConcierge', '#HealthcareConcierge', '#PatientJourney',
+  '#PatientExperience', '#MedicalTourismConsultant', '#MedicalTourismAgency',
+  '#InternationalPatientCoordinator',
+  // ── Procedure-specific ──
+  '#CancerTreatmentIndia', '#HeartSurgeryIndia', '#CardiacSurgeryIndia', '#KidneyTransplantIndia',
+  '#LiverTransplantIndia', '#OrganTransplantIndia', '#BoneMarrowTransplantIndia',
+  '#KneeReplacementIndia', '#SpineSurgeryIndia', '#IVFIndia', '#FertilityTreatmentIndia',
+  '#BariatricSurgeryIndia',
+  // ── Hospital brands (patients use these) ──
+  '#ApolloHospitals', '#FortisHospitals', '#MedantaHospital', '#NarayanaHealth', '#MaxHospital',
+  // ── GCC-specific ──
+  '#HealthTravelUAE', '#MedicalTourismDubai', '#MedicalTourismUAE', '#DubaiToIndia',
+  '#UAEPatients', '#SaudiPatients',
+  // ── Africa-specific ──
+  '#MedicalTourismAfrica', '#MedicalTourismNigeria', '#MedicalTourismKenya', '#NigeriaToIndia',
+  '#KenyaToIndia', '#AfricaToIndia', '#MedicalTourismGhana', '#AfricanPatientsIndia',
 ];
 
 // X (Twitter) search phrases — used for X SERP discovery (site:x.com "phrase").
+// Quoted = exact match (high precision). Unquoted = broad match (higher volume).
 export const BRIGHTDATA_X_PHRASES = [
-  '"Medical Tourism"', '"Medical Tourism India"', '"Medical Travel"', '"Treatment in India"',
-  '"Travel for Treatment"', '"Healthcare Tourism"', '"Medical Visa"', '"International Patient"',
-  '"Medical Travel India"',
-  'Medical Tourism Company', 'Medical Tourism Agency', 'Medical Travel Agency',
-  'Medical Tourism Facilitator', 'Healthcare Facilitator', 'Patient Referral',
-  'International Patient Coordinator', 'Medical Concierge', 'Healthcare Concierge', 'Medical Tourism Consultant',
+  // ── Core quoted phrases (exact match — highest precision) ──
+  '"medical tourism india"', '"treatment in india"', '"going to india for surgery"',
+  '"need treatment in india"', '"looking for hospital in india"', '"anyone recommend hospital in india"',
+  '"best hospital india for"', '"affordable surgery india"', '"cancer treatment india"',
+  '"cardiac surgery india"', '"kidney transplant india"', '"medical visa india"',
+  '"second opinion india"', '"india treatment cost"',
+  // ── GCC-specific quoted phrases ──
+  '"treatment in india from dubai"', '"treatment in india from uae"', '"treatment in india from saudi"',
+  '"treatment in india from riyadh"', '"dubai to india medical"', '"india hospital from uae"',
+  // ── Africa-specific quoted phrases ──
+  '"treatment in india from nigeria"', '"treatment in india from kenya"', '"nigeria to india treatment"',
+  '"kenya to india hospital"', '"africa to india medical"',
+  // ── Patient intent — unquoted (broader match, high volume) ──
+  'medical tourism india experience', 'medical travel india review', 'hospital india recommendation',
+  'best cancer hospital india', 'affordable heart surgery india', 'knee replacement cost india',
+  'liver transplant india cost', 'IVF treatment india', 'spine surgery india', 'bariatric surgery india',
+  // ── Partner / B2B discovery — quoted (🔵) ──
+  '"medical tourism partnership"', '"patient referral india"', '"hospital referral program"',
+  '"medical tourism facilitator"', '"medical tourism agent"', '"international patient coordinator"',
+  '"medical tourism MOU"', '"we send patients to india"', '"medical tourism commission"',
+  // ── Partner / B2B discovery — unquoted (🔵) ──
+  'medical tourism agency india partnership', 'patient referral program india hospitals',
+  'medical travel facilitator india tie up', 'hospital empanelment india international',
+];
+
+// ── Facebook Group search strings — used to DISCOVER relevant groups to monitor.
+// Facebook's dataset is url-collection only (no keyword discovery), so these feed
+// group-finding (manually or via a future group-URL discovery step), not post search.
+export const FACEBOOK_GROUP_SEARCH_TERMS = [
+  // Direct group searches
+  'medical tourism india', 'india treatment group', 'international patients india',
+  'treatment abroad support', 'medical travel community', 'india hospital patients',
+  'cancer treatment india support', 'organ transplant india', 'medical tourism support group',
+  'affordable healthcare abroad',
+  // GCC-focused groups
+  'africa india health travel', 'dubai india medical', 'GCC patients india',
+  'Arabs in India hospital', 'medical tourism UAE group', 'medical tourism saudi group',
+  // Africa-focused groups
+  'Nigerians in India medical', 'Kenyans medical treatment abroad', 'Africans seeking treatment india',
+  'medical tourism Africa group', 'Nigeria india treatment community',
+  // Diaspora / expat patient groups
+  'Indian expat health india', 'medical treatment abroad community',
+  'patients seeking treatment india', 'international patient support india',
 ];
 
 // Google site to search per platform for SERP-based keyword/hashtag discovery.

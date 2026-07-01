@@ -28,18 +28,27 @@ export class LeadsScheduler implements OnApplicationBootstrap {
     await this.runAll('scheduled');
   }
 
-  /** Catch-up: if 02:00 IST passed while the system was off, run the missed job on boot. */
+  /**
+   * Catch-up: run on boot if 02:00 IST passed while the system was off — OR if the
+   * run that fired then FAILED / saved no data (e.g. the box had no network when the
+   * cron fired). The old guard checked only that *some* scheduled job existed since
+   * 02:00, so a failed, data-less run silently blocked the retry.
+   */
   async onApplicationBootstrap() {
     if (process.env.LEADS_CRON_DISABLED === '1') return;
     try {
       const due = this.todays2amIST();
       if (new Date() < due) return; // 02:00 IST hasn't passed yet today — wait for the cron
-      const last = await this.prisma.leadJob.findFirst({
-        where: { trigger: { startsWith: 'scheduled' } },
-        orderBy: { createdAt: 'desc' },
-      });
-      if (last && last.createdAt >= due) return; // already ran since today's 02:00 IST
-      this.logger.log('Missed 02:00 IST daily run detected — catching up shortly');
+      // A run counts as successful only if a scheduled YouTube job since 02:00 IST
+      // didn't FAIL and some data actually landed (YouTube created leads, or any
+      // Bright Data job saved rows). Otherwise we retry.
+      const [ytSince, bdWithData] = await Promise.all([
+        this.prisma.leadJob.findFirst({ where: { trigger: { startsWith: 'scheduled' }, createdAt: { gte: due } }, orderBy: { createdAt: 'desc' } }),
+        this.prisma.brightDataJob.count({ where: { trigger: { startsWith: 'scheduled' }, createdAt: { gte: due }, saved: { gt: 0 } } }),
+      ]);
+      const ranOk = !!ytSince && ytSince.status !== 'FAILED' && (bdWithData > 0 || ytSince.created > 0);
+      if (ranOk) return; // a good run already happened since today's 02:00 IST
+      this.logger.log(ytSince ? 'Last 02:00 IST run failed or returned no data — retrying shortly' : 'Missed 02:00 IST daily run detected — catching up shortly');
       setTimeout(() => this.runAll('scheduled-catchup').catch((e) => this.logger.error(`catch-up run: ${e.message}`)), 15000);
     } catch (e: any) {
       this.logger.error(`catch-up check failed: ${e.message}`);
@@ -48,6 +57,13 @@ export class LeadsScheduler implements OnApplicationBootstrap {
 
   /** Trigger a fetch across every configured lead source. Each becomes a tracked job. */
   async runAll(trigger: string) {
+    // The cron can fire before the machine's network is back (e.g. a laptop that just
+    // woke). Wait for outbound connectivity first; if it never comes, abort cleanly so
+    // the restart catch-up retries — instead of burning a failed, data-less run.
+    if (!(await this.waitForNetwork())) {
+      this.logger.warn(`Aborting ${trigger} run — no outbound network after wait; will retry on next cron/restart`);
+      return;
+    }
     this.logger.log(`Daily lead run (${trigger}) — starting all sources`);
     const startedAt = new Date();
     // YouTube (own quota)
@@ -119,6 +135,26 @@ export class LeadsScheduler implements OnApplicationBootstrap {
 
   private sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
+  }
+
+  /**
+   * Poll for outbound connectivity (up to maxWaitMs, exponential backoff) so a run
+   * doesn't start before the network is back. Any HTTP response — even non-2xx —
+   * means the network is up; only a thrown fetch error counts as "still down".
+   */
+  private async waitForNetwork(maxWaitMs = 5 * 60 * 1000): Promise<boolean> {
+    const deadline = Date.now() + maxWaitMs;
+    let delay = 3000;
+    for (;;) {
+      try {
+        await fetch('https://www.google.com/generate_204', { method: 'HEAD' });
+        return true; // reachable — network is up
+      } catch {
+        if (Date.now() + delay > deadline) return false;
+        await this.sleep(delay);
+        delay = Math.min(30000, delay * 2);
+      }
+    }
   }
 
   /** Today's 02:00 Asia/Kolkata expressed as a UTC Date. */

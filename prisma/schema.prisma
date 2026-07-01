@@ -525,11 +525,16 @@ enum CapturePlatform {
 }
 
 // AI verdict on what a captured post actually is, for the lead-analytics dashboard.
-// LEAD = a real person seeking/discussing treatment abroad for their own situation;
-// MARKETING = promo/ads/self-promotion/spam selling services; NEWS = articles /
-// informational broadcast; OTHER = off-topic / irrelevant.
+// Mirrors the BrightData query-pack segregation:
+//   LEAD      = 🟢 a real patient/family seeking treatment abroad for their own situation;
+//   PARTNER   = 🔵 a business partner — facilitator/agency/coordinator offering or seeking
+//               a referral / commission / "we send patients" relationship;
+//   MARKETING = 🔴 promo/ads/self-promotion/spam selling services;
+//   NEWS      = 🔴 articles / informational broadcast;
+//   OTHER     = 🔴 off-topic / irrelevant.
 enum LeadCategory {
   LEAD
+  PARTNER
   MARKETING
   NEWS
   OTHER

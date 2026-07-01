@@ -501,7 +501,7 @@ export class BrightDataService {
       this.prisma.sourceCapture.groupBy({ by: ['category'], where: live, _count: true }),
       this.budget(),
     ]);
-    const categoryTotals: Record<string, number> = { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
+    const categoryTotals: Record<string, number> = { LEAD: 0, PARTNER: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
     for (const g of byCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] = g._count;
     return {
       total, softDeleted: deleted, spam, budget, platform: platform ?? null,
@@ -512,7 +512,7 @@ export class BrightDataService {
   }
 
   // ── Lead analytics (AI category breakdown + monthly volume) ───────────────────
-  private static readonly CATEGORIES = ['LEAD', 'MARKETING', 'NEWS', 'OTHER'] as const;
+  private static readonly CATEGORIES = ['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER'] as const;
 
   /**
    * Dashboard data: how the captured posts break down by AI category, by platform,
@@ -540,13 +540,13 @@ export class BrightDataService {
     const categorized = capCategorized + leadCategorized;
 
     // Category totals across BOTH sources (incl. an UNCATEGORIZED bucket).
-    const categoryTotals: Record<string, number> = { LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
+    const categoryTotals: Record<string, number> = { LEAD: 0, PARTNER: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0 };
     for (const g of capByCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] += g._count;
     for (const g of leadByCategory) categoryTotals[g.category ?? 'UNCATEGORIZED'] += g._count;
 
     // Per-platform category matrix (social platforms + a YOUTUBE row from the leads table).
     const byPlatform: Record<string, Record<string, number>> = {};
-    const blank = () => ({ LEAD: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0, total: 0 });
+    const blank = () => ({ LEAD: 0, PARTNER: 0, MARKETING: 0, NEWS: 0, OTHER: 0, UNCATEGORIZED: 0, total: 0 });
     for (const g of capByPlatformCat) {
       const p = (byPlatform[g.platform] ??= blank());
       p[g.category ?? 'UNCATEGORIZED'] += g._count;

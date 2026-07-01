@@ -1,188 +1,41 @@
 {
     "place": {
-        "name": "Max Super Speciality Hospital, Saket (Max Saket)",
-        "rating": 4.2,
-        "address": "1 2, Press Enclave Marg, Saket Institutional Area, Saket, New Delhi, Delhi 110017 "
+        "name": "Saifee Hospital",
+        "rating": 4.3,
+        "address": "Saifee Hospital, Maharshi Karve Rd, opp. Charni Road, Charni Road East, Opera House, Girgaon, Mumbai, Maharashtra 400004 "
     },
     "foreign": [
         {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2kxbVpUWm5UR0pyUlV0dWFuWTNUbkIwTlhFd1gwRRAB",
-            "name": "Boniface Muswilwa Chitambala",
+            "id": "Ci9DQUlRQUNvZENodHljRjlvT2tzNGR6VlNMV2RRZEVad1UzVmlkV2gzUW13eGJGRRAB",
+            "name": "Krutika Pednekar",
             "rating": 5,
-            "date": "3 months ago",
-            "text": "I am Mrs Inonge K. Chitambala from Zambia  came to India max hospital saket for treatment. After my surgery I felt good like never before. I never knew that my health would change from bad to good. I would recommend anyone to this hospital @dr Surbhi, Dr anant & Ashu , Mumtaz just like someone recommended me. The members of staff are wonderful.",
-            "profile": "https://www.google.com/maps/contrib/109301642129231432726/reviews?hl=en",
-            "country": "Zambia",
-            "region": "africa",
+            "date": "8 months ago",
+            "text": "Saifee is an amazing Hospital.\n-The doctors, nurse and the housekeeping staff all are helpful and co-operative.\n-The food is also good for the patient as well as the attendee.\n-The billing process is smooth no hassle whatsoever.\n-TPA desk is proactive and responsive.\n-They have a very good provision for relatives/attendees of patient who are staying overnight. There are dedicated bunker beds separate for male and female.\n-We had selected twin sharing room and the facilities provided was excellent.\n-Only cons would be the waiting area near the reception is small and gets too crowded. Further Waiting for the lift is another nightmare.\nOverall, the experience here was good and we did not face much problem. Infact thanks to the nurses and housekeeping staff who are genuinely good.",
+            "profile": "https://www.google.com/maps/contrib/100156965276153881290/reviews?hl=en",
+            "country": "Maldives",
+            "region": "south_asia",
             "flags": [],
             "tokens": [
-                "Zambia"
+                "Maldives"
             ],
             "lang": "en"
         },
         {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2sxdVJHeE5NVFpxZVRCQ1gwWjZiVnAzU0hoUFdFRRAB",
-            "name": "Gurbanmyrat Akmyradow",
-            "rating": 5,
-            "date": "a month ago",
-            "text": "Excellent hospital with world-class doctors and high-level medical service. Special thanks to the International Patient Lounge (IPC) team. Our coordinator Nikhil Malik is an amazing professional, always online and helpful at every step. Huge thanks to Satendra for guiding us through the hospital and helping with all the medical tests, our translator Inam for his great support, and Sudhir Pathak for the safe and smooth airport pickup. Highly recommend Max Hospital Saket for international patients!",
-            "profile": "https://www.google.com/maps/contrib/115428182614437057203/reviews?hl=en",
-            "country": "international patient",
-            "region": "phrase_signal",
-            "flags": [],
-            "tokens": [
-                "international patient"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2s5blppMXdiSFl3VUZsVlMyaGFSSEZwVDFKeWRFRRAB",
-            "name": "Khutheibamrocket Ali",
-            "rating": 5,
-            "date": "5 months ago",
-            "text": "Very helpful in the duties of doctors and nurses while treating patients in the hospital.The hospital is equipped with most modern sientific technological machines like Robotic machine for treatment of Robotic surgeries. The hospital is very neat and clean which is very hygienic to the patients. Moreover the duties assigned by Ms Prema and Mr Prabhakar both coordinators working in Max Hospital Saket are very excellent in so far as help of the patients coming from far places either within India and foreign countries.is concerned. In short I appreciate the hospital and staff including doctors.",
-            "profile": "https://www.google.com/maps/contrib/101665591507376520931/reviews?hl=en",
-            "country": "foreign",
-            "region": "phrase_signal",
-            "flags": [],
-            "tokens": [
-                "foreign"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2pkeU0yMW9TVjlSY2toR0xXaHdORVJIV0RocmNYYxAB",
-            "name": "peter b",
-            "rating": 5,
-            "date": "6 months ago",
-            "text": "What a world class hospital this is.Australia needs to learn from them what a hospital is.\nThe staff nurses and doctors are world first class. \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/109707353826686136730/reviews?hl=en",
-            "country": "Australia",
-            "region": "oceania",
-            "flags": [],
-            "tokens": [
-                "Australia"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2pCeWRHMVhSUzF3YTJ4ZkxVUlNabXRpVkRaR1lVRRAB",
-            "name": "Adal Khan",
+            "id": "Ci9DQUlRQUNvZENodHljRjlvT21GRmRIZFhSbDlDVlZGUE5YSktXa1ZvTldkVFdtYxAB",
+            "name": "Master Bayu",
             "rating": 1,
             "date": "9 months ago",
-            "text": "I have been in Delhi for the treatment of one of my family members. At this hospital, I met many doctors\u2014some were good, but others were not. The way they treated international patients was very disappointing and not up to standard. I would \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/118285807959484568039/reviews?hl=en",
+            "text": "Initially a good hospital but now money making hospital with worst drs like dr hemal shah causing kidney failures in patients so he can get money of doing transplant on same patient..this is from international patient called ayub whom he gave 120 mg /day predisilone ..instead of solving his transplanted kidney issue he ended up ruining it!",
+            "profile": "https://www.google.com/maps/contrib/115603848582533979557/reviews?hl=en",
             "country": "international patient",
             "region": "phrase_signal",
             "flags": [],
             "tokens": [
                 "international patient"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2tGcldVVkdSM2hGTWxkbVV6ZHZOMEYzY1V4UGNrRRAB",
-            "name": "vikas vats",
-            "rating": 5,
-            "date": "4 months ago",
-            "text": "Biggest private hospital in Delhi.  Having all the bell & whistles... New building under construction to cater international patients.\nUsually lot of patients are there. \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/113620006063736014521/reviews?hl=en",
-            "country": "international patient",
-            "region": "phrase_signal",
-            "flags": [],
-            "tokens": [
-                "international patient"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "ChdDSUhNMG9nS0VJQ0FnSUNLa0p2enp3RRAB",
-            "name": "Muhammed azzaki Muhammed",
-            "rating": 5,
-            "date": "5 years ago",
-            "text": "My patient Ajid saleh from Nigeria had undergone kidney transplant  under Dr Anant kumar at max hospital, the transplant team is very good, they helped us alot, special thanks to miss prema rawat she was always there to help us. Special \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/107756128769131107764/reviews?hl=en",
-            "country": "Nigeria",
-            "region": "africa",
-            "flags": [],
-            "tokens": [
-                "Nigeria"
             ],
             "lang": "en"
         }
     ],
-    "doctors": {
-        "Anant": [
-            0,
-            6
-        ]
-    },
-    "external": {
-        "Anant": [
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT25RemJHTllTbXhDWVVwbFJURllXa2RqTVY5d1UwRRAB",
-                "name": "usha taneja",
-                "rating": 5,
-                "date": "a month ago",
-                "text": "Had a very good experience at Max Super Speciality Hospital, Shalimar Bagh during my surgery and recovery. The entire team was extremely caring, supportive, and professional throughout the journey. The hospital environment was clean and well managed, and every staff member was helpful and attentive.\n\nSpecial thanks to Dr. Vishwas Sharma for the excellent treatment, guidance, and care. His experience and reassuring nature gave a lot of confidence to me and my family during a difficult time.\n\nI would also like to appreciate coordinator Jyoti Saini, sister Veenita, helper Sonia Kaul, and the complete staff for their kindness, patience, and continuous support. From patient care to assistance during recovery, everyone was very cooperative and compassionate.\n\nTruly thankful to the whole team for making the entire experience comfortable and smooth. Highly recommended for excellent patient care and supportive staff.",
-                "profile": "https://www.google.com/maps/contrib/101154595186294093260/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT21sMVNWOWhkV2MxZVMxSFIyaG1RekJFYTJ0SVUyYxAB",
-                "name": "ajay chaudhary",
-                "rating": 5,
-                "date": "3 weeks ago",
-                "text": "*5/5 \u2013 Excellent care and professionalism*\n\nI want to sincerely thank Dr. Ankita Singh for performing my wife Shweta\u2019s Total Abdominal hysterectomy surgery with utmost skill, care, and professionalism. She explained everything clearly, made the patient feel comfortable, and the surgery went extremely well with a smooth recovery.\n\nSpecial thanks to her coordinator, Ishita, for being very supportive, responsive, and for handling all the scheduling and follow-up with great efficiency. The entire experience was stress-free because of their teamwork.\n\nHighly recommend Dr. Ankita Singh and her team for anyone seeking compassionate and competent medical care.\n\nAjay Chaudhary",
-                "profile": "https://www.google.com/maps/contrib/109803759039968189823/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2pod09ISllZVXhTYkZnd2VuQjRSVWsyYkRWTFgxRRAB",
-                "name": "Basant",
-                "rating": 5,
-                "date": "3 weeks ago",
-                "text": "A heartfelt thank you to Dr. Monique Garg for the exceptional care and expertise during a critical time. Dr. Garg's professionalism, deep knowledge, and genuine compassion were truly remarkable throughout the treatment process. We are so grateful for the clear explanations of diagnosis, treatment options, and recovery plan, which brought us immense confidence and peace of mind. His prompt decision-making and dedication to patient care were incredibly reassuring. Thank you, Dr. Garg, for your unwavering commitment and support. We wholeheartedly recommend him for expert neurosurgical care! \ud83d\ude4f\ud83e\udde0 #Gratitude #Doctor #Care #Expertise #Neurosurgery",
-                "profile": "https://www.google.com/maps/contrib/116320473633700845749/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT201VVFXbERiVll3YTIxSlF5MWhlRGxsWmpWamRuYxAB",
-                "name": "Hina Khajuria",
-                "rating": 5,
-                "date": "4 months ago",
-                "text": "Dr Ankita Chandana, senior director, gynaecology. She operated me for fibroids. It was a robotic surgery. Just a few days back. She was exceptionally wonderful, took the time to explain everything personally and patiently. Very sweet and polite and capable. Highly recommend. The robotic surgery has helped me recover faster with minimal cuts and bleeding.\n\nAnd her team, including coordinator Suruchi especially was very helpful in making sure I had timely follow ups and all the relevant documents and coordinated everything seamlessly making the whole process hassle free.",
-                "profile": "https://www.google.com/maps/contrib/112760323330772640002/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2tWUkxYRjBTVXBNY2pSSk9URndXRlJTY1ZwaVUzYxAB",
-                "name": "Shalu",
-                "rating": 5,
-                "date": "3 weeks ago",
-                "text": "Dr. Seema Ma\u2019am,\n\nI would like to express my heartfelt gratitude for being such an incredible support throughout my pregnancy journey. Your expertise, patience, and compassionate care gave me confidence and peace of mind during every stage of this beautiful experience.\n\nThank you for guiding me through a smooth delivery and helping bring my healthy baby safely into the world. Your dedication, encouragement, and attention to every detail made all the difference for me and my family.\n\nWe will always be grateful for your kindness and the exceptional care you provided. Doctors like you not only deliver babies but also bring happiness, hope, and precious memories to families. Thank you for making this journey so comfortable and special for us.\nThanks to Miss tanuja and rekha didi also.\n\nWith sincere gratitude and best wishes,\nShalu",
-                "profile": "https://www.google.com/maps/contrib/108664431139126944827/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2pFMmNXZHRVaTF2YTNWNVptMWpZMGRPUldWVU5tYxAB",
-                "name": "Mohit Rajpal",
-                "rating": 5,
-                "date": "5 months ago",
-                "text": "We are extremely thankful to Dr. Seema Jain (Gynecologist) for taking excellent care of my wife and our newborn baby. She supported us throughout the entire 9-month journey and made the experience smooth and comfortable.\n\nWe would also like to thank the Food & Beverage department for providing high-quality and nutritious meals. Special thanks to Mrs. Shweta for her kindness and support.\n\nOur heartfelt appreciation goes to all the nurses and nannies who were always there for us, caring, supportive, and welcoming us with warm smiles.\n\nThank you, Max Hospital Shalimar Bagh, for the wonderful care and service.",
-                "profile": "https://www.google.com/maps/contrib/112322172144192072231/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2tRNFgzWnJiR3RKZWxsUU9EbHhRa3RKZWtRNFprRRAB",
-                "name": "deepika kedia",
-                "rating": 5,
-                "date": "3 weeks ago",
-                "text": "I am very thankful to God that I met with Dr Ankita chandana.I underwent a robotic hysterectomy. She handled my case utmost expertise. She explained my condition in detail and clearly outline the procedure ,it's benifits and recovery process.The robotic surgery has helped me recover faster with minimal cuts and bleeding.\nExcept this I visited 4 Dr 's no one explain me properly and they said uterus and ovaries will remove. But after meeting maam she is strictly deny not to take out ovaries. She takes stand for me.This  decision of her i appreciate. She is god to me and always she talk and care of me like mother.\nHer whole team  and her coordinator Suruchi was extremely helpful. She makes sure I had timely follow ups and all relevant documents. She help me in every step form come in to out go. She makes my process hasle free.\n. \ud83d\udc9e   My blessings are with them that they can cure with love who so ever come to them",
-                "profile": "https://www.google.com/maps/contrib/102849067380364804888/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT214alJVbHpaQzFNVW1zNE9WRmhNM0ZOVUhkek9IYxAB",
-                "name": "Anil Yadav",
-                "rating": 5,
-                "date": "4 months ago",
-                "text": "I would like to sincerely appreciate Mr. Rishi, Floor Manager of Tower 2 at Max Shalimar Bagh Hospital. During our stay, I was facing several issues related to housekeeping, bed arrangements, and other services on the floor. Whenever I contacted him \u2014 even late at night or early in the morning \u2014 he was always available and responded immediately.\n\nHe handled every problem quickly and ensured it was resolved without delay. It is true that sometimes staff members may not be fully aware of the issues patients and attendants are facing. But a good superior listens carefully, manages the team efficiently, and makes sure everything runs properly \u2014 and Mr. Rishi does exactly that.\n\nHe understands that quality service increases the reputation and value of the hospital. Every member of a hospital is responsible for maintaining its standards, and Mr. Rishi is truly maintaining and protecting the reputation of the hospital through his dedication and leadership.\n\nThank you, Sir, for your constant support and excellent service. We are truly grateful.",
-                "profile": "https://www.google.com/maps/contrib/101787782689247767184/reviews?hl=en"
-            }
-        ]
-    }
+    "doctors": {},
+    "external": {}
 }
