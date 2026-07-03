@@ -24,6 +24,8 @@ const review_lang_service_1 = require("./review-lang.service");
 const file_import_service_1 = require("./file-import.service");
 const sentinel_controller_1 = require("./sentinel.controller");
 const sentinel_service_1 = require("./sentinel.service");
+const settings_controller_1 = require("./settings/settings.controller");
+const settings_service_1 = require("./settings/settings.service");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -36,9 +38,10 @@ exports.AdminModule = AdminModule = __decorate([
             data_controller_1.AdminDataController,
             scrape_controller_1.AdminScrapeController,
             sentinel_controller_1.SentinelController,
+            settings_controller_1.AdminSettingsController,
         ],
-        providers: [users_service_1.UsersService, stats_service_1.StatsService, data_service_1.DataService, scrape_service_1.ScrapeService, scrape_scheduler_1.ScrapeScheduler, enrichment_service_1.EnrichmentService, review_lang_service_1.ReviewLangService, file_import_service_1.FileImportService, sentinel_service_1.SentinelService],
-        exports: [sentinel_service_1.SentinelService],
+        providers: [users_service_1.UsersService, stats_service_1.StatsService, data_service_1.DataService, scrape_service_1.ScrapeService, scrape_scheduler_1.ScrapeScheduler, enrichment_service_1.EnrichmentService, review_lang_service_1.ReviewLangService, file_import_service_1.FileImportService, sentinel_service_1.SentinelService, settings_service_1.SettingsService],
+        exports: [sentinel_service_1.SentinelService, settings_service_1.SettingsService],
     })
 ], AdminModule);
 //# sourceMappingURL=admin.module.js.map

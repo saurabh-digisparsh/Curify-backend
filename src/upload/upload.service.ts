@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 // pdf-parse v2 is class-based: new PDFParse({ data }).getText()
@@ -84,9 +84,17 @@ export class UploadService {
     return { success: true, reportId: report.id, reportRef: report.reportRef, analysis };
   }
 
-  async getReport(id: string) {
+  /**
+   * Fetch a stored analysis. PHI — the caller must own the report (or be an
+   * admin). A missing report and an unauthorized one both surface as 404 so we
+   * don't leak which report ids exist (prevents enumeration).
+   */
+  async getReport(id: string, requesterId: string, isAdmin = false) {
     const report = await this.prisma.report.findUnique({ where: { id } });
-    if (!report) return null;
+    if (!report) throw new NotFoundException('Report not found');
+    if (!isAdmin && report.userId !== requesterId) {
+      throw new NotFoundException('Report not found');
+    }
     // The frontend expects the nested analysis shape (diagnosis/extractedData/flags),
     // which is stored in rawAnalysis. Fall back to the row for legacy records.
     const raw = (report.rawAnalysis as any) ?? null;

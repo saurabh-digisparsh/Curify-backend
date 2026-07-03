@@ -9,8 +9,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fallback_secret',
-      signOptions: { expiresIn: '7d' },
+      // JWT_SECRET is required (validated at boot in main.ts) — no insecure fallback.
+      secret: process.env.JWT_SECRET as string,
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
     }),
   ],
   providers: [AuthService, JwtStrategy],

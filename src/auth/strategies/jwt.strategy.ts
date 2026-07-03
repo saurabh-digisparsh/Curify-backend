@@ -9,7 +9,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'fallback_secret',
+      // No insecure fallback: JWT_SECRET is validated as required at boot
+      // (see assertRequiredEnv in main.ts). A hardcoded default would let anyone
+      // forge tokens if the env var were ever unset.
+      secretOrKey: process.env.JWT_SECRET as string,
     });
   }
 

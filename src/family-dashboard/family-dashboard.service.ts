@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 
@@ -20,7 +20,7 @@ const DEFAULT_CONTACTS = [
 export class FamilyDashboardService {
   constructor(private prisma: PrismaService, private ai: AiService) {}
 
-  async getFamilyStatus(bookingId: string) {
+  async getFamilyStatus(bookingId: string, requesterId: string, isAdmin = false) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -31,8 +31,13 @@ export class FamilyDashboardService {
     });
 
     if (!booking) {
-      // Return demo state if no booking found (dev/demo mode)
+      // No such booking → demo state (fake data, no PHI leak).
       return this.getDemoState();
+    }
+
+    // A real booking's live status is PHI — only the owner (or an admin) may see it.
+    if (!isAdmin && booking.userId !== requesterId) {
+      throw new ForbiddenException('You do not have access to this booking');
     }
 
     const latestStatus = booking.statusUpdates[0]?.status ?? 'in-surgery';

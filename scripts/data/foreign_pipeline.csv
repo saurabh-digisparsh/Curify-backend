@@ -1,4 +1,19 @@
 kind,hospitalName,hospitalCity,hospitalRating,hospitalAddress,hospitalPhone,hospitalWebsite,hospitalPlaceId,hospitalLat,hospitalLng,hospitalMapsUri,id,name,rating,date,total_reviews,text,link,profile,country,region,flags,tokens,lang
-hospital,"Fortis Hospital, Anandapur - Best Hospital in Kolkata",Kolkata,4.3,"730, Eastern Metropolitan Bypass, Anandapur, East Kolkata Twp, Kolkata, West Bengal 700107 ",,,,,,,,,,,,,,,,,,,
-review,"Fortis Hospital, Anandapur - Best Hospital in Kolkata",Kolkata,,,,,,,,,ChdDSUhNMG9nS0VJQ0FnSUNlNDdYYm5BRRAB,Someshwar Bose,5,Edited 2 years ago,1,"This is a private hospital located ar Anandapur EM bypass, behind Kolkata international school. They provide high end medical services both OPD and IPD basis. It has radiology, gynaecology, international patient help desk, admission … More",,https://www.google.com/maps/contrib/111512339079421825426/reviews?hl=en,international patient,phrase_signal,[],"[""international patient""]",en
-review,"Fortis Hospital, Anandapur - Best Hospital in Kolkata",Kolkata,,,,,,,,,ChdDSUhNMG9nS0VJQ0FnSUREOGNibF9BRRAB,Aritra Basu,3,2 years ago,1,"Regular hospital in Kolkata. Female patient passed away in hospital, they mention male as the gender. Gastric Carcinoma patient is being given food laden with spices and oil. … More",,https://www.google.com/maps/contrib/104721233567085412551/reviews?hl=en,Maldives,south_asia,[],"[""Maldives""]",en
+hospital,Manipal Hospital EM Bypass,Kolkata,4.6,"127, Eastern Metropolitan Bypass, Nitai Nagar, Mukundapur, Kolkata, West Bengal 700099, India",033 6907 0000,https://www.manipalhospitals.com/em-bypass/?utm_source=GMB&utm_medium=,ChIJ7UDMkl9xAjoR6hQmPDygLfk,22.4942277,88.400696,https://maps.google.com/?cid=17955183469963646186&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA,,,,,,,,,,,,,
+review,Manipal Hospital EM Bypass,Kolkata,,,,,,,,,ChdDSUhNMG9nS0VJQ0FnSURpb3BmQTVBRRAB,Subhasish Kundu,5,5 years ago,1,"Got my wife admitted for a lapchole surgery in Nov,20.
+
+Information: Clear communication. No hidden area. They usually takes booking for rooms with estimation but due to Covid situation room is not a one shot. But they accommodate .
+
+Covid care: very much careful even using separate lift. Although there are always some patients companion shows illiterate behaviour.
+Overall absolutely they are doing there level best.
+
+Rooms: The best experience out of Amri , Apollo ,devine ,charnok and Columbia Asia. Very much clean ,maintained .
+
+Nursing staff: On this point I will give 200 out of 100. The whole nursing staff is so much caring and all the time with smile and helpful . They take care of the patients privacy during the hard time too. Even the new joiners are doing the best and shows that they like this job and honor that. Their response to patient call was in seconds every time. Even during night
+
+Pocket pinch: Bit of in the expensive side but again if anyone is comparing with the service, the price you pay is worth it. Yes the discharge billing is the pain as there is only one counter . That is why the star is one less for the rating.
+
+Even important thing is communication. As my wife is foreigner. Other places I felt communication issue which in this hospital was not there.
+
+Must recommended when people are suffering with poor health service by health care sector.",,https://www.google.com/maps/contrib/104442782877774650213/reviews?hl=en,foreigner,phrase_signal,[],"[""foreigner""]",en
+review,Manipal Hospital EM Bypass,Kolkata,,,,,,,,,ChZDSUhNMG9nS0VJQ0FnSURRbkpxSURBEAE,Rajat Saha,5,8 years ago,1,Very simplified admission process. Very well maintained. Less pressure of International (Bangladesh) patients makes it a great hospital. Administration is also seems very strict.,,https://www.google.com/maps/contrib/118198903402354902061/reviews?hl=en,Bangladesh,south_asia,[],"[""Bangladesh""]",en

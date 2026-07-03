@@ -1,6 +1,6 @@
 import {
   Controller, Post, Get, Param, Body, UploadedFile,
-  UseInterceptors, UseGuards, Request, Optional,
+  UseInterceptors, UseGuards, Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
@@ -15,7 +15,11 @@ const ALLOWED_MIMES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
+// PHI: medical reports must never be uploaded or read anonymously. Every route
+// here requires authentication, and reads are ownership-checked in the service.
 @ApiTags('Upload & Analysis')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('upload')
 export class UploadController {
   constructor(private uploadService: UploadService) {}
@@ -26,7 +30,8 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: { fileSize: 25 * 1024 * 1024 },
+      // 10 MB is ample for medical PDFs/images and limits memory-exhaustion risk.
+      limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) cb(null, true);
         else cb(new Error('Unsupported format. Use PDF, JPEG, PNG, or DOCX.'), false);
@@ -38,16 +43,17 @@ export class UploadController {
     @Body() body: { description?: string; treatment?: string; country?: string; urgency?: string },
     @Request() req,
   ) {
+    // The report is always attributed to the authenticated patient.
     return this.uploadService.analyzeAndStore({
-      userId: req.user?.id,
+      userId: req.user.id,
       file,
       ...body,
     });
   }
 
-  @ApiOperation({ summary: 'Get a stored analysis by ID' })
+  @ApiOperation({ summary: 'Get a stored analysis by ID (owner or admin only)' })
   @Get('analysis/:id')
-  getAnalysis(@Param('id') id: string) {
-    return this.uploadService.getReport(id);
+  getAnalysis(@Param('id') id: string, @Request() req) {
+    return this.uploadService.getReport(id, req.user.id, req.user.role === 'ADMIN');
   }
 }

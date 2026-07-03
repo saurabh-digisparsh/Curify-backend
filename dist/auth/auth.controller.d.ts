@@ -7,8 +7,8 @@ export declare class AuthController {
     signup(dto: SignupDto): Promise<{
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
             country: string | null;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
@@ -20,8 +20,8 @@ export declare class AuthController {
     login(dto: LoginDto): Promise<{
         user: {
             id: string;
-            name: string | null;
             email: string;
+            name: string | null;
             country: string | null;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
@@ -32,8 +32,8 @@ export declare class AuthController {
     }>;
     getMe(req: any): Promise<{
         id: string;
-        name: string | null;
         email: string;
+        name: string | null;
         country: string | null;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;

@@ -16,15 +16,16 @@ exports.BookingsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const bookings_service_1 = require("./bookings.service");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let BookingsController = class BookingsController {
     constructor(service) {
         this.service = service;
     }
-    create(body) {
-        return this.service.create(body);
+    create(body, req) {
+        return this.service.create({ ...body, userId: req.user.id });
     }
-    findOne(id) {
-        return this.service.findOne(id);
+    findOne(id, req) {
+        return this.service.findOne(id, req.user.id, req.user.role === 'ADMIN');
     }
 };
 exports.BookingsController = BookingsController;
@@ -32,20 +33,24 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Create a new booking after payment' }),
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "create", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get booking by ID' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get booking by ID (owner or admin only)' }),
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "findOne", null);
 exports.BookingsController = BookingsController = __decorate([
     (0, swagger_1.ApiTags)('Bookings'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('bookings'),
     __metadata("design:paramtypes", [bookings_service_1.BookingsService])
 ], BookingsController);

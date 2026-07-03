@@ -15,7 +15,7 @@ export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: {
-    userId?: string;
+    userId: string;
     reportId?: string;
     hospitalId: string;
     plan?: string;
@@ -27,16 +27,10 @@ export class BookingsService {
     const hospital = await this.prisma.hospital.findUnique({ where: { id: data.hospitalId } });
     if (!hospital) throw new NotFoundException('Hospital not found');
 
-    // Create a demo user if no userId provided (dev/demo flow)
-    let userId = data.userId;
-    if (!userId) {
-      const demoUser = await this.prisma.user.upsert({
-        where: { email: 'demo@curify.com' },
-        update: {},
-        create: { email: 'demo@curify.com', password: 'demo', name: 'Demo Patient' },
-      });
-      userId = demoUser.id;
-    }
+    // userId is always the authenticated caller (enforced in the controller).
+    // The previous demo-user fallback (demo@curify.com / 'demo') was removed — it
+    // created a shared, plaintext-password account and mixed demo/real data.
+    const userId = data.userId;
 
     const booking = await this.prisma.booking.create({
       data: {
@@ -69,12 +63,15 @@ export class BookingsService {
     return { bookingId: booking.id, paymentRef: booking.paymentRef, status: booking.status };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, requesterId: string, isAdmin = false) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: { hospital: true, statusUpdates: true, milestones: { orderBy: { sequence: 'asc' } } },
     });
-    if (!booking) throw new NotFoundException('Booking not found');
+    // 404 for both missing and unauthorized so ids can't be enumerated.
+    if (!booking || (!isAdmin && booking.userId !== requesterId)) {
+      throw new NotFoundException('Booking not found');
+    }
     return booking;
   }
 }

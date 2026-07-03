@@ -41,17 +41,14 @@ export declare class HospitalsService {
     findAll(): Promise<{
         hospitals: {
             reviewCount: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
-                name: string;
-                id: string;
-                createdAt: Date;
-                title: string | null;
                 hospital: string | null;
+                id: string;
+                name: string;
                 country: string | null;
+                createdAt: Date;
                 flag: string | null;
+                title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -67,17 +64,18 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            name: string;
+            _count: {
+                reviews: number;
+            };
             id: string;
-            city: string;
-            fairnessScore: number | null;
-            createdAt: Date;
-            procedures: import("@prisma/client/runtime/library").JsonValue | null;
-            surgeonId: string | null;
+            name: string;
             country: string;
+            createdAt: Date;
+            city: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
+            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -89,7 +87,9 @@ export declare class HospitalsService {
             mysteryShopperScore: number | null;
             patientsPerYear: number | null;
             internationalPercent: string | null;
+            surgeonId: string | null;
             specialty: string | null;
+            procedures: import("@prisma/client/runtime/library").JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;
@@ -99,13 +99,13 @@ export declare class HospitalsService {
             googleMapsUri: string | null;
         }[];
         surgeons: {
-            name: string;
-            id: string;
-            createdAt: Date;
-            title: string | null;
             hospital: string | null;
+            id: string;
+            name: string;
             country: string | null;
+            createdAt: Date;
             flag: string | null;
+            title: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -123,36 +123,14 @@ export declare class HospitalsService {
         }[];
     }>;
     findOne(id: string): Promise<{
-        reviews: {
-            id: string;
-            rating: number;
-            createdAt: Date;
-            link: string | null;
-            region: string | null;
-            lang: string | null;
-            procedure: string | null;
-            hospitalId: string;
-            surgeonId: string | null;
-            reviewerName: string;
-            nationality: string | null;
-            age: number | null;
-            reviewDate: string | null;
-            text: string;
-            textEn: string | null;
-            verified: boolean;
-            totalReviews: number | null;
-            tokens: import("@prisma/client/runtime/library").JsonValue | null;
-            flags: import("@prisma/client/runtime/library").JsonValue | null;
-            contentHash: string | null;
-        }[];
         surgeon: {
-            name: string;
-            id: string;
-            createdAt: Date;
-            title: string | null;
             hospital: string | null;
+            id: string;
+            name: string;
             country: string | null;
+            createdAt: Date;
             flag: string | null;
+            title: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -168,18 +146,38 @@ export declare class HospitalsService {
             avgSurgeryTime: string | null;
             nextAvailable: string | null;
         };
+        reviews: {
+            id: string;
+            createdAt: Date;
+            text: string;
+            flags: import("@prisma/client/runtime/library").JsonValue | null;
+            surgeonId: string | null;
+            link: string | null;
+            hospitalId: string;
+            reviewerName: string;
+            nationality: string | null;
+            age: number | null;
+            procedure: string | null;
+            rating: number;
+            reviewDate: string | null;
+            textEn: string | null;
+            region: string | null;
+            verified: boolean;
+            lang: string | null;
+            totalReviews: number | null;
+            tokens: import("@prisma/client/runtime/library").JsonValue | null;
+            contentHash: string | null;
+        }[];
     } & {
-        name: string;
         id: string;
-        city: string;
-        fairnessScore: number | null;
-        createdAt: Date;
-        procedures: import("@prisma/client/runtime/library").JsonValue | null;
-        surgeonId: string | null;
+        name: string;
         country: string;
+        createdAt: Date;
+        city: string;
         flag: string | null;
         imageUrl: string | null;
         jciAccredited: boolean;
+        fairnessScore: number | null;
         overallRating: number | null;
         quotedPriceUsd: number | null;
         localPriceUsd: number | null;
@@ -191,7 +189,9 @@ export declare class HospitalsService {
         mysteryShopperScore: number | null;
         patientsPerYear: number | null;
         internationalPercent: string | null;
+        surgeonId: string | null;
         specialty: string | null;
+        procedures: import("@prisma/client/runtime/library").JsonValue | null;
         intlOfficePhone: string | null;
         intlOfficeEmail: string | null;
         website: string | null;
@@ -202,24 +202,24 @@ export declare class HospitalsService {
     }>;
     getReviews(hospitalId: string, page?: number, pageSize?: number): Promise<{
         id: string;
-        rating: number;
         createdAt: Date;
-        link: string | null;
-        region: string | null;
-        lang: string | null;
-        procedure: string | null;
-        hospitalId: string;
+        text: string;
+        flags: import("@prisma/client/runtime/library").JsonValue | null;
         surgeonId: string | null;
+        link: string | null;
+        hospitalId: string;
         reviewerName: string;
         nationality: string | null;
         age: number | null;
+        procedure: string | null;
+        rating: number;
         reviewDate: string | null;
-        text: string;
         textEn: string | null;
+        region: string | null;
         verified: boolean;
+        lang: string | null;
         totalReviews: number | null;
         tokens: import("@prisma/client/runtime/library").JsonValue | null;
-        flags: import("@prisma/client/runtime/library").JsonValue | null;
         contentHash: string | null;
     }[]>;
     matchForPatient(params: {
@@ -231,17 +231,14 @@ export declare class HospitalsService {
         hospitals: {
             reviewCount: number;
             aiMatchScore: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
-                name: string;
-                id: string;
-                createdAt: Date;
-                title: string | null;
                 hospital: string | null;
+                id: string;
+                name: string;
                 country: string | null;
+                createdAt: Date;
                 flag: string | null;
+                title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -257,17 +254,18 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            name: string;
+            _count: {
+                reviews: number;
+            };
             id: string;
-            city: string;
-            fairnessScore: number | null;
-            createdAt: Date;
-            procedures: import("@prisma/client/runtime/library").JsonValue | null;
-            surgeonId: string | null;
+            name: string;
             country: string;
+            createdAt: Date;
+            city: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
+            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -279,7 +277,9 @@ export declare class HospitalsService {
             mysteryShopperScore: number | null;
             patientsPerYear: number | null;
             internationalPercent: string | null;
+            surgeonId: string | null;
             specialty: string | null;
+            procedures: import("@prisma/client/runtime/library").JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;
@@ -289,13 +289,13 @@ export declare class HospitalsService {
             googleMapsUri: string | null;
         }[];
         surgeons: {
-            name: string;
-            id: string;
-            createdAt: Date;
-            title: string | null;
             hospital: string | null;
+            id: string;
+            name: string;
             country: string | null;
+            createdAt: Date;
             flag: string | null;
+            title: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -324,17 +324,14 @@ export declare class HospitalsService {
     }): Promise<{
         hospitals: {
             reviewCount: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
-                name: string;
-                id: string;
-                createdAt: Date;
-                title: string | null;
                 hospital: string | null;
+                id: string;
+                name: string;
                 country: string | null;
+                createdAt: Date;
                 flag: string | null;
+                title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -350,17 +347,18 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            name: string;
+            _count: {
+                reviews: number;
+            };
             id: string;
-            city: string;
-            fairnessScore: number | null;
-            createdAt: Date;
-            procedures: import("@prisma/client/runtime/library").JsonValue | null;
-            surgeonId: string | null;
+            name: string;
             country: string;
+            createdAt: Date;
+            city: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
+            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -372,7 +370,9 @@ export declare class HospitalsService {
             mysteryShopperScore: number | null;
             patientsPerYear: number | null;
             internationalPercent: string | null;
+            surgeonId: string | null;
             specialty: string | null;
+            procedures: import("@prisma/client/runtime/library").JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;

@@ -19,5 +19,5 @@ export declare class UploadService {
         reportRef: string;
         analysis: any;
     }>;
-    getReport(id: string): Promise<any>;
+    getReport(id: string, requesterId: string, isAdmin?: boolean): Promise<any>;
 }

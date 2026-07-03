@@ -15,6 +15,8 @@ import { ReviewLangService } from './review-lang.service';
 import { FileImportService } from './file-import.service';
 import { SentinelController } from './sentinel.controller';
 import { SentinelService } from './sentinel.service';
+import { AdminSettingsController } from './settings/settings.controller';
+import { SettingsService } from './settings/settings.service';
 
 @Module({
   imports: [AuthModule, AiModule], // AuthModule: JWT strategy; AiModule: AiService for enrichment/localization
@@ -24,9 +26,11 @@ import { SentinelService } from './sentinel.service';
     AdminDataController,
     AdminScrapeController,
     SentinelController,
+    AdminSettingsController,
   ],
-  providers: [UsersService, StatsService, DataService, ScrapeService, ScrapeScheduler, EnrichmentService, ReviewLangService, FileImportService, SentinelService],
-  // Exported so the app-level Sentinel guards (registered in AppModule) can inject it.
-  exports: [SentinelService],
+  providers: [UsersService, StatsService, DataService, ScrapeService, ScrapeScheduler, EnrichmentService, ReviewLangService, FileImportService, SentinelService, SettingsService],
+  // Exported so the app-level Sentinel guards (registered in AppModule) can inject it,
+  // and SettingsService so other modules can read effective config values.
+  exports: [SentinelService, SettingsService],
 })
 export class AdminModule {}

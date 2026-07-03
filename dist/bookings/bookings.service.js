@@ -28,15 +28,7 @@ let BookingsService = class BookingsService {
         const hospital = await this.prisma.hospital.findUnique({ where: { id: data.hospitalId } });
         if (!hospital)
             throw new common_1.NotFoundException('Hospital not found');
-        let userId = data.userId;
-        if (!userId) {
-            const demoUser = await this.prisma.user.upsert({
-                where: { email: 'demo@curify.com' },
-                update: {},
-                create: { email: 'demo@curify.com', password: 'demo', name: 'Demo Patient' },
-            });
-            userId = demoUser.id;
-        }
+        const userId = data.userId;
         const booking = await this.prisma.booking.create({
             data: {
                 userId,
@@ -62,13 +54,14 @@ let BookingsService = class BookingsService {
         });
         return { bookingId: booking.id, paymentRef: booking.paymentRef, status: booking.status };
     }
-    async findOne(id) {
+    async findOne(id, requesterId, isAdmin = false) {
         const booking = await this.prisma.booking.findUnique({
             where: { id },
             include: { hospital: true, statusUpdates: true, milestones: { orderBy: { sequence: 'asc' } } },
         });
-        if (!booking)
+        if (!booking || (!isAdmin && booking.userId !== requesterId)) {
             throw new common_1.NotFoundException('Booking not found');
+        }
         return booking;
     }
 };

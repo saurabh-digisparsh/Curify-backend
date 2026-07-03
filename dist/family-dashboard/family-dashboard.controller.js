@@ -16,12 +16,13 @@ exports.FamilyDashboardController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const family_dashboard_service_1 = require("./family-dashboard.service");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let FamilyDashboardController = class FamilyDashboardController {
     constructor(service) {
         this.service = service;
     }
-    getFamilyStatus(bookingId) {
-        return this.service.getFamilyStatus(bookingId);
+    getFamilyStatus(bookingId, req) {
+        return this.service.getFamilyStatus(bookingId, req.user.id, req.user.role === 'ADMIN');
     }
     getUpdates(body) {
         return this.service.getUpdates({
@@ -34,11 +35,14 @@ let FamilyDashboardController = class FamilyDashboardController {
 };
 exports.FamilyDashboardController = FamilyDashboardController;
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get DB-driven family status for a booking' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Get DB-driven family status for a booking (owner or admin only)' }),
     (0, common_1.Get)('booking/:bookingId'),
     __param(0, (0, common_1.Param)('bookingId')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], FamilyDashboardController.prototype, "getFamilyStatus", null);
 __decorate([

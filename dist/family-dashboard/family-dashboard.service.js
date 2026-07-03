@@ -30,7 +30,7 @@ let FamilyDashboardService = class FamilyDashboardService {
         this.prisma = prisma;
         this.ai = ai;
     }
-    async getFamilyStatus(bookingId) {
+    async getFamilyStatus(bookingId, requesterId, isAdmin = false) {
         const booking = await this.prisma.booking.findUnique({
             where: { id: bookingId },
             include: {
@@ -41,6 +41,9 @@ let FamilyDashboardService = class FamilyDashboardService {
         });
         if (!booking) {
             return this.getDemoState();
+        }
+        if (!isAdmin && booking.userId !== requesterId) {
+            throw new common_1.ForbiddenException('You do not have access to this booking');
         }
         const latestStatus = booking.statusUpdates[0]?.status ?? 'in-surgery';
         const contacts = [

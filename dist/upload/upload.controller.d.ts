@@ -13,5 +13,5 @@ export declare class UploadController {
         reportRef: string;
         analysis: any;
     }>;
-    getAnalysis(id: string): Promise<any>;
+    getAnalysis(id: string, req: any): Promise<any>;
 }

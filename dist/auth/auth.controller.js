@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
 const signup_dto_1 = require("./dto/signup.dto");
 const login_dto_1 = require("./dto/login.dto");
@@ -35,6 +36,7 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
+    (0, throttler_1.Throttle)({ default: { ttl: 60_000, limit: 3 } }),
     (0, swagger_1.ApiOperation)({ summary: 'Register a new patient account' }),
     (0, common_1.Post)('signup'),
     __param(0, (0, common_1.Body)()),
@@ -43,6 +45,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "signup", null);
 __decorate([
+    (0, throttler_1.Throttle)({ default: { ttl: 60_000, limit: 5 } }),
     (0, swagger_1.ApiOperation)({ summary: 'Login with email & password' }),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),

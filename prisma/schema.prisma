@@ -646,3 +646,22 @@ model SecurityEvent {
   @@index([blocked])
   @@map("security_events")
 }
+
+// ─── Admin: System settings ───────────────────────────────────────────────────
+// Key/value overrides for app configuration + integration credentials, editable
+// from the admin "Settings" screen. The canonical list of settings (labels,
+// types, defaults, which are secret) lives in code (settings.registry.ts); this
+// table only stores the values an admin has changed. Effective value resolves as:
+// DB override (here) ?? environment variable ?? code default.
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique // matches a key in the settings registry
+  value     String   @db.Text // string-encoded (number/boolean serialized as text)
+  category  String   // 'integrations' | 'leadgen' | 'scheduling' | 'system'
+  updatedBy String?  // admin user id/email who last changed it
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}

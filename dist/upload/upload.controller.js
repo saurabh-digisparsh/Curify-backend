@@ -18,6 +18,7 @@ const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const multer_1 = require("multer");
 const upload_service_1 = require("./upload.service");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const ALLOWED_MIMES = [
     'application/pdf',
     'image/jpeg',
@@ -30,13 +31,13 @@ let UploadController = class UploadController {
     }
     async upload(file, body, req) {
         return this.uploadService.analyzeAndStore({
-            userId: req.user?.id,
+            userId: req.user.id,
             file,
             ...body,
         });
     }
-    getAnalysis(id) {
-        return this.uploadService.getReport(id);
+    getAnalysis(id, req) {
+        return this.uploadService.getReport(id, req.user.id, req.user.role === 'ADMIN');
     }
 };
 exports.UploadController = UploadController;
@@ -46,7 +47,7 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.memoryStorage)(),
-        limits: { fileSize: 25 * 1024 * 1024 },
+        limits: { fileSize: 10 * 1024 * 1024 },
         fileFilter: (_, file, cb) => {
             if (ALLOWED_MIMES.includes(file.mimetype))
                 cb(null, true);
@@ -62,15 +63,18 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "upload", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get a stored analysis by ID' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a stored analysis by ID (owner or admin only)' }),
     (0, common_1.Get)('analysis/:id'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], UploadController.prototype, "getAnalysis", null);
 exports.UploadController = UploadController = __decorate([
     (0, swagger_1.ApiTags)('Upload & Analysis'),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('upload'),
     __metadata("design:paramtypes", [upload_service_1.UploadService])
 ], UploadController);

@@ -3,25 +3,24 @@ export declare class BookingsController {
     private service;
     constructor(service: BookingsService);
     create(body: {
-        userId?: string;
         reportId?: string;
         hospitalId: string;
         plan?: string;
         totalAmount?: number;
         currency?: string;
         paymentRef?: string;
-    }): Promise<{
+    }, req: any): Promise<{
         bookingId: string;
         paymentRef: string;
         status: import(".prisma/client").$Enums.BookingStatus;
     }>;
-    findOne(id: string): Promise<{
+    findOne(id: string, req: any): Promise<{
         hospital: {
             id: string;
-            name: string;
-            country: string;
             createdAt: Date;
+            name: string;
             city: string;
+            country: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -50,8 +49,8 @@ export declare class BookingsController {
         };
         statusUpdates: {
             id: string;
-            createdAt: Date;
             status: string;
+            createdAt: Date;
             bookingId: string;
             message: string;
             icon: string;
@@ -59,19 +58,14 @@ export declare class BookingsController {
         }[];
         milestones: {
             id: string;
-            label: string;
-            bookingId: string;
             sequence: number;
+            bookingId: string;
+            label: string;
             done: boolean;
             active: boolean;
         }[];
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        userId: string;
-        reportId: string | null;
-        hospitalId: string;
         plan: import(".prisma/client").$Enums.Plan;
         status: import(".prisma/client").$Enums.BookingStatus;
         totalAmount: number | null;
@@ -80,5 +74,10 @@ export declare class BookingsController {
         travelDate: Date | null;
         surgeryDate: Date | null;
         notes: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        userId: string;
+        reportId: string | null;
+        hospitalId: string;
     }>;
 }

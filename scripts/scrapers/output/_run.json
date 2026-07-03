@@ -1,37 +1,37 @@
 {
     "place": {
-        "name": "Fortis Hospital, Anandapur - Best Hospital in Kolkata",
-        "rating": 4.3,
-        "address": "730, Eastern Metropolitan Bypass, Anandapur, East Kolkata Twp, Kolkata, West Bengal 700107 "
+        "name": "Manipal Hospital, Salt Lake",
+        "rating": 4.5,
+        "address": "IB-193, Broadway Rd, IB Block, Sector 3, Bidhannagar, Kolkata, West Bengal 700106 "
     },
     "foreign": [
         {
-            "id": "ChdDSUhNMG9nS0VJQ0FnSUNlNDdYYm5BRRAB",
-            "name": "Someshwar Bose",
+            "id": "ChdDSUhNMG9nS0VJQ0FnSURpb3BmQTVBRRAB",
+            "name": "Subhasish Kundu",
             "rating": 5,
-            "date": "Edited 2 years ago",
-            "text": "This is a private hospital located ar Anandapur EM bypass, behind Kolkata international school. They provide high end medical services both OPD and IPD basis. It has radiology, gynaecology, international patient help desk, admission \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/111512339079421825426/reviews?hl=en",
-            "country": "international patient",
+            "date": "5 years ago",
+            "text": "Got my wife admitted for a lapchole surgery in Nov,20.\n\nInformation: Clear communication. No hidden area. They usually takes booking for rooms with estimation but due to Covid situation room is not a one shot. But they accommodate .\n\nCovid care: very much careful even using separate lift. Although there are always some patients companion shows illiterate behaviour.\nOverall absolutely they are doing there level best.\n\nRooms: The best experience out of Amri , Apollo ,devine ,charnok and Columbia Asia. Very much clean ,maintained .\n\nNursing staff: On this point I will give 200 out of 100. The whole nursing staff is so much caring and all the time with smile and helpful . They take care of the patients privacy during the hard time too. Even the new joiners are doing the best and shows that they like this job and honor that. Their response to patient call was in seconds every time. Even during night\n\nPocket pinch: Bit of in the expensive side but again if anyone is comparing with the service, the price you pay is worth it. Yes the discharge billing is the pain as there is only one counter . That is why the star is one less for the rating.\n\nEven important thing is communication. As my wife is foreigner. Other places I felt communication issue which in this hospital was not there.\n\nMust recommended when people are suffering with poor health service by health care sector.",
+            "profile": "https://www.google.com/maps/contrib/104442782877774650213/reviews?hl=en",
+            "country": "foreigner",
             "region": "phrase_signal",
             "flags": [],
             "tokens": [
-                "international patient"
+                "foreigner"
             ],
             "lang": "en"
         },
         {
-            "id": "ChdDSUhNMG9nS0VJQ0FnSUREOGNibF9BRRAB",
-            "name": "Aritra Basu",
-            "rating": 3,
-            "date": "2 years ago",
-            "text": "Regular hospital in Kolkata. Female patient passed away in hospital, they mention male as the gender. Gastric Carcinoma patient is being given food laden with spices and oil. \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/104721233567085412551/reviews?hl=en",
-            "country": "Maldives",
+            "id": "ChZDSUhNMG9nS0VJQ0FnSURRbkpxSURBEAE",
+            "name": "Rajat Saha",
+            "rating": 5,
+            "date": "8 years ago",
+            "text": "Very simplified admission process. Very well maintained. Less pressure of International (Bangladesh) patients makes it a great hospital. Administration is also seems very strict.",
+            "profile": "https://www.google.com/maps/contrib/118198903402354902061/reviews?hl=en",
+            "country": "Bangladesh",
             "region": "south_asia",
             "flags": [],
             "tokens": [
-                "Maldives"
+                "Bangladesh"
             ],
             "lang": "en"
         }

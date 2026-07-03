@@ -81,10 +81,13 @@ let UploadService = UploadService_1 = class UploadService {
         });
         return { success: true, reportId: report.id, reportRef: report.reportRef, analysis };
     }
-    async getReport(id) {
+    async getReport(id, requesterId, isAdmin = false) {
         const report = await this.prisma.report.findUnique({ where: { id } });
         if (!report)
-            return null;
+            throw new common_1.NotFoundException('Report not found');
+        if (!isAdmin && report.userId !== requesterId) {
+            throw new common_1.NotFoundException('Report not found');
+        }
         const raw = report.rawAnalysis ?? null;
         if (raw && raw.diagnosis) {
             return { ...raw, reportRef: report.reportRef, reportId: report.id };

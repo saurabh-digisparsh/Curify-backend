@@ -2,7 +2,7 @@ import { FamilyDashboardService } from './family-dashboard.service';
 export declare class FamilyDashboardController {
     private service;
     constructor(service: FamilyDashboardService);
-    getFamilyStatus(bookingId: string): Promise<{
+    getFamilyStatus(bookingId: string, req: any): Promise<{
         bookingId: string;
         hospitalName: string;
         city: string;

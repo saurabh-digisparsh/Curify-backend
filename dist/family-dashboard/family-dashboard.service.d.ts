@@ -4,7 +4,7 @@ export declare class FamilyDashboardService {
     private prisma;
     private ai;
     constructor(prisma: PrismaService, ai: AiService);
-    getFamilyStatus(bookingId: string): Promise<{
+    getFamilyStatus(bookingId: string, requesterId: string, isAdmin?: boolean): Promise<{
         bookingId: string;
         hospitalName: string;
         city: string;
