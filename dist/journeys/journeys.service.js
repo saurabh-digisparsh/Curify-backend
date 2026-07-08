@@ -13,9 +13,10 @@ exports.JourneysService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ai_service_1 = require("../ai/ai.service");
+const travel_1 = require("../common/travel");
 const WRITABLE = [
     'title', 'status', 'treatment', 'city', 'urgency', 'homeCountry', 'description',
-    'step', 'reportId', 'analysis', 'stayOrGo', 'hospitalId', 'tripPlan',
+    'travelDate', 'step', 'reportId', 'analysis', 'stayOrGo', 'hospitalId', 'tripPlan',
 ];
 let JourneysService = class JourneysService {
     constructor(prisma, ai) {
@@ -114,6 +115,15 @@ let JourneysService = class JourneysService {
         for (const k of WRITABLE)
             if (body[k] !== undefined)
                 data[k] = body[k];
+        if (data.travelDate != null) {
+            const d = new Date(data.travelDate);
+            if (Number.isNaN(d.getTime()))
+                delete data.travelDate;
+            else {
+                data.travelDate = d;
+                data.urgent = (0, travel_1.deriveUrgent)(d);
+            }
+        }
         return data;
     }
     async list(userId, opts) {

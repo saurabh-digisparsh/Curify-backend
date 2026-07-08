@@ -2,6 +2,7 @@ import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AiService } from '../ai/ai.service';
+import { deriveUrgent } from '../common/travel';
 
 // AI calls are the most expensive thing this public endpoint can trigger —
 // throttle tighter than the global default (per-IP: 10 messages/minute).
@@ -44,6 +45,18 @@ export class AssistantController {
       country: typeof body?.country === 'string' ? body.country.slice(0, 100) : undefined,
       urgency: typeof body?.urgency === 'string' ? body.urgency.slice(0, 50) : undefined,
     });
+  }
+
+  @ApiOperation({ summary: 'Parse a free-typed travel-date phrase into a calendar date + urgent flag' })
+  @Throttle(CHAT_THROTTLE)
+  @Post('parse-date')
+  async parseDate(@Body() body: { text?: string }) {
+    const text = String(body?.text || '').trim().slice(0, 100);
+    if (text.length < 2) throw new BadRequestException('text too short');
+    const { date } = await this.ai.parseTravelDate({ text });
+    // Urgent derived here too so the chat can confirm it; the journey save recomputes
+    // authoritatively (deriveUrgent is the single shared rule).
+    return { date, urgent: date ? deriveUrgent(new Date(date)) : false };
   }
 
   @ApiOperation({ summary: 'AI-translate the UI string catalog into a target language (cached client-side)' })

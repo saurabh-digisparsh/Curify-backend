@@ -15,6 +15,12 @@ export declare class AssistantController {
         country?: string;
         urgency?: string;
     }): Promise<any>;
+    parseDate(body: {
+        text?: string;
+    }): Promise<{
+        date: string;
+        urgent: boolean;
+    }>;
     translateUi(body: {
         language?: string;
         strings?: Record<string, string>;

@@ -16,18 +16,18 @@ export declare class TripPlanService {
     }>;
     getFlights(origin: string, destination: string): Promise<{
         id: string;
+        label: string | null;
         destination: string;
         origin: string;
         airline: string;
         price: number;
         duration: string;
         stops: string | null;
-        label: string | null;
         bookingUrl: string | null;
     }[]>;
     getInsurance(): Promise<{
-        id: string;
         name: string;
+        id: string;
         bookingUrl: string | null;
         tagline: string | null;
         pricePerDay: number;

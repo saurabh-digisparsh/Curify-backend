@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
 const ai_service_1 = require("../ai/ai.service");
+const travel_1 = require("../common/travel");
 const CHAT_THROTTLE = { default: { ttl: 60_000, limit: 10 } };
 const TRANSLATE_THROTTLE = { default: { ttl: 300_000, limit: 30 } };
 let AssistantController = class AssistantController {
@@ -39,6 +40,13 @@ let AssistantController = class AssistantController {
             country: typeof body?.country === 'string' ? body.country.slice(0, 100) : undefined,
             urgency: typeof body?.urgency === 'string' ? body.urgency.slice(0, 50) : undefined,
         });
+    }
+    async parseDate(body) {
+        const text = String(body?.text || '').trim().slice(0, 100);
+        if (text.length < 2)
+            throw new common_1.BadRequestException('text too short');
+        const { date } = await this.ai.parseTravelDate({ text });
+        return { date, urgent: date ? (0, travel_1.deriveUrgent)(new Date(date)) : false };
     }
     translateUi(body) {
         const language = String(body?.language || '').toLowerCase();
@@ -71,6 +79,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AssistantController.prototype, "analyze", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Parse a free-typed travel-date phrase into a calendar date + urgent flag' }),
+    (0, throttler_1.Throttle)(CHAT_THROTTLE),
+    (0, common_1.Post)('parse-date'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AssistantController.prototype, "parseDate", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'AI-translate the UI string catalog into a target language (cached client-side)' }),
     (0, throttler_1.Throttle)(TRANSLATE_THROTTLE),

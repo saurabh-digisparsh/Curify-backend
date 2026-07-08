@@ -12,6 +12,8 @@ export declare class JourneysController {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -32,6 +34,8 @@ export declare class JourneysController {
             urgency: string | null;
             homeCountry: string | null;
             description: string | null;
+            travelDate: Date | null;
+            urgent: boolean;
             step: string;
             reportId: string | null;
             analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -56,6 +60,8 @@ export declare class JourneysController {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -76,6 +82,8 @@ export declare class JourneysController {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -96,6 +104,8 @@ export declare class JourneysController {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;

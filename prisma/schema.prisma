@@ -55,6 +55,8 @@ model Journey {
   urgency     String?
   homeCountry String?
   description String?
+  travelDate  DateTime? // expected travel date (chat step; picker/chip/AI-parsed free text)
+  urgent      Boolean   @default(false) // derived: travelDate < 30 days away → staff-prioritize
   // Step progress + AI output snapshots (shape mirrors the AI service JSON)
   step        String   @default("intake") // intake | analysis | recommendation | hospital | plan | travel | recovery | done
   reportId    String?
@@ -361,6 +363,24 @@ model RecoveryProtocol {
   handoff   Json
 
   @@map("recovery_protocols")
+}
+
+// The intake treatment catalog (the chat's "What treatment?" step). Was a
+// hardcoded array in the frontend; now DB-backed so admins edit it in the Data
+// Manager and the picker always reflects the DB. `specialty` maps a treatment to
+// Hospital.specialty for downstream ranking; `aiAdded` flags rows created from a
+// patient's free-typed "Other" answer (classified/normalized by the AI).
+model Treatment {
+  id        String   @id @default(cuid())
+  slug      String   @unique // stable id sent to the API (e.g. "orthopedic")
+  label     String // shown in the picker, may include an emoji
+  specialty String? // e.g. "Orthopedic" — matches Hospital.specialty for ranking
+  sortOrder Int      @default(0) // ascending display order in the picker
+  active    Boolean  @default(true) // hidden from the picker when false
+  aiAdded   Boolean  @default(false) // true when created from a user's free-typed "Other"
+  createdAt DateTime @default(now())
+
+  @@map("treatments")
 }
 
 model BookingStatusUpdate {

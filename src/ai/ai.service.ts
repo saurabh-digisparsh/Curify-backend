@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
+import { clampTravelDate, MIN_LEAD_DAYS, MAX_LEAD_DAYS } from '../common/travel';
 
 /** One configured chat backend (an OpenAI-compatible client + the model to call). */
 interface AiProvider {
@@ -154,6 +155,108 @@ Rules:
       mockFallback,
       0.5,
     );
+  }
+
+  /**
+   * Classify a patient's free-typed "Other" treatment against the catalog. Given
+   * the DB catalog and the raw text, the model either picks the best-matching
+   * catalog slug OR — when nothing fits — returns a clean normalized treatment
+   * name + specialty (slug:null) so the caller can add it as a new catalog entry.
+   * Returns label:"" for non-medical / nonsense input so the caller can reject it.
+   */
+  async classifyTreatment(params: {
+    text: string;
+    catalog: { slug: string; label: string; specialty: string | null }[];
+  }): Promise<{ slug: string | null; label: string; specialty: string | null }> {
+    const text = String(params.text || '').trim().slice(0, 200);
+    // Compact catalog for the prompt (strip emoji from labels so the model keys on words).
+    const catalog = params.catalog
+      .map((c) => `${c.slug} = ${c.label.replace(/[^\p{L}\p{N}\s&()'-]/gu, '').trim()}`)
+      .join('\n');
+
+    // Mock fallback: no AI available → save the raw text as a new entry (slug:null),
+    // so the patient's answer is never lost even when every provider is down.
+    const mockFallback = () => ({ slug: null, label: text, specialty: null });
+
+    const res = await this.chat(
+      [
+        {
+          role: 'system',
+          content: `You map a patient's free-typed medical treatment request to a treatment catalog.
+
+CATALOG (slug = name):
+${catalog}
+
+Return STRICT JSON: {"slug": string|null, "label": string, "specialty": string|null}
+- If the request clearly matches a catalog entry, return that entry's "slug" and its name as "label" (and a fitting medical "specialty").
+- If it is a real medical treatment but NOTHING in the catalog fits, return "slug": null, a concise normalized treatment name as "label" (Title Case, no emoji, e.g. "Hair Transplant"), and the best-fit medical "specialty" (e.g. "Dermatology").
+- If the text is NOT a medical treatment (gibberish, greeting, unrelated), return "slug": null, "label": "", "specialty": null.`,
+        },
+        { role: 'user', content: text },
+      ],
+      200,
+      mockFallback,
+      0.2,
+    );
+
+    // Normalize the model's output defensively (public, untrusted path).
+    const known = params.catalog.find((c) => c.slug === res?.slug);
+    return {
+      slug: known ? known.slug : null,
+      label: String((known ? known.label : res?.label) || '').slice(0, 120).trim(),
+      specialty: (known ? known.specialty : res?.specialty) ? String(known ? known.specialty : res.specialty).slice(0, 60) : null,
+    };
+  }
+
+  /**
+   * Resolve a free-typed travel-date phrase ("next month", "after Ramadan",
+   * "in 2 weeks", an explicit date) into a single calendar date (YYYY-MM-DD),
+   * clamped to the bookable window [today+MIN, today+MAX]. Returns date:null when
+   * the text carries no resolvable date. A local phrase parser is the mock
+   * fallback so common phrases still resolve when every AI provider is down.
+   */
+  async parseTravelDate(params: { text: string }): Promise<{ date: string | null }> {
+    const text = String(params.text || '').trim().slice(0, 100);
+    const now = new Date();
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const addDays = (n: number) => iso(clampTravelDate(new Date(now.getTime() + n * 86_400_000), now));
+
+    // Local parser — also the mock fallback. Covers the common phrases without a token spend.
+    const localParse = (): string | null => {
+      const s = text.toLowerCase();
+      if (/\b(asap|as soon|immediately|urgent|earliest)\b/.test(s)) return addDays(MIN_LEAD_DAYS);
+      const wk = s.match(/(\d+)\s*week/);
+      if (wk) return addDays(parseInt(wk[1], 10) * 7);
+      const dy = s.match(/(\d+)\s*day/);
+      if (dy) return addDays(parseInt(dy[1], 10));
+      const mo = s.match(/(\d+)\s*month/);
+      if (mo) return addDays(parseInt(mo[1], 10) * 30);
+      if (/next month/.test(s)) return addDays(30);
+      if (/next week/.test(s)) return addDays(7);
+      const explicit = Date.parse(text); // handles "2026-09-01", "Sep 1 2026", etc.
+      return Number.isNaN(explicit) ? null : iso(clampTravelDate(new Date(explicit), now));
+    };
+
+    const res = await this.chat(
+      [
+        {
+          role: 'system',
+          content: `Convert the user's travel-date phrase into ONE calendar date.
+Today is ${iso(now)}. The date MUST be between ${addDays(MIN_LEAD_DAYS)} and ${addDays(MAX_LEAD_DAYS)} (inclusive).
+Interpret relative phrases ("next month", "in 2 weeks", "as soon as possible" = the earliest allowed date).
+Return STRICT JSON: {"date": "YYYY-MM-DD"} — or {"date": null} if the text names no resolvable date.`,
+        },
+        { role: 'user', content: text },
+      ],
+      50,
+      () => ({ date: localParse() }),
+      0.1,
+    );
+
+    // Validate + clamp whatever the model returned; fall back to the local parser.
+    const raw = typeof res?.date === 'string' ? Date.parse(res.date) : NaN;
+    if (!Number.isNaN(raw)) return { date: iso(clampTravelDate(new Date(raw), now)) };
+    return { date: localParse() };
   }
 
   /**

@@ -1,6 +1,6 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
-declare const WRITABLE: readonly ["title", "status", "treatment", "city", "urgency", "homeCountry", "description", "step", "reportId", "analysis", "stayOrGo", "hospitalId", "tripPlan"];
+declare const WRITABLE: readonly ["title", "status", "treatment", "city", "urgency", "homeCountry", "description", "travelDate", "step", "reportId", "analysis", "stayOrGo", "hospitalId", "tripPlan"];
 type Writable = Partial<Record<(typeof WRITABLE)[number], any>>;
 type ChatSender = 'PATIENT' | 'HOSPITAL' | 'SYSTEM';
 type ChatKind = 'TEXT' | 'REPORT' | 'QUOTE_REQUEST' | 'QUOTE';
@@ -73,6 +73,8 @@ export declare class JourneysService {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -93,6 +95,8 @@ export declare class JourneysService {
             urgency: string | null;
             homeCountry: string | null;
             description: string | null;
+            travelDate: Date | null;
+            urgent: boolean;
             step: string;
             reportId: string | null;
             analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -117,6 +121,8 @@ export declare class JourneysService {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -137,6 +143,8 @@ export declare class JourneysService {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
@@ -157,6 +165,8 @@ export declare class JourneysService {
         urgency: string | null;
         homeCountry: string | null;
         description: string | null;
+        travelDate: Date | null;
+        urgent: boolean;
         step: string;
         reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;

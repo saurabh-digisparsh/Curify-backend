@@ -29,15 +29,12 @@ export declare class BrightDataService {
     }>;
     jobDetails(jobId: string): Promise<{
         job: {
-            error: string | null;
             id: string;
+            error: string | null;
             createdAt: Date;
-            updatedAt: Date;
             status: string;
+            updatedAt: Date;
             mode: string;
-            startedAt: Date | null;
-            finishedAt: Date | null;
-            trigger: string | null;
             platform: import(".prisma/client").$Enums.CapturePlatform;
             datasetId: string;
             snapshotId: string | null;
@@ -45,6 +42,9 @@ export declare class BrightDataService {
             records: number;
             saved: number;
             creditsApprox: number;
+            trigger: string | null;
+            startedAt: Date | null;
+            finishedAt: Date | null;
         };
         kind: string;
         summary: {
@@ -92,15 +92,12 @@ export declare class BrightDataService {
     private downloadSnapshot;
     private buildTrigger;
     collect(p: CollectParams): Promise<{
-        error: string | null;
         id: string;
+        error: string | null;
         createdAt: Date;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
         mode: string;
-        startedAt: Date | null;
-        finishedAt: Date | null;
-        trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
         datasetId: string;
         snapshotId: string | null;
@@ -108,18 +105,18 @@ export declare class BrightDataService {
         records: number;
         saved: number;
         creditsApprox: number;
+        trigger: string | null;
+        startedAt: Date | null;
+        finishedAt: Date | null;
     }>;
     private serpSearch;
     collectSerp(p: CollectParams): Promise<{
-        error: string | null;
         id: string;
+        error: string | null;
         createdAt: Date;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
         mode: string;
-        startedAt: Date | null;
-        finishedAt: Date | null;
-        trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
         datasetId: string;
         snapshotId: string | null;
@@ -127,6 +124,9 @@ export declare class BrightDataService {
         records: number;
         saved: number;
         creditsApprox: number;
+        trigger: string | null;
+        startedAt: Date | null;
+        finishedAt: Date | null;
     }>;
     private runSerp;
     private run;
@@ -148,14 +148,28 @@ export declare class BrightDataService {
         items: {
             id: string;
             createdAt: Date;
+            title: string | null;
             updatedAt: Date;
             procedures: Prisma.JsonValue | null;
-            title: string | null;
-            raw: Prisma.JsonValue;
-            category: import(".prisma/client").$Enums.LeadCategory | null;
+            platform: import(".prisma/client").$Enums.CapturePlatform;
+            datasetId: string | null;
+            snapshotId: string | null;
             externalId: string;
             url: string | null;
+            body: string | null;
+            author: string | null;
+            postedAt: Date | null;
+            raw: Prisma.JsonValue;
+            hasProcedure: boolean;
+            hasCost: boolean;
+            hasOrigin: boolean;
+            signalCount: number;
+            temperature: string | null;
+            origins: Prisma.JsonValue | null;
             intentScore: number;
+            isSpam: boolean;
+            category: import(".prisma/client").$Enums.LeadCategory | null;
+            aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
             categoryReason: string | null;
             categoryConfidence: number | null;
             categoryVotes: Prisma.JsonValue | null;
@@ -163,20 +177,6 @@ export declare class BrightDataService {
             reviewedBy: string | null;
             reviewedAt: Date | null;
             categorizedAt: Date | null;
-            platform: import(".prisma/client").$Enums.CapturePlatform;
-            datasetId: string | null;
-            snapshotId: string | null;
-            body: string | null;
-            author: string | null;
-            postedAt: Date | null;
-            hasProcedure: boolean;
-            hasCost: boolean;
-            hasOrigin: boolean;
-            signalCount: number;
-            temperature: string | null;
-            origins: Prisma.JsonValue | null;
-            isSpam: boolean;
-            aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
             jobId: string | null;
             keyword: string | null;
             comments: Prisma.JsonValue | null;
@@ -327,7 +327,7 @@ export declare class BrightDataService {
     setCategoryByHuman(id: string, category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER', reviewedBy?: string): Promise<{
         ok: boolean;
         id: string;
-        category: "OTHER" | "LEAD" | "PARTNER" | "MARKETING" | "NEWS";
+        category: "LEAD" | "PARTNER" | "MARKETING" | "NEWS" | "OTHER";
     }>;
     classificationScorecard(): Promise<{
         total: number;
@@ -343,15 +343,12 @@ export declare class BrightDataService {
         }[];
     }>;
     listJobs(): Prisma.PrismaPromise<{
-        error: string | null;
         id: string;
+        error: string | null;
         createdAt: Date;
-        updatedAt: Date;
         status: string;
+        updatedAt: Date;
         mode: string;
-        startedAt: Date | null;
-        finishedAt: Date | null;
-        trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
         datasetId: string;
         snapshotId: string | null;
@@ -359,6 +356,9 @@ export declare class BrightDataService {
         records: number;
         saved: number;
         creditsApprox: number;
+        trigger: string | null;
+        startedAt: Date | null;
+        finishedAt: Date | null;
     }[]>;
     softDelete(id: string): Promise<{
         ok: boolean;
@@ -371,14 +371,28 @@ export declare class BrightDataService {
     getCapture(id: string): Prisma.Prisma__SourceCaptureClient<{
         id: string;
         createdAt: Date;
+        title: string | null;
         updatedAt: Date;
         procedures: Prisma.JsonValue | null;
-        title: string | null;
-        raw: Prisma.JsonValue;
-        category: import(".prisma/client").$Enums.LeadCategory | null;
+        platform: import(".prisma/client").$Enums.CapturePlatform;
+        datasetId: string | null;
+        snapshotId: string | null;
         externalId: string;
         url: string | null;
+        body: string | null;
+        author: string | null;
+        postedAt: Date | null;
+        raw: Prisma.JsonValue;
+        hasProcedure: boolean;
+        hasCost: boolean;
+        hasOrigin: boolean;
+        signalCount: number;
+        temperature: string | null;
+        origins: Prisma.JsonValue | null;
         intentScore: number;
+        isSpam: boolean;
+        category: import(".prisma/client").$Enums.LeadCategory | null;
+        aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
         categoryReason: string | null;
         categoryConfidence: number | null;
         categoryVotes: Prisma.JsonValue | null;
@@ -386,20 +400,6 @@ export declare class BrightDataService {
         reviewedBy: string | null;
         reviewedAt: Date | null;
         categorizedAt: Date | null;
-        platform: import(".prisma/client").$Enums.CapturePlatform;
-        datasetId: string | null;
-        snapshotId: string | null;
-        body: string | null;
-        author: string | null;
-        postedAt: Date | null;
-        hasProcedure: boolean;
-        hasCost: boolean;
-        hasOrigin: boolean;
-        signalCount: number;
-        temperature: string | null;
-        origins: Prisma.JsonValue | null;
-        isSpam: boolean;
-        aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
         jobId: string | null;
         keyword: string | null;
         comments: Prisma.JsonValue | null;

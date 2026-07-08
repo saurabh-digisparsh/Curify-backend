@@ -21,6 +21,47 @@ async function main() {
   });
   console.log(`✅ Admin ready: ${adminEmail}`);
 
+  // ── Treatment catalog ───────────────────────────────────────────────────────
+  // The chat's "What treatment?" picker (was a hardcoded frontend array). `specialty`
+  // mirrors Hospital.specialty so downstream ranking can match; leave it null where
+  // there's no single specialty (robotic/preventive are cross-cutting). Upsert by slug
+  // so re-seeding is idempotent and never clobbers admin-added/AI-added rows.
+  const treatments = [
+    { slug: 'cardiology',          label: '❤️ Cardiology',                                  specialty: 'Cardiology' },
+    { slug: 'cardiac-surgery',     label: '🫀 Cardiac Surgery',                             specialty: 'Cardiology' },
+    { slug: 'orthopedic',          label: '🦴 Orthopedics & Joint Replacement',            specialty: 'Orthopedic' },
+    { slug: 'spine-surgery',       label: '🩻 Spine Surgery',                               specialty: 'Orthopedic' },
+    { slug: 'neurosurgery',        label: '🧠 Neurosurgery',                                specialty: 'Neurology' },
+    { slug: 'neurology',           label: '⚡ Neurology',                                   specialty: 'Neurology' },
+    { slug: 'oncology',            label: '🎗️ Oncology (Cancer Care)',                     specialty: 'Oncology' },
+    { slug: 'fertility-ivf',       label: '🤱 IVF & Fertility',                             specialty: 'Fertility' },
+    { slug: 'cosmetic-surgery',    label: '✨ Cosmetic & Plastic Surgery',                  specialty: 'Cosmetic' },
+    { slug: 'dental',              label: '🦷 Dental Care',                                 specialty: 'Dental' },
+    { slug: 'eye-surgery',         label: '👁️ Ophthalmology (Eye Care)',                   specialty: 'Ophthalmology' },
+    { slug: 'gastroenterology',    label: '🩺 Gastroenterology',                            specialty: 'Gastroenterology' },
+    { slug: 'liver-transplant',    label: '🩸 Liver Transplant',                            specialty: 'Gastroenterology' },
+    { slug: 'kidney-transplant',   label: '🫘 Kidney Transplant',                           specialty: 'Urology' },
+    { slug: 'urology',             label: '🚹 Urology',                                     specialty: 'Urology' },
+    { slug: 'bariatric-surgery',   label: '⚖️ Bariatric Surgery',                          specialty: 'General Surgery' },
+    { slug: 'robotic-surgery',     label: '🤖 Robotic Surgery',                             specialty: null },
+    { slug: 'general-surgery',     label: '🏥 General Surgery',                             specialty: 'General Surgery' },
+    { slug: 'ent',                 label: '👂 ENT',                                         specialty: 'ENT' },
+    { slug: 'pediatrics',          label: '👶 Pediatrics',                                  specialty: 'Pediatrics' },
+    { slug: 'womens-health',       label: "🤰 Women's Health (Gynecology & Obstetrics)",    specialty: 'Gynecology' },
+    { slug: 'dermatology',         label: '🧴 Dermatology',                                 specialty: 'Dermatology' },
+    { slug: 'rehab-physiotherapy', label: '💪 Rehabilitation & Physiotherapy',             specialty: 'Rehabilitation' },
+    { slug: 'preventive-checkup',  label: '📋 Preventive Health Checkups',                  specialty: null },
+  ];
+  for (let i = 0; i < treatments.length; i++) {
+    const t = treatments[i];
+    await prisma.treatment.upsert({
+      where: { slug: t.slug },
+      update: { label: t.label, specialty: t.specialty, sortOrder: i },
+      create: { ...t, sortOrder: i },
+    });
+  }
+  console.log(`✅ Treatments ready: ${treatments.length}`);
+
   // ── Surgeons ──────────────────────────────────────────────────────────────
   const surgeons = [
     { id: 'rajesh', name: 'Dr. Rajesh Malhotra', title: 'Head of Orthopedic Surgery', hospital: 'Apollo Hospitals Chennai', country: 'India', flag: '🇮🇳', specialization: 'Joint Replacement & Sports Injuries', yearsExperience: 22, totalProcedures: 2800, aclSpecific: 1400, successRate: 97.2, complications: 2.1, education: ['MBBS — AIIMS, New Delhi', 'MS Orthopedics — AIIMS', 'Fellowship — Hospital for Special Surgery, New York'], publications: 34, languages: ['Hindi', 'English', 'Tamil'], awards: ['Apollo Excellence Award 2023', 'Best Orthopedic Surgeon India 2022'], patientRating: 4.9, avgSurgeryTime: '90 min', nextAvailable: '2 weeks' },

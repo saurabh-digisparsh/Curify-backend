@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
  */
 const RESOURCES: Record<string, { delegate: string; search: string[]; label: string; group: string }> = {
   hospitals:            { delegate: 'hospital',         search: ['name', 'city', 'country', 'specialty'], label: 'Hospitals',             group: 'Catalog' },
+  treatments:           { delegate: 'treatment',        search: ['slug', 'label', 'specialty'],           label: 'Treatments',            group: 'Catalog' },
   surgeons:             { delegate: 'surgeon',          search: ['name', 'specialization', 'hospital'],   label: 'Surgeons',              group: 'Catalog' },
   reviews:              { delegate: 'review',           search: ['reviewerName', 'nationality', 'text'],  label: 'Reviews',               group: 'Catalog' },
   'stay-or-go':         { delegate: 'stayOrGoTemplate', search: ['procedure', 'homeCountry'],             label: 'Stay-or-Go Templates',  group: 'Journey Content' },

@@ -10,6 +10,23 @@ export declare class AiService {
         }[];
         language?: string;
     }): Promise<any>;
+    classifyTreatment(params: {
+        text: string;
+        catalog: {
+            slug: string;
+            label: string;
+            specialty: string | null;
+        }[];
+    }): Promise<{
+        slug: string | null;
+        label: string;
+        specialty: string | null;
+    }>;
+    parseTravelDate(params: {
+        text: string;
+    }): Promise<{
+        date: string | null;
+    }>;
     translateUi(params: {
         language: string;
         strings: Record<string, string>;

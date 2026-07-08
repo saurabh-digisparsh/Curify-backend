@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const RESOURCES = {
     hospitals: { delegate: 'hospital', search: ['name', 'city', 'country', 'specialty'], label: 'Hospitals', group: 'Catalog' },
+    treatments: { delegate: 'treatment', search: ['slug', 'label', 'specialty'], label: 'Treatments', group: 'Catalog' },
     surgeons: { delegate: 'surgeon', search: ['name', 'specialization', 'hospital'], label: 'Surgeons', group: 'Catalog' },
     reviews: { delegate: 'review', search: ['reviewerName', 'nationality', 'text'], label: 'Reviews', group: 'Catalog' },
     'stay-or-go': { delegate: 'stayOrGoTemplate', search: ['procedure', 'homeCountry'], label: 'Stay-or-Go Templates', group: 'Journey Content' },

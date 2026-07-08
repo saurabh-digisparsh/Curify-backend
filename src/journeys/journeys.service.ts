@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { deriveUrgent } from '../common/travel';
 
 /** Fields a client may set — everything else (id, userId, timestamps) is server-owned. */
 const WRITABLE = [
   'title', 'status', 'treatment', 'city', 'urgency', 'homeCountry', 'description',
-  'step', 'reportId', 'analysis', 'stayOrGo', 'hospitalId', 'tripPlan',
+  'travelDate', 'step', 'reportId', 'analysis', 'stayOrGo', 'hospitalId', 'tripPlan',
 ] as const;
 type Writable = Partial<Record<(typeof WRITABLE)[number], any>>;
 
@@ -116,6 +117,13 @@ export class JourneysService {
   private pick(body: Writable) {
     const data: any = {};
     for (const k of WRITABLE) if (body[k] !== undefined) data[k] = body[k];
+    // travelDate is client-set; `urgent` is DERIVED here and never trusted from the
+    // client. Coerce the ISO string to a Date; drop an unparseable value silently.
+    if (data.travelDate != null) {
+      const d = new Date(data.travelDate);
+      if (Number.isNaN(d.getTime())) delete data.travelDate;
+      else { data.travelDate = d; data.urgent = deriveUrgent(d); }
+    }
     return data;
   }
 

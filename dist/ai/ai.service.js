@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiService = void 0;
 const common_1 = require("@nestjs/common");
 const openai_1 = require("openai");
+const travel_1 = require("../common/travel");
 let AiService = class AiService {
     constructor() {
         const baseURL = process.env.AI_BASE_URL;
@@ -118,6 +119,74 @@ Rules:
             },
             ...history,
         ], 700, mockFallback, 0.5);
+    }
+    async classifyTreatment(params) {
+        const text = String(params.text || '').trim().slice(0, 200);
+        const catalog = params.catalog
+            .map((c) => `${c.slug} = ${c.label.replace(/[^\p{L}\p{N}\s&()'-]/gu, '').trim()}`)
+            .join('\n');
+        const mockFallback = () => ({ slug: null, label: text, specialty: null });
+        const res = await this.chat([
+            {
+                role: 'system',
+                content: `You map a patient's free-typed medical treatment request to a treatment catalog.
+
+CATALOG (slug = name):
+${catalog}
+
+Return STRICT JSON: {"slug": string|null, "label": string, "specialty": string|null}
+- If the request clearly matches a catalog entry, return that entry's "slug" and its name as "label" (and a fitting medical "specialty").
+- If it is a real medical treatment but NOTHING in the catalog fits, return "slug": null, a concise normalized treatment name as "label" (Title Case, no emoji, e.g. "Hair Transplant"), and the best-fit medical "specialty" (e.g. "Dermatology").
+- If the text is NOT a medical treatment (gibberish, greeting, unrelated), return "slug": null, "label": "", "specialty": null.`,
+            },
+            { role: 'user', content: text },
+        ], 200, mockFallback, 0.2);
+        const known = params.catalog.find((c) => c.slug === res?.slug);
+        return {
+            slug: known ? known.slug : null,
+            label: String((known ? known.label : res?.label) || '').slice(0, 120).trim(),
+            specialty: (known ? known.specialty : res?.specialty) ? String(known ? known.specialty : res.specialty).slice(0, 60) : null,
+        };
+    }
+    async parseTravelDate(params) {
+        const text = String(params.text || '').trim().slice(0, 100);
+        const now = new Date();
+        const iso = (d) => d.toISOString().slice(0, 10);
+        const addDays = (n) => iso((0, travel_1.clampTravelDate)(new Date(now.getTime() + n * 86_400_000), now));
+        const localParse = () => {
+            const s = text.toLowerCase();
+            if (/\b(asap|as soon|immediately|urgent|earliest)\b/.test(s))
+                return addDays(travel_1.MIN_LEAD_DAYS);
+            const wk = s.match(/(\d+)\s*week/);
+            if (wk)
+                return addDays(parseInt(wk[1], 10) * 7);
+            const dy = s.match(/(\d+)\s*day/);
+            if (dy)
+                return addDays(parseInt(dy[1], 10));
+            const mo = s.match(/(\d+)\s*month/);
+            if (mo)
+                return addDays(parseInt(mo[1], 10) * 30);
+            if (/next month/.test(s))
+                return addDays(30);
+            if (/next week/.test(s))
+                return addDays(7);
+            const explicit = Date.parse(text);
+            return Number.isNaN(explicit) ? null : iso((0, travel_1.clampTravelDate)(new Date(explicit), now));
+        };
+        const res = await this.chat([
+            {
+                role: 'system',
+                content: `Convert the user's travel-date phrase into ONE calendar date.
+Today is ${iso(now)}. The date MUST be between ${addDays(travel_1.MIN_LEAD_DAYS)} and ${addDays(travel_1.MAX_LEAD_DAYS)} (inclusive).
+Interpret relative phrases ("next month", "in 2 weeks", "as soon as possible" = the earliest allowed date).
+Return STRICT JSON: {"date": "YYYY-MM-DD"} — or {"date": null} if the text names no resolvable date.`,
+            },
+            { role: 'user', content: text },
+        ], 50, () => ({ date: localParse() }), 0.1);
+        const raw = typeof res?.date === 'string' ? Date.parse(res.date) : NaN;
+        if (!Number.isNaN(raw))
+            return { date: iso((0, travel_1.clampTravelDate)(new Date(raw), now)) };
+        return { date: localParse() };
     }
     async translateUi(params) {
         const entries = Object.entries(params.strings || {})
