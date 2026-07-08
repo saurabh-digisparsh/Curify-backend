@@ -15,7 +15,7 @@ export declare class HospitalsService {
         cities: string[];
         specialties: string[];
     }>;
-    getDispatch(page?: number, pageSize?: number, search?: string): Promise<{
+    getDispatch(page?: number, pageSize?: number, search?: string, city?: string): Promise<{
         global: {
             totalReviews: number;
             totalHospitals: number;
@@ -25,6 +25,7 @@ export declare class HospitalsService {
         page: number;
         pageSize: number;
         pageCount: number;
+        cities: string[];
         hospitals: {
             slug: string;
             title: string;
@@ -42,13 +43,16 @@ export declare class HospitalsService {
     findAll(): Promise<{
         hospitals: {
             reviewCount: number;
+            _count: {
+                reviews: number;
+            };
             surgeon: {
-                hospital: string | null;
                 id: string;
                 name: string;
                 country: string | null;
-                createdAt: Date;
                 flag: string | null;
+                createdAt: Date;
+                hospital: string | null;
                 title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
@@ -65,14 +69,10 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            _count: {
-                reviews: number;
-            };
             id: string;
             name: string;
-            country: string;
-            createdAt: Date;
             city: string;
+            country: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -98,14 +98,15 @@ export declare class HospitalsService {
             latitude: number | null;
             longitude: number | null;
             googleMapsUri: string | null;
+            createdAt: Date;
         }[];
         surgeons: {
-            hospital: string | null;
             id: string;
             name: string;
             country: string | null;
-            createdAt: Date;
             flag: string | null;
+            createdAt: Date;
+            hospital: string | null;
             title: string | null;
             photoUrl: string | null;
             specialization: string | null;
@@ -125,12 +126,12 @@ export declare class HospitalsService {
     }>;
     findOne(id: string): Promise<{
         surgeon: {
-            hospital: string | null;
             id: string;
             name: string;
             country: string | null;
-            createdAt: Date;
             flag: string | null;
+            createdAt: Date;
+            hospital: string | null;
             title: string | null;
             photoUrl: string | null;
             specialization: string | null;
@@ -149,10 +150,8 @@ export declare class HospitalsService {
         };
         reviews: {
             id: string;
-            createdAt: Date;
-            text: string;
-            flags: import("@prisma/client/runtime/library").JsonValue | null;
             surgeonId: string | null;
+            createdAt: Date;
             link: string | null;
             hospitalId: string;
             rating: number;
@@ -162,19 +161,20 @@ export declare class HospitalsService {
             nationality: string | null;
             procedure: string | null;
             reviewDate: string | null;
+            text: string;
             textEn: string | null;
             region: string | null;
             verified: boolean;
             lang: string | null;
             tokens: import("@prisma/client/runtime/library").JsonValue | null;
+            flags: import("@prisma/client/runtime/library").JsonValue | null;
             contentHash: string | null;
         }[];
     } & {
         id: string;
         name: string;
-        country: string;
-        createdAt: Date;
         city: string;
+        country: string;
         flag: string | null;
         imageUrl: string | null;
         jciAccredited: boolean;
@@ -200,13 +200,12 @@ export declare class HospitalsService {
         latitude: number | null;
         longitude: number | null;
         googleMapsUri: string | null;
+        createdAt: Date;
     }>;
     getReviews(hospitalId: string, page?: number, pageSize?: number): Promise<{
         id: string;
-        createdAt: Date;
-        text: string;
-        flags: import("@prisma/client/runtime/library").JsonValue | null;
         surgeonId: string | null;
+        createdAt: Date;
         link: string | null;
         hospitalId: string;
         rating: number;
@@ -216,11 +215,13 @@ export declare class HospitalsService {
         nationality: string | null;
         procedure: string | null;
         reviewDate: string | null;
+        text: string;
         textEn: string | null;
         region: string | null;
         verified: boolean;
         lang: string | null;
         tokens: import("@prisma/client/runtime/library").JsonValue | null;
+        flags: import("@prisma/client/runtime/library").JsonValue | null;
         contentHash: string | null;
     }[]>;
     matchForPatient(params: {
@@ -232,13 +233,16 @@ export declare class HospitalsService {
         hospitals: {
             reviewCount: number;
             aiMatchScore: number;
+            _count: {
+                reviews: number;
+            };
             surgeon: {
-                hospital: string | null;
                 id: string;
                 name: string;
                 country: string | null;
-                createdAt: Date;
                 flag: string | null;
+                createdAt: Date;
+                hospital: string | null;
                 title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
@@ -255,14 +259,10 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            _count: {
-                reviews: number;
-            };
             id: string;
             name: string;
-            country: string;
-            createdAt: Date;
             city: string;
+            country: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -288,14 +288,15 @@ export declare class HospitalsService {
             latitude: number | null;
             longitude: number | null;
             googleMapsUri: string | null;
+            createdAt: Date;
         }[];
         surgeons: {
-            hospital: string | null;
             id: string;
             name: string;
             country: string | null;
-            createdAt: Date;
             flag: string | null;
+            createdAt: Date;
+            hospital: string | null;
             title: string | null;
             photoUrl: string | null;
             specialization: string | null;
@@ -326,13 +327,16 @@ export declare class HospitalsService {
     }): Promise<{
         hospitals: {
             reviewCount: number;
+            _count: {
+                reviews: number;
+            };
             surgeon: {
-                hospital: string | null;
                 id: string;
                 name: string;
                 country: string | null;
-                createdAt: Date;
                 flag: string | null;
+                createdAt: Date;
+                hospital: string | null;
                 title: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
@@ -349,14 +353,10 @@ export declare class HospitalsService {
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
             };
-            _count: {
-                reviews: number;
-            };
             id: string;
             name: string;
-            country: string;
-            createdAt: Date;
             city: string;
+            country: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -382,6 +382,7 @@ export declare class HospitalsService {
             latitude: number | null;
             longitude: number | null;
             googleMapsUri: string | null;
+            createdAt: Date;
         }[];
         total: number;
         page: number;

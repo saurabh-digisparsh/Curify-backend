@@ -28,8 +28,8 @@ let HospitalsController = class HospitalsController {
     getMeta() {
         return this.hospitalsService.getMeta();
     }
-    getDispatch(page, pageSize, search) {
-        return this.hospitalsService.getDispatch(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 20, search);
+    getDispatch(page, pageSize, search, city) {
+        return this.hospitalsService.getDispatch(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 20, search, city);
     }
     getComparison(page, pageSize, city, sort, treatment, urgency, search) {
         return this.hospitalsService.getComparison({
@@ -73,8 +73,9 @@ __decorate([
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('pageSize')),
     __param(2, (0, common_1.Query)('search')),
+    __param(3, (0, common_1.Query)('city')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], HospitalsController.prototype, "getDispatch", null);
 __decorate([

@@ -30,11 +30,13 @@ export class HospitalsController {
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
     @Query('search') search?: string,
+    @Query('city') city?: string,
   ) {
     return this.hospitalsService.getDispatch(
       page ? parseInt(page, 10) : 1,
       pageSize ? parseInt(pageSize, 10) : 20,
       search,
+      city,
     );
   }
 

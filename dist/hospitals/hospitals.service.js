@@ -94,7 +94,7 @@ let HospitalsService = class HospitalsService {
         const specialties = [...new Set(hospitals.map(h => h.specialty).filter(Boolean))].sort();
         return { cities, specialties };
     }
-    async getDispatch(page = 1, pageSize = 20, search = '') {
+    async getDispatch(page = 1, pageSize = 20, search = '', city = '') {
         page = Math.max(1, Number(page) || 1);
         pageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
         const hospitals = await this.prisma.hospital.findMany({
@@ -141,7 +141,13 @@ let HospitalsService = class HospitalsService {
         });
         items.sort((x, y) => y.reviews - x.reviews);
         const q = String(search || '').trim().toLowerCase();
-        const filtered = q ? items.filter((h) => h.title.toLowerCase().includes(q)) : items;
+        const cityQ = String(city || '').trim().toLowerCase();
+        let filtered = items;
+        if (q)
+            filtered = filtered.filter((h) => h.title.toLowerCase().includes(q));
+        if (cityQ && cityQ !== 'all')
+            filtered = filtered.filter((h) => (h.city || '').toLowerCase() === cityQ);
+        const cities = [...new Set(hospitals.map((h) => h.city).filter(Boolean))].sort();
         const start = Math.max(0, (page - 1) * pageSize);
         const paged = filtered.slice(start, start + pageSize);
         return {
@@ -154,6 +160,7 @@ let HospitalsService = class HospitalsService {
             page,
             pageSize,
             pageCount: Math.max(1, Math.ceil(filtered.length / pageSize)),
+            cities,
             hospitals: paged,
         };
     }

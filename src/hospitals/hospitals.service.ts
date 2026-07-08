@@ -101,7 +101,7 @@ export class HospitalsService {
     return { cities, specialties };
   }
 
-  async getDispatch(page = 1, pageSize = 20, search = '') {
+  async getDispatch(page = 1, pageSize = 20, search = '', city = '') {
     // Anti-scrape: clamp so a single request can't pull the whole catalog
     // (e.g. ?pageSize=100000). Never serve more than 50 hospitals per page.
     page = Math.max(1, Number(page) || 1);
@@ -158,10 +158,16 @@ export class HospitalsService {
     // Biggest hospitals first.
     items.sort((x, y) => y.reviews - x.reviews);
 
-    // Free-text search by hospital name (substring, case-insensitive). Global
-    // stats stay whole-archive; only the grid + page count reflect the filter.
+    // Free-text search by hospital name + city filter (substring, case-insensitive).
+    // Global stats stay whole-archive; only the grid + page count reflect the filter.
     const q = String(search || '').trim().toLowerCase();
-    const filtered = q ? items.filter((h) => h.title.toLowerCase().includes(q)) : items;
+    const cityQ = String(city || '').trim().toLowerCase();
+    let filtered = items;
+    if (q) filtered = filtered.filter((h) => h.title.toLowerCase().includes(q));
+    if (cityQ && cityQ !== 'all') filtered = filtered.filter((h) => (h.city || '').toLowerCase() === cityQ);
+
+    // Distinct cities across the whole catalog — for the city filter dropdown.
+    const cities = [...new Set(hospitals.map((h) => h.city).filter(Boolean))].sort();
 
     // Server-side pagination — return only the requested page slice.
     const start = Math.max(0, (page - 1) * pageSize);
@@ -177,6 +183,7 @@ export class HospitalsService {
       page,
       pageSize,
       pageCount: Math.max(1, Math.ceil(filtered.length / pageSize)),
+      cities,
       hospitals: paged,
     };
   }
