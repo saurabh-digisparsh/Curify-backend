@@ -1,19 +1,73 @@
-kind,hospitalName,hospitalCity,hospitalRating,hospitalAddress,hospitalPhone,hospitalWebsite,hospitalPlaceId,hospitalLat,hospitalLng,hospitalMapsUri,id,name,rating,date,total_reviews,text,link,profile,country,region,flags,tokens,lang
-hospital,Manipal Hospital EM Bypass,Kolkata,4.6,"127, Eastern Metropolitan Bypass, Nitai Nagar, Mukundapur, Kolkata, West Bengal 700099, India",033 6907 0000,https://www.manipalhospitals.com/em-bypass/?utm_source=GMB&utm_medium=,ChIJ7UDMkl9xAjoR6hQmPDygLfk,22.4942277,88.400696,https://maps.google.com/?cid=17955183469963646186&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA,,,,,,,,,,,,,
-review,Manipal Hospital EM Bypass,Kolkata,,,,,,,,,ChdDSUhNMG9nS0VJQ0FnSURpb3BmQTVBRRAB,Subhasish Kundu,5,5 years ago,1,"Got my wife admitted for a lapchole surgery in Nov,20.
+kind,hospitalName,hospitalCity,hospitalRating,hospitalAddress,hospitalPhone,hospitalWebsite,hospitalPlaceId,hospitalLat,hospitalLng,hospitalMapsUri,id,name,rating,date,total_reviews,text,link,profile,country,region,flags,tokens,lang,surgeonName,source
+hospital,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,4.8,"CTS 1900-1917, Lal Bahadur Shastri Marg, Gandhi Nagar, Kirti Vihar, Ghatkopar West, Mumbai, Maharashtra 400086, India",022 6890 0000,https://www.zynovashalbyhospital.com/,ChIJachKp6fH5zsRarJmdOryU_I,19.0886636,72.9065126,https://maps.google.com/?cid=17461567269034701418&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA,,,,,,,,,,,,,,,
+review,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,,,,,,,,,Ci9DQUlRQUNvZENodHljRjlvT21oRVV6ZHVPSE5JVkZkT1MyOU5YME5OUTE5bVJsRRAB,Rohit Vinerkar,5,7 months ago,1,"Exceptional Care & Trustworthy Expertise—A Deeply Appreciated Recovery Experience of Rohit Vinerkar
 
-Information: Clear communication. No hidden area. They usually takes booking for rooms with estimation but due to Covid situation room is not a one shot. But they accommodate .
+My recent admission to Zynova Shalby Hospital for Typhoid Fever (Nov 13-17) reaffirmed the trust my family and I place in this institution, particularly after my mother’s successful knee replacement in 2022.
 
-Covid care: very much careful even using separate lift. Although there are always some patients companion shows illiterate behaviour.
-Overall absolutely they are doing there level best.
+I approached Dr. Satvik Patel for a second opinion on November 12th. I was thoroughly impressed with his approach; he carefully assessed my situation and ordered the necessary tests. The following day, with the diagnosis confirmed, Dr. Patel advised an SOS admission.
 
-Rooms: The best experience out of Amri , Apollo ,devine ,charnok and Columbia Asia. Very much clean ,maintained .
+Dr. Patel's Professional Excellence and New Discoveries -
+During my treatment for typhoid, another concern related to my health came forward. Dr. Patel immediately took charge, providing guidance and treatment in a cool and composed manner. He is truly the MS Dhoni of medicine, maintaining his calm demeanor and delivering effective treatment under pressure. This ability to manage complex situations without stress was immensely reassuring.
+Furthermore, his thoroughness brought to light a fascinating personal detail: I apparently have an abundance of RBCs in my blood. Dr. Patel, not only provided treatment for the fever but also gave me some great life advice—I've been kindly recommended to donate blood often. (It seems I now generate content both for the screen and for the blood bank. Who knew my body was producing a surplus!)
+His ability to explain all these complex findings clearly in excellent Marathi instantly built a strong and enduring connection. It was incredibly reassuring to hear detailed medical advice given with such clarity and ease. ""तुमचा स्वभाव आणि समजावण्याची पद्धत, सर, अगदी कौतुकास्पद आहे.""
+We are now hoping to resolve this new challenge soon under his expert care.
 
-Nursing staff: On this point I will give 200 out of 100. The whole nursing staff is so much caring and all the time with smile and helpful . They take care of the patients privacy during the hard time too. Even the new joiners are doing the best and shows that they like this job and honor that. Their response to patient call was in seconds every time. Even during night
+Staff, Facilities, and Comfort -
+The medical attention and human touch provided by the staff were consistently excellent. The nurses were attentive and meticulous in my care.
+Even while recovering in Room 605 (a choice made for the Vastu and morning sunlight), I felt well-supported and comfortable. The colour choice of the interior is lively, and the view from the window is amazing, contributing greatly to the positive atmosphere. I even watched the India vs. South Africa cricket test!
 
-Pocket pinch: Bit of in the expensive side but again if anyone is comparing with the service, the price you pay is worth it. Yes the discharge billing is the pain as there is only one counter . That is why the star is one less for the rating.
+On November 14th, the staff's care gave me enough comfort to watch the broadcast of Doraemon Movie Earth Symphony on Disney India. As I was the Assistant Dubbing Director and Mixing Engineer for that project, it was a unique and meaningful experience to connect with my work while recovering. The quality and timing of the food service were also good.
 
-Even important thing is communication. As my wife is foreigner. Other places I felt communication issue which in this hospital was not there.
+A Critical Point for Management Consideration -
+While the patient care is truly awesome, I must address a severe pain point that impacts accessibility for many patients: The security deposit requested during the admission process is significantly higher than usual.
+It is challenging for patients, especially those with high-premium insurance coverage, to submit such a substantial deposit. If Zynova Shalby’s core mission is to serve humanity, I strongly urge the management to reassess this security deposit policy. Streamlining this financial aspect would remove a severe point of friction and ensure that exceptional medical care is accessible to all.
 
-Must recommended when people are suffering with poor health service by health care sector.",,https://www.google.com/maps/contrib/104442782877774650213/reviews?hl=en,foreigner,phrase_signal,[],"[""foreigner""]",en
-review,Manipal Hospital EM Bypass,Kolkata,,,,,,,,,ChZDSUhNMG9nS0VJQ0FnSURRbkpxSURBEAE,Rajat Saha,5,8 years ago,1,Very simplified admission process. Very well maintained. Less pressure of International (Bangladesh) patients makes it a great hospital. Administration is also seems very strict.,,https://www.google.com/maps/contrib/118198903402354902061/reviews?hl=en,Bangladesh,south_asia,[],"[""Bangladesh""]",en
+Overall: I am grateful for the expert medical treatment and compassionate attention I received. Thank you, Zynova, and especially Dr. Patel, for taking excellent care of me. ""हम दिल से आपके आभारी हैं। एक मरीज को और क्या चाहिए? सब कुछ बहुत अच्छा था।"" I am focusing on a swift recovery and look forward to being fit soon!",https://www.google.com/maps/contrib/114513087280836362649/reviews,https://www.google.com/maps/contrib/114513087280836362649/reviews,South Africa,africa,[],"[""South Africa""]",en,,
+surgeon,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,,,,,,,,,,,,,,,,,,,,,,Satvik Patel,
+surgeon-review,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,,,,,,,,,Ci9DQUlRQUNvZENodHljRjlvT21oRVV6ZHVPSE5JVkZkT1MyOU5YME5OUTE5bVJsRRAB,Rohit Vinerkar,5,7 months ago,1,"Exceptional Care & Trustworthy Expertise—A Deeply Appreciated Recovery Experience of Rohit Vinerkar
+
+My recent admission to Zynova Shalby Hospital for Typhoid Fever (Nov 13-17) reaffirmed the trust my family and I place in this institution, particularly after my mother’s successful knee replacement in 2022.
+
+I approached Dr. Satvik Patel for a second opinion on November 12th. I was thoroughly impressed with his approach; he carefully assessed my situation and ordered the necessary tests. The following day, with the diagnosis confirmed, Dr. Patel advised an SOS admission.
+
+Dr. Patel's Professional Excellence and New Discoveries -
+During my treatment for typhoid, another concern related to my health came forward. Dr. Patel immediately took charge, providing guidance and treatment in a cool and composed manner. He is truly the MS Dhoni of medicine, maintaining his calm demeanor and delivering effective treatment under pressure. This ability to manage complex situations without stress was immensely reassuring.
+Furthermore, his thoroughness brought to light a fascinating personal detail: I apparently have an abundance of RBCs in my blood. Dr. Patel, not only provided treatment for the fever but also gave me some great life advice—I've been kindly recommended to donate blood often. (It seems I now generate content both for the screen and for the blood bank. Who knew my body was producing a surplus!)
+His ability to explain all these complex findings clearly in excellent Marathi instantly built a strong and enduring connection. It was incredibly reassuring to hear detailed medical advice given with such clarity and ease. ""तुमचा स्वभाव आणि समजावण्याची पद्धत, सर, अगदी कौतुकास्पद आहे.""
+We are now hoping to resolve this new challenge soon under his expert care.
+
+Staff, Facilities, and Comfort -
+The medical attention and human touch provided by the staff were consistently excellent. The nurses were attentive and meticulous in my care.
+Even while recovering in Room 605 (a choice made for the Vastu and morning sunlight), I felt well-supported and comfortable. The colour choice of the interior is lively, and the view from the window is amazing, contributing greatly to the positive atmosphere. I even watched the India vs. South Africa cricket test!
+
+On November 14th, the staff's care gave me enough comfort to watch the broadcast of Doraemon Movie Earth Symphony on Disney India. As I was the Assistant Dubbing Director and Mixing Engineer for that project, it was a unique and meaningful experience to connect with my work while recovering. The quality and timing of the food service were also good.
+
+A Critical Point for Management Consideration -
+While the patient care is truly awesome, I must address a severe pain point that impacts accessibility for many patients: The security deposit requested during the admission process is significantly higher than usual.
+It is challenging for patients, especially those with high-premium insurance coverage, to submit such a substantial deposit. If Zynova Shalby’s core mission is to serve humanity, I strongly urge the management to reassess this security deposit policy. Streamlining this financial aspect would remove a severe point of friction and ensure that exceptional medical care is accessible to all.
+
+Overall: I am grateful for the expert medical treatment and compassionate attention I received. Thank you, Zynova, and especially Dr. Patel, for taking excellent care of me. ""हम दिल से आपके आभारी हैं। एक मरीज को और क्या चाहिए? सब कुछ बहुत अच्छा था।"" I am focusing on a swift recovery and look forward to being fit soon!",https://www.google.com/maps/contrib/114513087280836362649/reviews,https://www.google.com/maps/contrib/114513087280836362649/reviews,South Africa,africa,[],"[""South Africa""]",en,Satvik Patel,mention
+surgeon,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,,,,,,,,,,,,,,,,,,,,,,Patel,
+surgeon-review,"Zynova Shalby Hospital | Best Multispeciality, Critical Care & 24/7 Emergency Hospital in Mumbai",Mumbai,,,,,,,,,Ci9DQUlRQUNvZENodHljRjlvT21oRVV6ZHVPSE5JVkZkT1MyOU5YME5OUTE5bVJsRRAB,Rohit Vinerkar,5,7 months ago,1,"Exceptional Care & Trustworthy Expertise—A Deeply Appreciated Recovery Experience of Rohit Vinerkar
+
+My recent admission to Zynova Shalby Hospital for Typhoid Fever (Nov 13-17) reaffirmed the trust my family and I place in this institution, particularly after my mother’s successful knee replacement in 2022.
+
+I approached Dr. Satvik Patel for a second opinion on November 12th. I was thoroughly impressed with his approach; he carefully assessed my situation and ordered the necessary tests. The following day, with the diagnosis confirmed, Dr. Patel advised an SOS admission.
+
+Dr. Patel's Professional Excellence and New Discoveries -
+During my treatment for typhoid, another concern related to my health came forward. Dr. Patel immediately took charge, providing guidance and treatment in a cool and composed manner. He is truly the MS Dhoni of medicine, maintaining his calm demeanor and delivering effective treatment under pressure. This ability to manage complex situations without stress was immensely reassuring.
+Furthermore, his thoroughness brought to light a fascinating personal detail: I apparently have an abundance of RBCs in my blood. Dr. Patel, not only provided treatment for the fever but also gave me some great life advice—I've been kindly recommended to donate blood often. (It seems I now generate content both for the screen and for the blood bank. Who knew my body was producing a surplus!)
+His ability to explain all these complex findings clearly in excellent Marathi instantly built a strong and enduring connection. It was incredibly reassuring to hear detailed medical advice given with such clarity and ease. ""तुमचा स्वभाव आणि समजावण्याची पद्धत, सर, अगदी कौतुकास्पद आहे.""
+We are now hoping to resolve this new challenge soon under his expert care.
+
+Staff, Facilities, and Comfort -
+The medical attention and human touch provided by the staff were consistently excellent. The nurses were attentive and meticulous in my care.
+Even while recovering in Room 605 (a choice made for the Vastu and morning sunlight), I felt well-supported and comfortable. The colour choice of the interior is lively, and the view from the window is amazing, contributing greatly to the positive atmosphere. I even watched the India vs. South Africa cricket test!
+
+On November 14th, the staff's care gave me enough comfort to watch the broadcast of Doraemon Movie Earth Symphony on Disney India. As I was the Assistant Dubbing Director and Mixing Engineer for that project, it was a unique and meaningful experience to connect with my work while recovering. The quality and timing of the food service were also good.
+
+A Critical Point for Management Consideration -
+While the patient care is truly awesome, I must address a severe pain point that impacts accessibility for many patients: The security deposit requested during the admission process is significantly higher than usual.
+It is challenging for patients, especially those with high-premium insurance coverage, to submit such a substantial deposit. If Zynova Shalby’s core mission is to serve humanity, I strongly urge the management to reassess this security deposit policy. Streamlining this financial aspect would remove a severe point of friction and ensure that exceptional medical care is accessible to all.
+
+Overall: I am grateful for the expert medical treatment and compassionate attention I received. Thank you, Zynova, and especially Dr. Patel, for taking excellent care of me. ""हम दिल से आपके आभारी हैं। एक मरीज को और क्या चाहिए? सब कुछ बहुत अच्छा था।"" I am focusing on a swift recovery and look forward to being fit soon!",https://www.google.com/maps/contrib/114513087280836362649/reviews,https://www.google.com/maps/contrib/114513087280836362649/reviews,South Africa,africa,[],"[""South Africa""]",en,Patel,mention

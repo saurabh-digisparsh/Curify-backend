@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional, Matches } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, Matches, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SignupDto {
@@ -28,4 +28,11 @@ export class SignupDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  // Consent to store/process medical documents (PHI) — captured in the chat
+  // flow's signup card before the first report upload; timestamped server-side.
+  @ApiProperty({ example: true, required: false })
+  @IsOptional()
+  @IsBoolean()
+  medicalConsent?: boolean;
 }

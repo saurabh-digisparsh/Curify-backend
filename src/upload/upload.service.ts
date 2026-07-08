@@ -28,25 +28,28 @@ export class UploadService {
   async analyzeAndStore(params: {
     userId?: string;
     file?: Express.Multer.File;
+    files?: Express.Multer.File[]; // multi-document upload
     description?: string;
     treatment?: string;
     country?: string;
     urgency?: string;
   }) {
-    let fileBase64: string | undefined;
-    let fileType: string | undefined;
+    // Normalise to a list (supports both the single-file and multi-file paths).
+    const docs = params.files?.length ? params.files : params.file ? [params.file] : [];
 
-    if (params.file) {
-      fileBase64 = params.file.buffer.toString('base64');
-      fileType = params.file.mimetype;
+    // Collect image files for the vision model; extract text from every PDF.
+    const images = docs
+      .filter((f) => f.mimetype?.startsWith('image/'))
+      .map((f) => ({ base64: f.buffer.toString('base64'), type: f.mimetype }));
+    const pdfTexts: string[] = [];
+    for (const f of docs) {
+      const txt = await this.extractPdfText(f);
+      if (txt) pdfTexts.push(`--- ${f.originalname || 'document'} ---\n${txt}`);
     }
-
-    // Pull text out of PDFs so the model analyses the real report content.
-    const reportText = await this.extractPdfText(params.file);
+    const reportText = pdfTexts.length ? pdfTexts.join('\n\n').slice(0, 16000) : undefined;
 
     const analysis = await this.ai.analyzeReport({
-      fileBase64,
-      fileType,
+      files: images,
       reportText,
       description: params.description,
       treatment: params.treatment,
@@ -60,8 +63,9 @@ export class UploadService {
         reportRef: analysis.reportId
           ? `${analysis.reportId}-${Date.now().toString(36).slice(-6)}`
           : `RPT-${Date.now()}`,
-        filename: params.file?.originalname,
-        fileType: params.file?.mimetype,
+        // Store all uploaded filenames (comma-joined) for the record.
+        filename: docs.map((f) => f.originalname).filter(Boolean).join(', ') || undefined,
+        fileType: docs[0]?.mimetype,
         language: analysis.language,
         confidence: analysis.confidence,
         conditionName: analysis.diagnosis?.condition,

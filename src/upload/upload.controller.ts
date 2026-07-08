@@ -1,8 +1,8 @@
 import {
-  Controller, Post, Get, Param, Body, UploadedFile,
+  Controller, Post, Get, Param, Body, UploadedFile, UploadedFiles,
   UseInterceptors, UseGuards, Request,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 import { UploadService } from './upload.service';
@@ -49,6 +49,27 @@ export class UploadController {
       file,
       ...body,
     });
+  }
+
+  @ApiOperation({ summary: 'Upload MULTIPLE medical documents and get one combined AI analysis' })
+  @ApiConsumes('multipart/form-data')
+  @Post('multi')
+  @UseInterceptors(
+    FilesInterceptor('files', 8, {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB each, up to 8 documents
+      fileFilter: (_, file, cb) => {
+        if (ALLOWED_MIMES.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Unsupported format. Use PDF, JPEG, PNG, or DOCX.'), false);
+      },
+    }),
+  )
+  async uploadMulti(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: { description?: string; treatment?: string; country?: string; urgency?: string },
+    @Request() req,
+  ) {
+    return this.uploadService.analyzeAndStore({ userId: req.user.id, files, ...body });
   }
 
   @ApiOperation({ summary: 'Get a stored analysis by ID (owner or admin only)' })

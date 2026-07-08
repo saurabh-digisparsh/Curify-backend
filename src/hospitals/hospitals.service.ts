@@ -61,7 +61,7 @@ export class HospitalsService {
 
   async getStats() {
     const SERVED = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
-    const [hospitalCount, countryCount, reviewCount, servedPatients] =
+    const [hospitalCount, countryCount, reviewCount, servedPatients, ratingAgg] =
       await Promise.all([
         // Homepage labels this "JCI-Accredited Hospitals" → only count JCI ones.
         this.prisma.hospital.count({ where: { jciAccredited: true } }),
@@ -79,12 +79,16 @@ export class HospitalsService {
           select: { userId: true },
           distinct: ['userId'],
         }),
+        // Homepage trust band shows "★ x.x verified reviews" → average over all reviews.
+        this.prisma.review.aggregate({ _avg: { rating: true } }),
       ]);
     return {
       hospitalCount,
       countryCount,
       reviewCount,
       patientCount: servedPatients.length,
+      // One decimal (e.g. 4.8); 0 when there are no reviews yet.
+      avgRating: Math.round((ratingAgg._avg.rating ?? 0) * 10) / 10,
     };
   }
 
@@ -97,7 +101,7 @@ export class HospitalsService {
     return { cities, specialties };
   }
 
-  async getDispatch(page = 1, pageSize = 20) {
+  async getDispatch(page = 1, pageSize = 20, search = '') {
     // Anti-scrape: clamp so a single request can't pull the whole catalog
     // (e.g. ?pageSize=100000). Never serve more than 50 hospitals per page.
     page = Math.max(1, Number(page) || 1);
@@ -154,9 +158,14 @@ export class HospitalsService {
     // Biggest hospitals first.
     items.sort((x, y) => y.reviews - x.reviews);
 
+    // Free-text search by hospital name (substring, case-insensitive). Global
+    // stats stay whole-archive; only the grid + page count reflect the filter.
+    const q = String(search || '').trim().toLowerCase();
+    const filtered = q ? items.filter((h) => h.title.toLowerCase().includes(q)) : items;
+
     // Server-side pagination — return only the requested page slice.
     const start = Math.max(0, (page - 1) * pageSize);
-    const paged = items.slice(start, start + pageSize);
+    const paged = filtered.slice(start, start + pageSize);
 
     return {
       global: {
@@ -167,7 +176,7 @@ export class HospitalsService {
       },
       page,
       pageSize,
-      pageCount: Math.ceil(items.length / pageSize),
+      pageCount: Math.max(1, Math.ceil(filtered.length / pageSize)),
       hospitals: paged,
     };
   }
@@ -246,7 +255,7 @@ export class HospitalsService {
    */
   async getComparison(params: {
     page?: number; pageSize?: number; city?: string; sort?: string;
-    treatment?: string; urgency?: string;
+    treatment?: string; urgency?: string; search?: string;
   }) {
     const page = Math.max(1, Number(params.page) || 1);
     const pageSize = Math.min(50, Math.max(1, Number(params.pageSize) || 20));
@@ -278,6 +287,10 @@ export class HospitalsService {
       const c = params.city.toLowerCase();
       list = list.filter((h) => h.city.toLowerCase().includes(c));
     }
+
+    // Free-text search by hospital name (substring, case-insensitive).
+    const q = params.search?.trim().toLowerCase();
+    if (q) list = list.filter((h) => h.name.toLowerCase().includes(q));
 
     if (params.sort === 'rating') list.sort((a, b) => (b.overallRating ?? 0) - (a.overallRating ?? 0));
     else if (params.sort === 'reviews') list.sort((a, b) => b.reviewCount - a.reviewCount);

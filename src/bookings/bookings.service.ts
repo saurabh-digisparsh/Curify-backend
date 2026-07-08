@@ -22,6 +22,9 @@ export class BookingsService {
     totalAmount?: number;
     currency?: string;
     paymentRef?: string;
+    paymentMethod?: string;
+    downPayment?: number;
+    installments?: number;
   }) {
     // Ensure hospital exists
     const hospital = await this.prisma.hospital.findUnique({ where: { id: data.hospitalId } });
@@ -42,6 +45,9 @@ export class BookingsService {
         totalAmount: data.totalAmount ?? null,
         currency: data.currency ?? 'USD',
         paymentRef: data.paymentRef ?? `CRF-${Date.now()}`,
+        paymentMethod: data.paymentMethod ?? 'FULL',
+        downPayment: data.downPayment ?? null,
+        installments: data.installments ?? null,
       },
     });
 

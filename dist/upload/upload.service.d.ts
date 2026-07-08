@@ -9,6 +9,7 @@ export declare class UploadService {
     analyzeAndStore(params: {
         userId?: string;
         file?: Express.Multer.File;
+        files?: Express.Multer.File[];
         description?: string;
         treatment?: string;
         country?: string;

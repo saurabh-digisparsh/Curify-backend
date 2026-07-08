@@ -72,6 +72,11 @@ export declare class LeadsService {
             aiPersona: string | null;
             aiSummary: string | null;
             categoryReason: string | null;
+            categoryConfidence: number | null;
+            categoryVotes: Prisma.JsonValue | null;
+            needsReview: boolean;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
             categorizedAt: Date | null;
         }[];
         total: number;
@@ -147,6 +152,11 @@ export declare class LeadsService {
         aiPersona: string | null;
         aiSummary: string | null;
         categoryReason: string | null;
+        categoryConfidence: number | null;
+        categoryVotes: Prisma.JsonValue | null;
+        needsReview: boolean;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
         categorizedAt: Date | null;
     }>;
     remove(id: string): Promise<{

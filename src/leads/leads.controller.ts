@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -173,6 +173,24 @@ export class LeadsController {
     return this.brightData.categorizeStatus();
   }
 
+  @ApiOperation({ summary: 'Re-score all stored captures from saved text (DB-only backfill of corridor-aware heat/signals)' })
+  @Post('analytics/rescore')
+  rescore() {
+    return this.brightData.rescoreCaptures();
+  }
+
+  @ApiOperation({ summary: 'Reset + few-shot re-classify: keep DB-sourced exemplars, clear other labels, re-classify from scratch' })
+  @Post('analytics/reset-reclassify')
+  resetReclassify() {
+    return this.brightData.resetAndReclassify();
+  }
+
+  @ApiOperation({ summary: 'Classification scorecard: confusion matrix + precision/recall/F1 from human-reviewed rows' })
+  @Get('analytics/scorecard')
+  scorecard() {
+    return this.brightData.classificationScorecard();
+  }
+
   @ApiOperation({ summary: 'Drill-down post list for analytics (social captures + YouTube leads), filtered by category/platform' })
   @Get('analytics/posts')
   analyticsPosts(
@@ -202,6 +220,7 @@ export class LeadsController {
     @Query('includeDeleted') includeDeleted?: string,
     @Query('includeSpam') includeSpam?: string,
     @Query('sort') sort?: string,
+    @Query('needsReview') needsReview?: string,
   ) {
     return this.brightData.listCaptures({
       page: page ? +page : 1,
@@ -210,6 +229,7 @@ export class LeadsController {
       minSignals: minSignals ? +minSignals : undefined,
       includeDeleted: includeDeleted === 'true',
       includeSpam: includeSpam === 'true',
+      needsReview: needsReview === 'true',
     });
   }
 
@@ -235,6 +255,15 @@ export class LeadsController {
   @Delete('brightdata/captures/:id')
   softDeleteCapture(@Param('id') id: string) {
     return this.brightData.softDelete(id);
+  }
+
+  @ApiOperation({ summary: 'Human-in-the-loop: confirm/override a captured post\'s AI category (marks reviewed)' })
+  @Patch('brightdata/captures/:id/category')
+  reviewCategory(@Param('id') id: string, @Body() body: { category: string }, @Req() req: any) {
+    const category = String(body?.category || '').toUpperCase();
+    if (!['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER'].includes(category)) throw new BadRequestException('invalid category');
+    const reviewer = req?.user?.email || req?.user?.userId || req?.user?.sub || 'admin';
+    return this.brightData.setCategoryByHuman(id, category as any, reviewer);
   }
 
   @ApiOperation({ summary: 'Restore a soft-deleted capture' })

@@ -45,7 +45,7 @@ let AiService = class AiService {
         console.log(`🤖 AI provider: ${this.primary.label} (model ${this.primary.model})` +
             (this.fallback ? ` · fallback: ${this.fallback.label} (model ${this.fallback.model})` : ' · no fallback'));
     }
-    async chat(messages, maxTokens = 1500, mockFallback) {
+    async chat(messages, maxTokens = 1500, mockFallback, temperature = 0.3) {
         const providers = this.fallback ? [this.primary, this.fallback] : [this.primary];
         let lastErr;
         for (let i = 0; i < providers.length; i++) {
@@ -55,7 +55,7 @@ let AiService = class AiService {
                     model: p.model,
                     messages,
                     max_tokens: maxTokens,
-                    temperature: 0.3,
+                    temperature,
                     response_format: { type: 'json_object' },
                 });
                 const text = res.choices[0].message.content?.trim() ?? '{}';
@@ -73,13 +73,94 @@ let AiService = class AiService {
         }
         throw new Error(`AI call failed: ${lastErr?.message}`);
     }
+    async assistantChat(params) {
+        const history = (params.messages || [])
+            .slice(-20)
+            .map((m) => ({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: String(m.content || '').slice(0, 2000),
+        }));
+        const mockFallback = () => ({
+            reply: "I'm having trouble reaching our AI right now, but you don't have to wait: you can browse ranked hospitals with transparent total prices, or upload your medical reports for a free analysis.",
+            language: params.language || 'en',
+            detected: { condition: null, treatment: null, country: null, urgency: null },
+            quickReplies: [],
+            estimate: null,
+            nextStep: 'browse_hospitals',
+        });
+        return this.chat([
+            {
+                role: 'system',
+                content: `You are Curify's medical-travel assistant. Curify connects patients (mostly from the USA, Middle East, and Africa) with NABH/JCI-accredited hospitals in India, with one transparent total price (surgery + flights + stay).
+
+The chat OPENS by asking who the visitor is. Adapt to their answer:
+- "I need Medical Treatment" (a patient or family member) → the patient flow below.
+- "I'm a Doctor" → they can refer patients to Curify's hospital network or request second opinions. Ask their specialty and country, explain the doctor referral partnership (their patients get transparent packages; the doctor stays informed via records handoff), and offer to connect them with our partnerships team. nextStep stays "chat".
+- "I'm a Hospital/Clinic" → they may want to JOIN the network. Explain requirements (NABH or JCI accreditation, transparent package pricing, verified-review participation), ask hospital name/city/specialties, and offer the partnerships team. nextStep stays "chat".
+- "I'm a Travel Agent" → Curify's agent program: they refer patients, we handle the medical side; fixed commission per completed booking, automated KYC onboarding, live lead pipeline. Ask their agency name/country and offer sign-up. nextStep stays "chat".
+
+Patient flow: warmly understand the patient's situation and collect, over the conversation: condition/procedure, home country, timeline/urgency, and insurance status. Be honest — if India is not clearly worth it, say so.
+Reply in the language the user writes in${params.language ? ` (their UI language preference is "${params.language}")` : ''}. Keep replies short: 2-3 sentences, warm, plain language, no medical jargon.
+Respond with ONLY valid JSON matching this schema exactly:
+{
+  "reply": "your conversational reply, in the user's language",
+  "language": "ISO 639-1 code of the reply",
+  "detected": { "condition": "condition/procedure or null", "treatment": "treatment category or null", "country": "patient home country or null", "urgency": "asap|1-3 months|exploring|null" },
+  "quickReplies": ["up to 3 short suggested answers the user might tap, in their language"],
+  "estimate": null OR { "procedure": "name", "homeCostUsd": 0, "indiaCostUsd": 0, "savingsPct": 0 },
+  "nextStep": "chat|upload_reports|browse_hospitals"
+}
+Rules:
+- Provide "estimate" ONLY once you know both the condition and home country. Use realistic India medical-tourism package pricing ($2,000-$15,000 all-in) vs typical home-country cost.
+- Set nextStep="upload_reports" when medical reports/scans would be the natural next step (you've understood the case).
+- Set nextStep="browse_hospitals" when an estimate has been given and the user is ready to see ranked hospitals.
+- Otherwise nextStep="chat".`,
+            },
+            ...history,
+        ], 700, mockFallback, 0.5);
+    }
+    async translateUi(params) {
+        const entries = Object.entries(params.strings || {})
+            .slice(0, 200)
+            .map(([k, v]) => [String(k).slice(0, 120), String(v).slice(0, 700)]);
+        const system = {
+            role: 'system',
+            content: `You translate a web app's UI string catalog for Curify, a medical-tourism platform.
+Respond ONLY with a JSON object that has EXACTLY the same keys as the input, each value translated into the language with ISO 639-1 code "${params.language}".
+Rules:
+- Keep every {{placeholder}} token exactly as-is (e.g. {{count}}, {{rating}}, {{india}}).
+- Keep emoji, arrows (→ ← ↩), "★", "·", numbers, and brand/proper names (Curify, WhatsApp, NABH, JCI, HIPAA, AI) unchanged.
+- Natural, warm, patient-friendly tone; keep each value roughly the same length as the original.
+- Never add, drop, or rename keys.`,
+        };
+        const CHUNK = 15;
+        const out = {};
+        for (let i = 0; i < entries.length; i += CHUNK) {
+            const chunk = Object.fromEntries(entries.slice(i, i + CHUNK));
+            try {
+                const res = await this.chat([system, { role: 'user', content: JSON.stringify(chunk) }], 2500, undefined, 0.2);
+                for (const [k, v] of Object.entries(res || {})) {
+                    if (typeof v === 'string' && k in params.strings)
+                        out[k] = v;
+                }
+            }
+            catch (err) {
+                console.warn(`⚠️  translate-ui chunk ${i / CHUNK + 1} failed (${params.language}): ${err.message}`);
+            }
+        }
+        return out;
+    }
     async analyzeReport(params) {
         const userContent = [];
-        if (params.fileBase64 && params.fileType?.startsWith('image/')) {
-            userContent.push({
-                type: 'image_url',
-                image_url: { url: `data:${params.fileType};base64,${params.fileBase64}` },
-            });
+        const images = params.files?.length
+            ? params.files
+            : params.fileBase64 && params.fileType
+                ? [{ base64: params.fileBase64, type: params.fileType }]
+                : [];
+        for (const img of images) {
+            if (img.type?.startsWith('image/')) {
+                userContent.push({ type: 'image_url', image_url: { url: `data:${img.type};base64,${img.base64}` } });
+            }
         }
         let contextText = 'Analyze this medical report and extract structured data. Base every field strictly on the report content below — do not invent a condition from the treatment hint.';
         if (params.reportText) {
@@ -99,36 +180,92 @@ let AiService = class AiService {
         userContent.push({ type: 'text', text: contextText });
         const now = new Date();
         const mockFallback = () => this.mockAnalysis(params);
-        return this.chat([
+        const result = await this.chat([
             {
                 role: 'system',
-                content: `You are Curify's AI medical analyst. Extract structured data from medical reports.
-Respond with valid JSON only matching this schema exactly:
+                content: `You are Curify's AI medical analyst. Convert the raw inputs (treatment info + diagnostic reports) into a scored, severity-graded analytical report following the standard Curify template.
+Respond with valid JSON ONLY, matching this schema exactly:
 {
   "reportId": "RPT-YYYY-NNN",
   "language": "detected language",
   "confidence": 0-100,
   "diagnosis": {
-    "condition": "full condition name",
+    "condition": "primary condition name",
     "medical": "detailed medical description",
     "plain": "2-3 sentence patient-friendly explanation",
     "severity": "Low|Moderate|Moderate-High|High|Critical"
   },
   "flags": [{ "type": "warning|success|alert|info", "icon": "emoji", "text": "flag text" }],
-  "extractedData": {
-    "patientAge": null,
-    "patientName": null,
-    "patientCountry": "patient's home country if stated in the report, else null",
-    "scanType": "type of scan or test performed",
-    "scanDate": "YYYY-MM-DD or null",
-    "referringDoctor": null
+  "extractedData": { "patientAge": null, "patientName": null, "patientCountry": "home country if stated else null", "scanType": "test/scan type", "scanDate": "YYYY-MM-DD or null", "referringDoctor": null },
+  "report": {
+    "overview": { "patientName": "or N/A", "ageSex": "or N/A", "dateOfReport": "or N/A", "referringDoctor": "or N/A", "reportsIncluded": ["Blood","ECG","HRCT Chest","X-Ray","Other — only those actually provided"] },
+    "treatment": { "type": "or N/A", "description": "or N/A", "durationDosage": "or N/A", "startDate": "or N/A", "clinicalNotes": "or N/A" },
+    "categories": [
+      { "name": "Blood Report | ECG Report | HRCT Chest Report | X-Ray Report | <other>",
+        "parameters": [ { "parameter": "e.g. Hemoglobin / Heart Rate / Ground Glass Opacities", "value": "reported value or finding", "reference": "reference range / normal expected", "deviation": "e.g. Low/High/Normal (blood) or short note", "score": 0, "comment": "brief" } ],
+        "subScore": "sum / max", "severity": "Normal|Mild|Moderate|Severe|Critical" }
+    ],
+    "weightingRationale": "1-2 sentences: which report(s) you weighted highest and why, based on the primary clinical concern.",
+    "composite": [ { "category": "Blood Report", "subScore": "x/y", "weightPct": 0, "weightedScore": 0, "severity": "..." } ],
+    "compositeScore": 0,
+    "compositeSeverity": "Normal|Mild|Moderate|Severe|Critical",
+    "correlation": { "consistency": "do findings support one picture or conflict?", "treatmentCorrelation": "consistent with expected treatment response/side-effects?", "trend": "Improving|Stable|Worsening|N/A", "keyFlags": "key items for clinician attention" },
+    "impression": "2-4 sentence plain-language summary combining all findings, overall severity, and treatment correlation.",
+    "recommendations": ["next tests / follow-up interval", "treatment adjustment considerations", "specialist referral if applicable"]
   }
 }
-Generate 3-5 clinically relevant flags with at least one warning and one info.
-Set patientCountry only if the report explicitly mentions the patient's country/nationality/address; otherwise null.`,
+CRITICAL RULES:
+- Scoring key per parameter: 0=normal, 1=mild, 2=moderate, 3=severe, 4=critical.
+- Include a "categories" block ONLY for report types actually provided/visible. If NO diagnostic report is provided (description only), set "categories": [], "composite": [], compositeScore based on described severity, and note this in weightingRationale.
+- Weights across composite categories MUST sum to 100. Choose weights by the PRIMARY clinical concern (cardiac→ECG highest; respiratory→HRCT highest; infection→Blood highest; metabolic/renal/hepatic→Blood highest). State the rationale.
+- compositeScore is 0-100. Severity scale: 0-20 Normal, 21-40 Mild, 41-60 Moderate, 61-80 Severe, 81-100 Critical.
+- Base every value strictly on the actual report/description — do NOT fabricate numbers. Use "N/A" where a field is unknown.
+- 3-5 flags with at least one warning and one info. Set patientCountry only if explicitly stated.`,
             },
             { role: 'user', content: userContent },
-        ], 1500, mockFallback);
+        ], 3500, mockFallback);
+        if (result?.report) {
+            const bands = {
+                Normal: [0, 20], Minimal: [0, 20], Mild: [21, 40], Moderate: [41, 60], Severe: [61, 80], Critical: [81, 100],
+            };
+            const band = bands[result.report.compositeSeverity];
+            const score = Number(result.report.compositeScore);
+            if (band && (!Number.isFinite(score) || score < band[0] || score > band[1])) {
+                result.report.compositeScore = Math.round((band[0] + band[1]) / 2);
+            }
+        }
+        if (result && !result.report) {
+            const sev = result.diagnosis?.severity || 'Moderate';
+            const scoreBySev = { Low: 15, Mild: 30, Moderate: 50, 'Moderate-High': 65, High: 75, Severe: 78, Critical: 90 };
+            result.report = {
+                overview: {
+                    patientName: result.extractedData?.patientName || 'N/A',
+                    ageSex: result.extractedData?.patientAge ? String(result.extractedData.patientAge) : 'N/A',
+                    dateOfReport: result.extractedData?.scanDate || 'N/A',
+                    referringDoctor: result.extractedData?.referringDoctor || 'N/A',
+                    reportsIncluded: result.extractedData?.scanType ? [result.extractedData.scanType] : [],
+                },
+                treatment: { type: params.treatment || 'N/A', description: params.description || 'N/A', durationDosage: 'N/A', startDate: 'N/A', clinicalNotes: 'N/A' },
+                categories: [],
+                weightingRationale: 'No structured diagnostic report parsed — severity estimated from the described condition.',
+                composite: [],
+                compositeScore: scoreBySev[sev] ?? 50,
+                compositeSeverity: sev,
+                correlation: { consistency: 'N/A', treatmentCorrelation: 'N/A', trend: 'N/A', keyFlags: (result.flags || []).map((f) => f.text).join('; ') },
+                impression: result.diagnosis?.plain || '',
+                recommendations: ['Consult a specialist to confirm findings and plan treatment.'],
+            };
+        }
+        const tr = result?.report?.treatment;
+        if (tr) {
+            const blank = (v) => !v || !String(v).trim() || String(v).trim().toUpperCase() === 'N/A';
+            if (blank(tr.type) && params.treatment) {
+                tr.type = params.treatment.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            }
+            if (blank(tr.description) && params.description)
+                tr.description = params.description;
+        }
+        return result;
     }
     mockAnalysis(params) {
         const isFever = params.description?.toLowerCase().includes('fever') || params.description?.toLowerCase().includes('temperature');
@@ -221,17 +358,17 @@ Respond with valid JSON matching this schema exactly:
 {
   "home": {
     "country": "country name",
-    "waitTime": "estimate",
-    "cost": "USD range",
-    "successRate": "percentage",
-    "accredited": "number of JCI hospitals",
+    "waitTime": "concrete duration range, e.g. \\"6-12 weeks\\" or \\"3-6 months\\"",
+    "cost": "explicit USD amount range, e.g. \\"$18,000-$30,000\\"",
+    "successRate": "numeric percentage or range, e.g. \\"80-85%\\"",
+    "accredited": "number of JCI hospitals, e.g. \\"2 JCI-accredited\\"",
     "risks": ["risk1", "risk2", "risk3", "risk4"]
   },
   "abroad": {
-    "waitTime": "estimate",
-    "cost": "USD range",
-    "successRate": "percentage",
-    "accredited": "matched hospitals description",
+    "waitTime": "concrete duration range, e.g. \\"1-2 weeks\\"",
+    "cost": "explicit USD amount range, e.g. \\"$6,000-$11,000\\"",
+    "successRate": "numeric percentage or range, e.g. \\"90-95%\\"",
+    "accredited": "matched hospitals description, e.g. \\"8 JCI-accredited matches\\"",
     "benefits": ["benefit1", "benefit2", "benefit3", "benefit4"]
   },
   "timeline": [
@@ -243,7 +380,8 @@ Respond with valid JSON matching this schema exactly:
   ],
   "recommendation": "stay|go",
   "recommendationReason": "1-2 sentence explanation"
-}`,
+}
+CRITICAL: cost, waitTime and successRate MUST be concrete numbers/ranges — NEVER qualitative words like "High", "Moderate" or "Low". Base the USD cost ranges on realistic figures: the home country's PRIVATE-care pricing for this treatment vs India's medical-tourism pricing (India is typically 40-70% cheaper). Success rates are realistic clinical percentages.`,
             },
             {
                 role: 'user',
@@ -254,6 +392,21 @@ Urgency: ${params.urgency}
 Analyze whether patient should treat at home or travel to India.`,
             },
         ], 1200);
+    }
+    async analyzeHospitalChat(params) {
+        return this.chat([
+            {
+                role: 'system',
+                content: `You read a chat transcript between a PATIENT and a HOSPITAL coordinator about a medical trip to India. Extract the outcome. Respond with valid JSON ONLY:
+{
+  "agreedQuoteUsd": number or null,
+  "inclusions": ["what the quoted package includes"],
+  "summary": "2-3 sentence summary of what was discussed and agreed"
+}
+Rules: base everything strictly on the transcript. "agreedQuoteUsd" is the final all-inclusive surgery/package price the HOSPITAL quoted, in USD (a single number); if no price was quoted, set it to null. Do not invent numbers.`,
+            },
+            { role: 'user', content: `Treatment: ${params.treatment}\n\nTranscript:\n${params.transcript}` },
+        ], 800);
     }
     async localizeReview(text) {
         return this.chat([
@@ -305,7 +458,7 @@ Respond ONLY as JSON: {"results":[{"id":"<id>","isLead":true,"confidence":90,"pe
         }
         return map;
     }
-    async classifyCategories(items) {
+    async classifyCategories(items, examples, temperature) {
         if (!items.length)
             return {};
         const list = items
@@ -314,6 +467,10 @@ Respond ONLY as JSON: {"results":[{"id":"<id>","isLead":true,"confidence":90,"pe
             return `${i + 1}. id=${c.id}\n   platform: ${c.platform || '?'}\n   text: ${text || '(empty)'}`;
         })
             .join('\n');
+        const fewShot = examples?.length
+            ? `\nLABELLED EXAMPLES from our own reviewed data — learn each category's boundary from these and label consistently:\n` +
+                examples.map((e) => `• [${e.category}] ${e.text}${e.reason ? `  →(${e.reason})` : ''}`).join('\n') + '\n'
+            : '';
         const result = await this.chat([
             {
                 role: 'system',
@@ -323,18 +480,19 @@ Respond ONLY as JSON: {"results":[{"id":"<id>","isLead":true,"confidence":90,"pe
  - "MARKETING": promotional or advertising content with NO partnership intent — hospitals, clinics, agencies or influencers PROMOTING or SELLING services, packages, treatments, discounts, "contact/DM us", booking links, or unrelated commercial spam (e.g. exam-cheating, SEO link spam).
  - "NEWS": journalistic, informational, educational, or broadcast content — news articles, reports, statistics, "how-to"/guides/explainers, academic/research, or general non-personal discussion about medical tourism as a topic.
  - "OTHER": off-topic, irrelevant, unintelligible, generic wellness/spa/yoga, or not related to medical tourism / healthcare at all.
-KEY TEST: a real person speaking about THEIR OWN care need = LEAD; someone seeking/offering a referral or patient-pipeline partnership = PARTNER; someone merely selling/promoting = MARKETING; impersonal reporting/education = NEWS; unrelated = OTHER.
-For EACH item return: id, category (one of LEAD|PARTNER|MARKETING|NEWS|OTHER), reason (short phrase, max ~12 words).
-Respond ONLY as JSON: {"results":[{"id":"<id>","category":"LEAD","reason":"patient asking for knee surgery cost in India"}]}`,
+${fewShot}KEY TEST: a real person speaking about THEIR OWN care need = LEAD; someone seeking/offering a referral or patient-pipeline partnership = PARTNER; someone merely selling/promoting = MARKETING; impersonal reporting/education = NEWS; unrelated = OTHER.
+For EACH item return: id, category (one of LEAD|PARTNER|MARKETING|NEWS|OTHER), reason (short phrase, max ~12 words), and confidence (0-100 = how certain you are of the category).
+Respond ONLY as JSON: {"results":[{"id":"<id>","category":"LEAD","reason":"patient asking for knee surgery cost in India","confidence":90}]}`,
             },
             { role: 'user', content: list },
-        ], 2000);
+        ], 2000, undefined, temperature ?? 0.3);
         const valid = new Set(['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER']);
         const map = {};
         for (const r of result?.results || []) {
             const cat = String(r?.category || '').toUpperCase();
             if (r?.id && valid.has(cat)) {
-                map[r.id] = { category: cat, reason: String(r.reason || '').slice(0, 200) };
+                const conf = Math.max(0, Math.min(100, Number(r.confidence)));
+                map[r.id] = { category: cat, reason: String(r.reason || '').slice(0, 200), confidence: Number.isFinite(conf) ? conf : 60 };
             }
         }
         return map;
@@ -518,7 +676,14 @@ Surgeon: ${params.surgeon?.name || 'Assigned surgeon'}
 Surgery price: $${params.hospital.quotedPriceUsd}
 Procedure: ${params.treatment || params.diagnosis}
 Patient from: ${params.country || 'Nigeria'}
-Included: ${(params.hospital.included || []).join(', ')}`,
+Departure city: ${params.departureCity || params.country || 'Nigeria'}
+Preferred travel date: ${params.travelDate || 'flexible'}
+Travellers (incl. patient): ${params.travelers || 1}
+Length of stay: ${params.stayNights ? `${params.stayNights} nights` : 'estimate from the procedure recovery time'}
+Accommodation preference: ${params.accommodation || 'standard'}
+${params.notes ? `Special assistance / notes: ${params.notes}` : ''}
+Included: ${(params.hospital.included || []).join(', ')}
+Tailor flight origin, visa steps, hotel/companion costs and the timeline to the above travel details.`,
             },
         ], 2000);
     }

@@ -26,10 +26,15 @@ export class HospitalsController {
   @ApiOperation({ summary: 'Dispatch view: paginated hospitals with review aggregates' })
   @Throttle(DATA_THROTTLE)
   @Get('dispatch')
-  getDispatch(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {
+  getDispatch(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('search') search?: string,
+  ) {
     return this.hospitalsService.getDispatch(
       page ? parseInt(page, 10) : 1,
       pageSize ? parseInt(pageSize, 10) : 20,
+      search,
     );
   }
 
@@ -43,11 +48,12 @@ export class HospitalsController {
     @Query('sort') sort?: string,
     @Query('treatment') treatment?: string,
     @Query('urgency') urgency?: string,
+    @Query('search') search?: string,
   ) {
     return this.hospitalsService.getComparison({
       page: page ? parseInt(page, 10) : 1,
       pageSize: pageSize ? parseInt(pageSize, 10) : 20,
-      city, sort, treatment, urgency,
+      city, sort, treatment, urgency, search,
     });
   }
 

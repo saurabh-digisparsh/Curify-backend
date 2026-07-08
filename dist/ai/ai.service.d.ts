@@ -3,9 +3,24 @@ export declare class AiService {
     private readonly fallback;
     constructor();
     private chat;
+    assistantChat(params: {
+        messages: {
+            role: 'user' | 'assistant';
+            content: string;
+        }[];
+        language?: string;
+    }): Promise<any>;
+    translateUi(params: {
+        language: string;
+        strings: Record<string, string>;
+    }): Promise<Record<string, string>>;
     analyzeReport(params: {
         fileBase64?: string;
         fileType?: string;
+        files?: {
+            base64: string;
+            type: string;
+        }[];
         reportText?: string;
         description?: string;
         treatment?: string;
@@ -18,6 +33,10 @@ export declare class AiService {
         country: string;
         treatment: string;
         urgency: string;
+    }): Promise<any>;
+    analyzeHospitalChat(params: {
+        transcript: string;
+        treatment: string;
     }): Promise<any>;
     localizeReview(text: string): Promise<{
         lang: string;
@@ -42,9 +61,14 @@ export declare class AiService {
         platform?: string;
         title?: string | null;
         body?: string | null;
-    }[]): Promise<Record<string, {
+    }[], examples?: {
+        text: string;
+        category: string;
+        reason?: string;
+    }[], temperature?: number): Promise<Record<string, {
         category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER';
         reason: string;
+        confidence: number;
     }>>;
     analyzeTranscript(input: {
         title: string;
@@ -85,6 +109,12 @@ export declare class AiService {
         diagnosis: string;
         treatment: string;
         country: string;
+        departureCity?: string;
+        travelDate?: string;
+        travelers?: number;
+        stayNights?: number;
+        accommodation?: string;
+        notes?: string;
     }): Promise<any>;
     generateRecoveryPlan(params: {
         diagnosis: string;

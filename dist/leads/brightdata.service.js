@@ -447,7 +447,9 @@ let BrightDataService = BrightDataService_1 = class BrightDataService {
         if (params.category)
             where.category = params.category === 'UNCATEGORIZED' ? null : params.category;
         if (params.temperature)
-            where.temperature = params.temperature;
+            where.temperature = params.temperature === 'hot' ? { startsWith: 'hot' } : params.temperature;
+        if (params.needsReview)
+            where.needsReview = true;
         if (params.minSignals)
             where.signalCount = { gte: Number(params.minSignals) };
         if (params.q)
@@ -489,6 +491,42 @@ let BrightDataService = BrightDataService_1 = class BrightDataService {
             byTemperature: Object.fromEntries(byTemp.map((t) => [t.temperature ?? 'cold', t._count])),
             byCategory: categoryTotals,
         };
+    }
+    async rescoreCaptures() {
+        const BATCH = 500;
+        let cursor;
+        let scanned = 0, updated = 0;
+        for (;;) {
+            const rows = await this.prisma.sourceCapture.findMany({
+                select: { id: true, title: true, body: true, temperature: true, intentScore: true, signalCount: true, isSpam: true },
+                orderBy: { id: 'asc' },
+                take: BATCH,
+                ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+            });
+            if (!rows.length)
+                break;
+            cursor = rows[rows.length - 1].id;
+            for (const r of rows) {
+                scanned++;
+                const text = `${r.title ?? ''} ${r.body ?? ''}`;
+                const sig = (0, leads_config_1.scoreSignals)(text);
+                const spam = (0, leads_config_1.isSpam)(text);
+                if (r.temperature === sig.temperature && r.intentScore === sig.intentScore && r.signalCount === sig.signalCount && r.isSpam === spam)
+                    continue;
+                await this.prisma.sourceCapture.update({
+                    where: { id: r.id },
+                    data: {
+                        hasProcedure: sig.hasProcedure, hasCost: sig.hasCost, hasOrigin: sig.hasOrigin,
+                        signalCount: sig.signalCount, temperature: sig.temperature,
+                        procedures: sig.procedures, origins: sig.origins,
+                        intentScore: sig.intentScore, isSpam: spam,
+                    },
+                });
+                updated++;
+            }
+        }
+        this.logger.log(`Rescore captures: ${updated}/${scanned} rows updated with current signals`);
+        return { scanned, updated };
     }
     async analytics(bucket = 'month') {
         const unit = ['day', 'month', 'quarter', 'year'].includes(bucket) ? bucket : 'month';
@@ -640,6 +678,7 @@ let BrightDataService = BrightDataService_1 = class BrightDataService {
     }
     async runCategorize(items) {
         const BATCH = 15;
+        const { examples } = await this.buildFewShotExamples();
         try {
             for (let i = 0; i < items.length; i += BATCH) {
                 if (!this.categorize.running)
@@ -652,35 +691,74 @@ let BrightDataService = BrightDataService_1 = class BrightDataService {
                     leadIds.length ? this.prisma.lead.findMany({ where: { id: { in: leadIds } }, select: { id: true, title: true, description: true, transcript: true, aiSummary: true } }) : Promise.resolve([]),
                 ]);
                 const inputs = [];
+                const textById = new Map();
                 const verdicts = {};
                 for (const r of caps) {
                     const text = ((r.title || '') + (r.body || '')).trim();
                     if (!text)
-                        verdicts[`capture:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
-                    else
+                        verdicts[`capture:${r.id}`] = { category: 'OTHER', reason: 'no text content', confidence: 100, votes: { OTHER: 1 }, needsReview: false };
+                    else {
                         inputs.push({ id: `capture:${r.id}`, platform: r.platform, title: r.title, body: r.body });
+                        textById.set(`capture:${r.id}`, `${r.title ?? ''} ${r.body ?? ''}`);
+                    }
                 }
                 for (const r of leads) {
                     const body = r.transcript || r.aiSummary || r.description || '';
                     const text = ((r.title || '') + body).trim();
                     if (!text)
-                        verdicts[`lead:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
-                    else
+                        verdicts[`lead:${r.id}`] = { category: 'OTHER', reason: 'no text content', confidence: 100, votes: { OTHER: 1 }, needsReview: false };
+                    else {
                         inputs.push({ id: `lead:${r.id}`, platform: 'YOUTUBE', title: r.title, body });
+                        textById.set(`lead:${r.id}`, `${r.title ?? ''} ${body}`);
+                    }
                 }
-                if (inputs.length)
-                    Object.assign(verdicts, await this.ai.classifyCategories(inputs));
+                if (inputs.length) {
+                    const pass1 = await this.ai.classifyCategories(inputs, examples, 0.3);
+                    const hard = inputs.filter((x) => {
+                        const v = pass1[x.id];
+                        if (!v)
+                            return false;
+                        const partnerClash = (0, leads_config_1.hasPartnerSignal)(textById.get(x.id) || '') && v.category !== 'PARTNER';
+                        return v.category === 'LEAD' || v.category === 'PARTNER' || v.confidence < 75 || partnerClash;
+                    });
+                    const [pass2, pass3] = hard.length
+                        ? await Promise.all([this.ai.classifyCategories(hard, examples, 0.6), this.ai.classifyCategories(hard, examples, 0.85)])
+                        : [{}, {}];
+                    for (const x of inputs) {
+                        const v1 = pass1[x.id];
+                        if (!v1) {
+                            verdicts[x.id] = { category: 'OTHER', reason: 'unclassified by model', confidence: 40, votes: {}, needsReview: true };
+                            continue;
+                        }
+                        const isHard = hard.includes(x);
+                        const passes = [v1, ...(isHard ? [pass2[x.id], pass3[x.id]].filter(Boolean) : [])];
+                        const votes = {};
+                        for (const p of passes)
+                            votes[p.category] = (votes[p.category] || 0) + 1;
+                        let winner = v1.category, top = 0;
+                        for (const [c, n] of Object.entries(votes))
+                            if (n > top) {
+                                top = n;
+                                winner = c;
+                            }
+                        const agree = votes[winner] / passes.length;
+                        const winningPass = passes.find((p) => p.category === winner) || v1;
+                        const confidence = Math.round(0.7 * agree * 100 + 0.3 * winningPass.confidence);
+                        const partnerClash = (0, leads_config_1.hasPartnerSignal)(textById.get(x.id) || '') && winner !== 'PARTNER';
+                        const needsReview = (isHard && agree < 0.6) || partnerClash || confidence < 55;
+                        verdicts[x.id] = { category: winner, reason: winningPass.reason, confidence, votes, needsReview };
+                    }
+                }
                 const now = new Date();
                 for (const b of batch) {
                     const v = verdicts[`${b.kind}:${b.id}`];
                     if (!v)
                         continue;
-                    if (b.kind === 'capture') {
-                        await this.prisma.sourceCapture.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
-                    }
-                    else {
-                        await this.prisma.lead.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
-                    }
+                    const data = { category: v.category, categoryReason: v.reason, categoryConfidence: v.confidence, categoryVotes: v.votes, needsReview: v.needsReview, categorizedAt: now };
+                    if (b.kind === 'capture')
+                        await this.prisma.sourceCapture.update({ where: { id: b.id }, data: { ...data, aiCategory: v.category } });
+                    else
+                        await this.prisma.lead.update({ where: { id: b.id }, data });
                     this.categorize.updated++;
                     this.categorize.byCategory[v.category] = (this.categorize.byCategory[v.category] || 0) + 1;
                 }
@@ -691,6 +769,92 @@ let BrightDataService = BrightDataService_1 = class BrightDataService {
             this.categorize.running = false;
             this.categorize.finishedAt = new Date().toISOString();
         }
+    }
+    async buildFewShotExamples() {
+        const PER = { LEAD: 6, PARTNER: 3, MARKETING: 3, NEWS: 3, OTHER: 3 };
+        const examples = [];
+        const ids = [];
+        for (const category of ['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER']) {
+            const rows = await this.prisma.sourceCapture.findMany({
+                where: { category: category, deletedAt: null, isSpam: false, body: { not: null } },
+                select: { id: true, title: true, body: true, categoryReason: true },
+                orderBy: [{ reviewedAt: { sort: 'desc', nulls: 'last' } }, { intentScore: 'desc' }, { signalCount: 'desc' }],
+                take: PER[category] ?? 3,
+            });
+            for (const r of rows) {
+                const text = `${r.title ? r.title + ' — ' : ''}${(r.body || '').replace(/\s+/g, ' ').slice(0, 200)}`.trim();
+                if (!text)
+                    continue;
+                examples.push({ text, category, reason: r.categoryReason || '' });
+                ids.push(r.id);
+            }
+        }
+        return { examples, ids };
+    }
+    async resetAndReclassify() {
+        if (this.categorize.running)
+            return { ok: false, reason: 'classification already running' };
+        const { ids } = await this.buildFewShotExamples();
+        const keep = ids.length ? ids : ['__none__'];
+        const [caps, leads] = await Promise.all([
+            this.prisma.sourceCapture.updateMany({
+                where: { category: { not: null }, id: { notIn: keep } },
+                data: { category: null, categoryReason: null, categorizedAt: null },
+            }),
+            this.prisma.lead.updateMany({
+                where: { category: { not: null } },
+                data: { category: null, categoryReason: null, categorizedAt: null },
+            }),
+        ]);
+        this.logger.log(`Reset+reclassify: kept ${ids.length} exemplars, cleared ${caps.count} captures + ${leads.count} leads`);
+        const res = await this.startCategorize({});
+        return { ...res, exemplars: ids.length, cleared: caps.count + leads.count };
+    }
+    async setCategoryByHuman(id, category, reviewedBy) {
+        const row = await this.prisma.sourceCapture.findUnique({ where: { id }, select: { category: true, aiCategory: true } });
+        const aiCategory = (row?.aiCategory ?? row?.category ?? null);
+        await this.prisma.sourceCapture.update({
+            where: { id },
+            data: {
+                category, aiCategory, categoryReason: 'human review', categoryConfidence: 100,
+                categoryVotes: { human: 1 }, needsReview: false,
+                reviewedBy: reviewedBy ?? 'admin', reviewedAt: new Date(), categorizedAt: new Date(),
+            },
+        });
+        return { ok: true, id, category };
+    }
+    async classificationScorecard() {
+        const CATS = ['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER'];
+        const rows = await this.prisma.sourceCapture.findMany({
+            where: { reviewedBy: { not: null }, aiCategory: { not: null }, category: { not: null } },
+            select: { category: true, aiCategory: true },
+        });
+        const matrix = {};
+        for (const a of CATS) {
+            matrix[a] = {};
+            for (const p of CATS)
+                matrix[a][p] = 0;
+        }
+        let correct = 0;
+        for (const r of rows) {
+            const a = String(r.category), p = String(r.aiCategory);
+            if (matrix[a]?.[p] != null) {
+                matrix[a][p]++;
+                if (a === p)
+                    correct++;
+            }
+        }
+        const total = rows.length;
+        const metrics = CATS.map((c) => {
+            const tp = matrix[c][c];
+            const predicted = CATS.reduce((s, a) => s + matrix[a][c], 0);
+            const support = CATS.reduce((s, p) => s + matrix[c][p], 0);
+            const precision = predicted ? tp / predicted : null;
+            const recall = support ? tp / support : null;
+            const f1 = precision != null && recall != null ? (precision + recall ? (2 * precision * recall) / (precision + recall) : 0) : null;
+            return { category: c, support, precision, recall, f1 };
+        });
+        return { total, accuracy: total ? correct / total : null, categories: CATS, matrix, metrics };
     }
     listJobs() {
         return this.prisma.brightDataJob.findMany({ orderBy: { createdAt: 'desc' }, take: 30 });

@@ -7,12 +7,13 @@ export declare class HospitalsController {
         countryCount: number;
         reviewCount: number;
         patientCount: number;
+        avgRating: number;
     }>;
     getMeta(): Promise<{
         cities: string[];
         specialties: string[];
     }>;
-    getDispatch(page?: string, pageSize?: string): Promise<{
+    getDispatch(page?: string, pageSize?: string, search?: string): Promise<{
         global: {
             totalReviews: number;
             totalHospitals: number;
@@ -36,7 +37,7 @@ export declare class HospitalsController {
             top_countries: [string, number][];
         }[];
     }>;
-    getComparison(page?: string, pageSize?: string, city?: string, sort?: string, treatment?: string, urgency?: string): Promise<{
+    getComparison(page?: string, pageSize?: string, city?: string, sort?: string, treatment?: string, urgency?: string, search?: string): Promise<{
         hospitals: {
             reviewCount: number;
             surgeon: {
@@ -219,17 +220,17 @@ export declare class HospitalsController {
             surgeonId: string | null;
             link: string | null;
             hospitalId: string;
+            rating: number;
+            age: number | null;
+            totalReviews: number | null;
             reviewerName: string;
             nationality: string | null;
-            age: number | null;
             procedure: string | null;
-            rating: number;
             reviewDate: string | null;
             textEn: string | null;
             region: string | null;
             verified: boolean;
             lang: string | null;
-            totalReviews: number | null;
             tokens: import("@prisma/client/runtime/library").JsonValue | null;
             contentHash: string | null;
         }[];
@@ -273,17 +274,17 @@ export declare class HospitalsController {
         surgeonId: string | null;
         link: string | null;
         hospitalId: string;
+        rating: number;
+        age: number | null;
+        totalReviews: number | null;
         reviewerName: string;
         nationality: string | null;
-        age: number | null;
         procedure: string | null;
-        rating: number;
         reviewDate: string | null;
         textEn: string | null;
         region: string | null;
         verified: boolean;
         lang: string | null;
-        totalReviews: number | null;
         tokens: import("@prisma/client/runtime/library").JsonValue | null;
         contentHash: string | null;
     }[]>;

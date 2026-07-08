@@ -228,7 +228,8 @@ function scoreSignals(text) {
     const hasPartner = partners.length > 0;
     const hasMedTourism = exports.MEDTOURISM_TERMS.some((x) => t.includes(x)) || exports.BRAND_TERMS.some((x) => t.includes(x)) || /\bindia\b/.test(t);
     const signalCount = [hasProcedure, hasCost, hasOrigin].filter(Boolean).length;
-    const temperature = signalCount >= 3 ? 'hot' : signalCount === 2 ? 'warm' : 'cold';
+    const temperature = signalCount >= 3 ? (hasMedTourism ? 'hot-corridor' : 'hot-generic')
+        : signalCount === 2 ? 'warm' : 'cold';
     const intentScore = Math.min(100, (hasProcedure ? 35 : 0) + (hasCost ? 25 : 0) + (hasOrigin ? 25 : 0) +
         (hasMedTourism ? 15 : 0) + (hasPartner ? 25 : 0));
     return { hasProcedure, hasCost, hasOrigin, hasMedTourism, hasPartner, partners, signalCount, temperature, procedures, origins, intentScore };

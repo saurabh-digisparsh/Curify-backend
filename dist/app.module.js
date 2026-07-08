@@ -27,6 +27,8 @@ const family_dashboard_module_1 = require("./family-dashboard/family-dashboard.m
 const bookings_module_1 = require("./bookings/bookings.module");
 const admin_module_1 = require("./admin/admin.module");
 const leads_module_1 = require("./leads/leads.module");
+const assistant_module_1 = require("./assistant/assistant.module");
+const journeys_module_1 = require("./journeys/journeys.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,6 +53,8 @@ exports.AppModule = AppModule = __decorate([
             family_dashboard_module_1.FamilyDashboardModule,
             bookings_module_1.BookingsModule,
             leads_module_1.LeadsModule,
+            assistant_module_1.AssistantModule,
+            journeys_module_1.JourneysModule,
         ],
         providers: [
             { provide: core_1.APP_GUARD, useClass: ip_block_guard_1.IpBlockGuard },

@@ -99,7 +99,9 @@ export class SettingsService {
   /** Full settings list, grouped by category, for the admin screen. */
   async list(): Promise<SettingsGroup[]> {
     const overrides = await this.overrides();
-    const order: SettingCategory[] = ['integrations', 'leadgen', 'scheduling', 'system'];
+    // 'integrations' (API Keys & Integrations) and 'system' are intentionally hidden
+    // from the admin Settings screen; their keys still resolve via env/defaults.
+    const order: SettingCategory[] = ['leadgen', 'scheduling'];
     return order.map((category) => ({
       category,
       label: CATEGORY_META[category].label,

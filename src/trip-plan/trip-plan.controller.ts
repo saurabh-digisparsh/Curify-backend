@@ -34,7 +34,11 @@ export class TripPlanController {
   @ApiOperation({ summary: 'Generate a personalized medical trip plan' })
   @Post()
   generate(
-    @Body() body: { hospitalId: string; diagnosis: string; treatment: string; country: string },
+    @Body() body: {
+      hospitalId: string; diagnosis: string; treatment: string; country: string;
+      departureCity?: string; travelDate?: string; travelers?: number; stayNights?: number;
+      passport?: string; visaHelp?: string; accommodation?: string; notes?: string;
+    },
   ) {
     return this.service.generate(body);
   }

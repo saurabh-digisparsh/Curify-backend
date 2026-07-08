@@ -22,6 +22,9 @@ export class BookingsController {
       totalAmount?: number;
       currency?: string;
       paymentRef?: string;
+      paymentMethod?: string;
+      downPayment?: number;
+      installments?: number;
     },
     @Request() req,
   ) {

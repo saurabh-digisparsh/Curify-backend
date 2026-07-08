@@ -102,6 +102,15 @@ let LeadsController = class LeadsController {
     classifyStatus() {
         return this.brightData.categorizeStatus();
     }
+    rescore() {
+        return this.brightData.rescoreCaptures();
+    }
+    resetReclassify() {
+        return this.brightData.resetAndReclassify();
+    }
+    scorecard() {
+        return this.brightData.classificationScorecard();
+    }
     analyticsPosts(category, platform, q, page, pageSize) {
         return this.brightData.analyticsPosts({
             category, platform, q,
@@ -109,7 +118,7 @@ let LeadsController = class LeadsController {
             pageSize: pageSize ? +pageSize : 25,
         });
     }
-    captures(page, pageSize, platform, category, temperature, minSignals, q, includeDeleted, includeSpam, sort) {
+    captures(page, pageSize, platform, category, temperature, minSignals, q, includeDeleted, includeSpam, sort, needsReview) {
         return this.brightData.listCaptures({
             page: page ? +page : 1,
             pageSize: pageSize ? +pageSize : 50,
@@ -117,6 +126,7 @@ let LeadsController = class LeadsController {
             minSignals: minSignals ? +minSignals : undefined,
             includeDeleted: includeDeleted === 'true',
             includeSpam: includeSpam === 'true',
+            needsReview: needsReview === 'true',
         });
     }
     collect(body) {
@@ -130,6 +140,13 @@ let LeadsController = class LeadsController {
     }
     softDeleteCapture(id) {
         return this.brightData.softDelete(id);
+    }
+    reviewCategory(id, body, req) {
+        const category = String(body?.category || '').toUpperCase();
+        if (!['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER'].includes(category))
+            throw new common_1.BadRequestException('invalid category');
+        const reviewer = req?.user?.email || req?.user?.userId || req?.user?.sub || 'admin';
+        return this.brightData.setCategoryByHuman(id, category, reviewer);
     }
     restoreCapture(id) {
         return this.brightData.restore(id);
@@ -287,6 +304,27 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], LeadsController.prototype, "classifyStatus", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Re-score all stored captures from saved text (DB-only backfill of corridor-aware heat/signals)' }),
+    (0, common_1.Post)('analytics/rescore'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], LeadsController.prototype, "rescore", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Reset + few-shot re-classify: keep DB-sourced exemplars, clear other labels, re-classify from scratch' }),
+    (0, common_1.Post)('analytics/reset-reclassify'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], LeadsController.prototype, "resetReclassify", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Classification scorecard: confusion matrix + precision/recall/F1 from human-reviewed rows' }),
+    (0, common_1.Get)('analytics/scorecard'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], LeadsController.prototype, "scorecard", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Drill-down post list for analytics (social captures + YouTube leads), filtered by category/platform' }),
     (0, common_1.Get)('analytics/posts'),
     __param(0, (0, common_1.Query)('category')),
@@ -311,8 +349,9 @@ __decorate([
     __param(7, (0, common_1.Query)('includeDeleted')),
     __param(8, (0, common_1.Query)('includeSpam')),
     __param(9, (0, common_1.Query)('sort')),
+    __param(10, (0, common_1.Query)('needsReview')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String, String, String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], LeadsController.prototype, "captures", null);
 __decorate([
@@ -347,6 +386,16 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], LeadsController.prototype, "softDeleteCapture", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Human-in-the-loop: confirm/override a captured post\'s AI category (marks reviewed)' }),
+    (0, common_1.Patch)('brightdata/captures/:id/category'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], LeadsController.prototype, "reviewCategory", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Restore a soft-deleted capture' }),
     (0, common_1.Patch)('brightdata/captures/:id/restore'),

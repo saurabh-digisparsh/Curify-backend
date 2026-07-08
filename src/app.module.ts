@@ -18,6 +18,8 @@ import { FamilyDashboardModule } from './family-dashboard/family-dashboard.modul
 import { BookingsModule } from './bookings/bookings.module';
 import { AdminModule } from './admin/admin.module';
 import { LeadsModule } from './leads/leads.module';
+import { AssistantModule } from './assistant/assistant.module';
+import { JourneysModule } from './journeys/journeys.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { LeadsModule } from './leads/leads.module';
     FamilyDashboardModule,
     BookingsModule,
     LeadsModule,
+    AssistantModule,
+    JourneysModule,
   ],
   providers: [
     // Guard order matters: reject admin-blocked IPs FIRST (so they don't even

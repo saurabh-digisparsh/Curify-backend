@@ -17,6 +17,7 @@ import {
   serpTermsFor,
   scoreSignals,
   isSpam,
+  hasPartnerSignal,
 } from './leads.config';
 
 const BASE = 'https://api.brightdata.com/datasets/v3';
@@ -461,7 +462,7 @@ export class BrightDataService {
   // ── Read / soft-delete APIs ───────────────────────────────────────────────────
   async listCaptures(params: {
     page?: number; pageSize?: number; platform?: string; category?: string;
-    temperature?: string; minSignals?: number; q?: string; includeDeleted?: boolean; includeSpam?: boolean; sort?: string;
+    temperature?: string; minSignals?: number; q?: string; includeDeleted?: boolean; includeSpam?: boolean; sort?: string; needsReview?: boolean;
   }) {
     const page = Math.max(1, Number(params.page) || 1);
     const pageSize = Math.min(200, Math.max(1, Number(params.pageSize) || 50));
@@ -470,7 +471,9 @@ export class BrightDataService {
     if (!params.includeSpam) where.isSpam = false; // spam hidden by default (still stored)
     if (params.platform) where.platform = params.platform as any;
     if (params.category) where.category = params.category === 'UNCATEGORIZED' ? null : (params.category as any);
-    if (params.temperature) where.temperature = params.temperature;
+    // 'hot' matches both corridor-aware hot tiers (hot-corridor + hot-generic); specific values match exactly.
+    if (params.temperature) where.temperature = params.temperature === 'hot' ? { startsWith: 'hot' } : params.temperature;
+    if (params.needsReview) where.needsReview = true;
     if (params.minSignals) where.signalCount = { gte: Number(params.minSignals) };
     if (params.q) where.OR = [
       { title: { contains: params.q, mode: 'insensitive' } },
@@ -509,6 +512,47 @@ export class BrightDataService {
       byTemperature: Object.fromEntries(byTemp.map((t) => [t.temperature ?? 'cold', t._count])),
       byCategory: categoryTotals,
     };
+  }
+
+  /**
+   * Re-score every stored capture from its saved text (title + body) using the CURRENT
+   * scoreSignals rules — pure DB work, no scraping / API calls. Backfills the corridor-aware
+   * heat (and any tuned keyword lists) onto historical rows. Idempotent; only writes changed rows.
+   */
+  async rescoreCaptures(): Promise<{ scanned: number; updated: number }> {
+    const BATCH = 500;
+    let cursor: string | undefined;
+    let scanned = 0, updated = 0;
+    for (;;) {
+      const rows = await this.prisma.sourceCapture.findMany({
+        select: { id: true, title: true, body: true, temperature: true, intentScore: true, signalCount: true, isSpam: true },
+        orderBy: { id: 'asc' },
+        take: BATCH,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      });
+      if (!rows.length) break;
+      cursor = rows[rows.length - 1].id;
+      for (const r of rows) {
+        scanned++;
+        const text = `${r.title ?? ''} ${r.body ?? ''}`;
+        const sig = scoreSignals(text);
+        const spam = isSpam(text);
+        // Skip rows whose scored fields are already up to date.
+        if (r.temperature === sig.temperature && r.intentScore === sig.intentScore && r.signalCount === sig.signalCount && r.isSpam === spam) continue;
+        await this.prisma.sourceCapture.update({
+          where: { id: r.id },
+          data: {
+            hasProcedure: sig.hasProcedure, hasCost: sig.hasCost, hasOrigin: sig.hasOrigin,
+            signalCount: sig.signalCount, temperature: sig.temperature,
+            procedures: sig.procedures as any, origins: sig.origins as any,
+            intentScore: sig.intentScore, isSpam: spam,
+          },
+        });
+        updated++;
+      }
+    }
+    this.logger.log(`Rescore captures: ${updated}/${scanned} rows updated with current signals`);
+    return { scanned, updated };
   }
 
   // ── Lead analytics (AI category breakdown + monthly volume) ───────────────────
@@ -709,6 +753,8 @@ export class BrightDataService {
 
   private async runCategorize(items: { kind: 'lead' | 'capture'; id: string }[]) {
     const BATCH = 15;
+    // Build the LEAD-weighted few-shot set once (from our own labelled DB rows) and reuse per batch.
+    const { examples } = await this.buildFewShotExamples();
     try {
       for (let i = 0; i < items.length; i += BATCH) {
         if (!this.categorize.running) break; // (defensive — no external cancel yet)
@@ -722,30 +768,62 @@ export class BrightDataService {
         ]);
 
         // Build classification inputs (namespaced ids so the two tables can't collide).
+        type Verdict = { category: any; reason: string; confidence: number; votes: Record<string, number>; needsReview: boolean };
         const inputs: { id: string; platform?: string; title?: string | null; body?: string | null }[] = [];
-        const verdicts: Record<string, { category: any; reason: string }> = {};
+        const textById = new Map<string, string>();
+        const verdicts: Record<string, Verdict> = {};
         for (const r of caps) {
           const text = ((r.title || '') + (r.body || '')).trim();
-          if (!text) verdicts[`capture:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
-          else inputs.push({ id: `capture:${r.id}`, platform: r.platform, title: r.title, body: r.body });
+          if (!text) verdicts[`capture:${r.id}`] = { category: 'OTHER', reason: 'no text content', confidence: 100, votes: { OTHER: 1 }, needsReview: false };
+          else { inputs.push({ id: `capture:${r.id}`, platform: r.platform, title: r.title, body: r.body }); textById.set(`capture:${r.id}`, `${r.title ?? ''} ${r.body ?? ''}`); }
         }
         for (const r of leads) {
           const body = r.transcript || r.aiSummary || r.description || '';
           const text = ((r.title || '') + body).trim();
-          if (!text) verdicts[`lead:${r.id}`] = { category: 'OTHER', reason: 'no text content' };
-          else inputs.push({ id: `lead:${r.id}`, platform: 'YOUTUBE', title: r.title, body });
+          if (!text) verdicts[`lead:${r.id}`] = { category: 'OTHER', reason: 'no text content', confidence: 100, votes: { OTHER: 1 }, needsReview: false };
+          else { inputs.push({ id: `lead:${r.id}`, platform: 'YOUTUBE', title: r.title, body }); textById.set(`lead:${r.id}`, `${r.title ?? ''} ${body}`); }
         }
-        if (inputs.length) Object.assign(verdicts, await this.ai.classifyCategories(inputs));
+
+        if (inputs.length) {
+          // Pass 1 — cheap single-shot over the whole batch (few-shot, low temperature).
+          const pass1 = await this.ai.classifyCategories(inputs, examples, 0.3);
+          // Re-vote only the rows that matter: high-value (LEAD/PARTNER), low confidence, or a
+          // deterministic partner-tag clash (keyword says PARTNER but the model didn't). Cost stays low.
+          const hard = inputs.filter((x) => {
+            const v = pass1[x.id]; if (!v) return false;
+            const partnerClash = hasPartnerSignal(textById.get(x.id) || '') && v.category !== 'PARTNER';
+            return v.category === 'LEAD' || v.category === 'PARTNER' || v.confidence < 75 || partnerClash;
+          });
+          const [pass2, pass3] = hard.length
+            ? await Promise.all([this.ai.classifyCategories(hard, examples, 0.6), this.ai.classifyCategories(hard, examples, 0.85)])
+            : [{} as typeof pass1, {} as typeof pass1];
+
+          for (const x of inputs) {
+            const v1 = pass1[x.id];
+            if (!v1) { verdicts[x.id] = { category: 'OTHER', reason: 'unclassified by model', confidence: 40, votes: {}, needsReview: true }; continue; }
+            const isHard = hard.includes(x);
+            const passes = [v1, ...(isHard ? [pass2[x.id], pass3[x.id]].filter(Boolean) : [])];
+            const votes: Record<string, number> = {};
+            for (const p of passes) votes[p.category] = (votes[p.category] || 0) + 1;
+            let winner = v1.category, top = 0;
+            for (const [c, n] of Object.entries(votes)) if (n > top) { top = n; winner = c as any; }
+            const agree = votes[winner] / passes.length; // 1.0 = unanimous
+            const winningPass = passes.find((p) => p.category === winner) || v1;
+            // Confidence blends ensemble agreement (better calibrated) with the model's self-report.
+            const confidence = Math.round(0.7 * agree * 100 + 0.3 * winningPass.confidence);
+            const partnerClash = hasPartnerSignal(textById.get(x.id) || '') && winner !== 'PARTNER';
+            const needsReview = (isHard && agree < 0.6) || partnerClash || confidence < 55;
+            verdicts[x.id] = { category: winner, reason: winningPass.reason, confidence, votes, needsReview };
+          }
+        }
 
         const now = new Date();
         for (const b of batch) {
           const v = verdicts[`${b.kind}:${b.id}`];
           if (!v) continue;
-          if (b.kind === 'capture') {
-            await this.prisma.sourceCapture.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
-          } else {
-            await this.prisma.lead.update({ where: { id: b.id }, data: { category: v.category, categoryReason: v.reason, categorizedAt: now } });
-          }
+          const data = { category: v.category, categoryReason: v.reason, categoryConfidence: v.confidence, categoryVotes: v.votes as any, needsReview: v.needsReview, categorizedAt: now };
+          if (b.kind === 'capture') await this.prisma.sourceCapture.update({ where: { id: b.id }, data: { ...data, aiCategory: v.category } });
+          else await this.prisma.lead.update({ where: { id: b.id }, data });
           this.categorize.updated++;
           this.categorize.byCategory[v.category] = (this.categorize.byCategory[v.category] || 0) + 1;
         }
@@ -755,6 +833,107 @@ export class BrightDataService {
       this.categorize.running = false;
       this.categorize.finishedAt = new Date().toISOString();
     }
+  }
+
+  /**
+   * Build the few-shot exemplar set from our OWN labelled captures (DB-only). LEAD-weighted
+   * (~30% of examples) since LEAD is the revenue class; the other four categories share the rest.
+   * Picks the strongest-signal, non-spam, non-deleted rows per category; body truncated to bound tokens.
+   */
+  async buildFewShotExamples(): Promise<{ examples: { text: string; category: string; reason: string }[]; ids: string[] }> {
+    const PER: Record<string, number> = { LEAD: 6, PARTNER: 3, MARKETING: 3, NEWS: 3, OTHER: 3 }; // LEAD 6/18 ≈ 33%
+    const examples: { text: string; category: string; reason: string }[] = [];
+    const ids: string[] = [];
+    for (const category of ['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER']) {
+      const rows = await this.prisma.sourceCapture.findMany({
+        where: { category: category as any, deletedAt: null, isSpam: false, body: { not: null } },
+        select: { id: true, title: true, body: true, categoryReason: true },
+        // Prefer human-reviewed rows as exemplars (the compounding loop), then strongest signals.
+        orderBy: [{ reviewedAt: { sort: 'desc', nulls: 'last' } }, { intentScore: 'desc' }, { signalCount: 'desc' }],
+        take: PER[category] ?? 3,
+      });
+      for (const r of rows) {
+        const text = `${r.title ? r.title + ' — ' : ''}${(r.body || '').replace(/\s+/g, ' ').slice(0, 200)}`.trim();
+        if (!text) continue;
+        examples.push({ text, category, reason: r.categoryReason || '' });
+        ids.push(r.id);
+      }
+    }
+    return { examples, ids };
+  }
+
+  /**
+   * "Reset + few-shot re-classify" — keep the exemplar rows as anchors, CLEAR the AI category on
+   * every OTHER row (captures + leads) so they re-classify from scratch with the few-shot classifier.
+   * Deterministic tags (temperature/signals) are preserved. Pure DB work, no scraping.
+   */
+  async resetAndReclassify(): Promise<any> {
+    if (this.categorize.running) return { ok: false, reason: 'classification already running' };
+    const { ids } = await this.buildFewShotExamples();
+    const keep = ids.length ? ids : ['__none__'];
+    const [caps, leads] = await Promise.all([
+      this.prisma.sourceCapture.updateMany({
+        where: { category: { not: null }, id: { notIn: keep } },
+        data: { category: null, categoryReason: null, categorizedAt: null },
+      }),
+      // Exemplars are sourced from captures, so all YouTube leads re-classify fresh.
+      this.prisma.lead.updateMany({
+        where: { category: { not: null } },
+        data: { category: null, categoryReason: null, categorizedAt: null },
+      }),
+    ]);
+    this.logger.log(`Reset+reclassify: kept ${ids.length} exemplars, cleared ${caps.count} captures + ${leads.count} leads`);
+    const res = await this.startCategorize({});
+    return { ...res, exemplars: ids.length, cleared: caps.count + leads.count };
+  }
+
+  /**
+   * Human-in-the-loop override: an admin confirms/corrects a capture's category. Marks it reviewed
+   * (clears needsReview, confidence 100) so it becomes a trusted few-shot exemplar going forward. DB-only.
+   */
+  async setCategoryByHuman(id: string, category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER', reviewedBy?: string) {
+    const row = await this.prisma.sourceCapture.findUnique({ where: { id }, select: { category: true, aiCategory: true } });
+    // Preserve the model's prediction at review time so the scorecard can score AI vs human (gold).
+    const aiCategory = (row?.aiCategory ?? row?.category ?? null) as any;
+    await this.prisma.sourceCapture.update({
+      where: { id },
+      data: {
+        category, aiCategory, categoryReason: 'human review', categoryConfidence: 100,
+        categoryVotes: { human: 1 } as any, needsReview: false,
+        reviewedBy: reviewedBy ?? 'admin', reviewedAt: new Date(), categorizedAt: new Date(),
+      },
+    });
+    return { ok: true, id, category };
+  }
+
+  /**
+   * Classification scorecard (lever 6) — a confusion matrix + precision/recall/F1 per category,
+   * computed from human-reviewed captures (gold = category, prediction = aiCategory). Pure DB read.
+   */
+  async classificationScorecard() {
+    const CATS = ['LEAD', 'PARTNER', 'MARKETING', 'NEWS', 'OTHER'];
+    const rows = await this.prisma.sourceCapture.findMany({
+      where: { reviewedBy: { not: null }, aiCategory: { not: null }, category: { not: null } },
+      select: { category: true, aiCategory: true },
+    });
+    const matrix: Record<string, Record<string, number>> = {};
+    for (const a of CATS) { matrix[a] = {}; for (const p of CATS) matrix[a][p] = 0; }
+    let correct = 0;
+    for (const r of rows) {
+      const a = String(r.category), p = String(r.aiCategory);
+      if (matrix[a]?.[p] != null) { matrix[a][p]++; if (a === p) correct++; }
+    }
+    const total = rows.length;
+    const metrics = CATS.map((c) => {
+      const tp = matrix[c][c];
+      const predicted = CATS.reduce((s, a) => s + matrix[a][c], 0); // column sum = times AI predicted c
+      const support = CATS.reduce((s, p) => s + matrix[c][p], 0);    // row sum = gold count of c
+      const precision = predicted ? tp / predicted : null;
+      const recall = support ? tp / support : null;
+      const f1 = precision != null && recall != null ? (precision + recall ? (2 * precision * recall) / (precision + recall) : 0) : null;
+      return { category: c, support, precision, recall, f1 };
+    });
+    return { total, accuracy: total ? correct / total : null, categories: CATS, matrix, metrics };
   }
 
   listJobs() {

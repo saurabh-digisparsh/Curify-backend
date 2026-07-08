@@ -69,7 +69,7 @@ let SettingsService = class SettingsService {
     }
     async list() {
         const overrides = await this.overrides();
-        const order = ['integrations', 'leadgen', 'scheduling', 'system'];
+        const order = ['leadgen', 'scheduling'];
         return order.map((category) => ({
             category,
             label: settings_registry_1.CATEGORY_META[category].label,

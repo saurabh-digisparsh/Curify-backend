@@ -1,30 +1,30 @@
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { ProfileDto } from './dto/profile.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
     signup(dto: SignupDto): Promise<{
-        user: {
-            id: string;
-            email: string;
-            name: string | null;
-            country: string | null;
-            phone: string | null;
-            role: import(".prisma/client").$Enums.Role;
-            createdAt: Date;
-            updatedAt: Date;
-        };
-        token: string;
+        requiresVerification: boolean;
+        email: string;
+        message: string;
     }>;
     login(dto: LoginDto): Promise<{
         user: {
             id: string;
-            email: string;
             name: string | null;
+            email: string;
+            verifyToken: string | null;
             country: string | null;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
+            medicalConsentAt: Date | null;
+            emailVerifiedAt: Date | null;
+            verifyTokenExp: Date | null;
+            verifyOtp: string | null;
+            verifyOtpExp: Date | null;
+            verifyOtpTries: number;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -32,11 +32,71 @@ export declare class AuthController {
     }>;
     getMe(req: any): Promise<{
         id: string;
-        email: string;
         name: string | null;
+        email: string;
+        verifyToken: string | null;
         country: string | null;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
+        medicalConsentAt: Date | null;
+        emailVerifiedAt: Date | null;
+        verifyTokenExp: Date | null;
+        verifyOtp: string | null;
+        verifyOtpExp: Date | null;
+        verifyOtpTries: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    consent(req: any): Promise<{
+        medicalConsentAt: Date;
+    }>;
+    verifyEmail(token: string): Promise<{
+        verified: boolean;
+        email: string;
+    }>;
+    verifyOtp(body: {
+        email?: string;
+        otp?: string;
+    }): Promise<{
+        user: {
+            id: string;
+            name: string | null;
+            email: string;
+            verifyToken: string | null;
+            country: string | null;
+            phone: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            medicalConsentAt: Date | null;
+            emailVerifiedAt: Date | null;
+            verifyTokenExp: Date | null;
+            verifyOtp: string | null;
+            verifyOtpExp: Date | null;
+            verifyOtpTries: number;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        token: string;
+        verified: boolean;
+    }>;
+    resend(body: {
+        email?: string;
+    }): Promise<{
+        message: string;
+    }>;
+    profile(req: any, dto: ProfileDto): Promise<{
+        id: string;
+        name: string | null;
+        email: string;
+        verifyToken: string | null;
+        country: string | null;
+        phone: string | null;
+        role: import(".prisma/client").$Enums.Role;
+        medicalConsentAt: Date | null;
+        emailVerifiedAt: Date | null;
+        verifyTokenExp: Date | null;
+        verifyOtp: string | null;
+        verifyOtpExp: Date | null;
+        verifyOtpTries: number;
         createdAt: Date;
         updatedAt: Date;
     }>;

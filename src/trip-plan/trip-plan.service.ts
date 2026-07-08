@@ -39,17 +39,22 @@ export class TripPlanService {
     return this.prisma.insurancePlan.findMany({ orderBy: { pricePerDay: 'asc' } });
   }
 
-  async generate(params: { hospitalId: string; diagnosis: string; treatment: string; country: string }) {
+  async generate(params: {
+    hospitalId: string; diagnosis: string; treatment: string; country: string;
+    departureCity?: string; travelDate?: string; travelers?: number; stayNights?: number;
+    passport?: string; visaHelp?: string; accommodation?: string; notes?: string;
+  }) {
     const hospital = await this.prisma.hospital.findUnique({
       where: { id: params.hospitalId },
       include: { surgeon: true },
     });
     if (!hospital) throw new NotFoundException('Hospital not found');
 
-    // Try DB template first
+    // Try DB template first. Flights use the patient's actual departure city when
+    // given (falls back to their country).
     const template = await this.getTemplate(params.treatment, hospital.city);
     const [flights, insurance] = await Promise.all([
-      this.getFlights(params.country, hospital.city),
+      this.getFlights(params.departureCity || params.country, hospital.city),
       this.getInsurance(),
     ]);
 
@@ -109,6 +114,12 @@ export class TripPlanService {
       diagnosis: params.diagnosis,
       treatment: params.treatment,
       country: params.country,
+      departureCity: params.departureCity,
+      travelDate: params.travelDate,
+      travelers: params.travelers,
+      stayNights: params.stayNights,
+      accommodation: params.accommodation,
+      notes: params.notes,
     });
 
     // Cache result as new template

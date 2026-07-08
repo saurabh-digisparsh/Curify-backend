@@ -10,6 +10,9 @@ export declare class BookingsService {
         totalAmount?: number;
         currency?: string;
         paymentRef?: string;
+        paymentMethod?: string;
+        downPayment?: number;
+        installments?: number;
     }): Promise<{
         bookingId: string;
         paymentRef: string;
@@ -18,10 +21,10 @@ export declare class BookingsService {
     findOne(id: string, requesterId: string, isAdmin?: boolean): Promise<{
         hospital: {
             id: string;
-            createdAt: Date;
             name: string;
-            city: string;
             country: string;
+            createdAt: Date;
+            city: string;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -50,8 +53,8 @@ export declare class BookingsService {
         };
         statusUpdates: {
             id: string;
-            status: string;
             createdAt: Date;
+            status: string;
             bookingId: string;
             message: string;
             icon: string;
@@ -59,26 +62,29 @@ export declare class BookingsService {
         }[];
         milestones: {
             id: string;
-            sequence: number;
-            bookingId: string;
             label: string;
+            bookingId: string;
+            sequence: number;
             done: boolean;
             active: boolean;
         }[];
     } & {
         id: string;
-        plan: import(".prisma/client").$Enums.Plan;
-        status: import(".prisma/client").$Enums.BookingStatus;
-        totalAmount: number | null;
-        currency: string;
-        paymentRef: string | null;
-        travelDate: Date | null;
-        surgeryDate: Date | null;
-        notes: string | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
         reportId: string | null;
         hospitalId: string;
+        plan: import(".prisma/client").$Enums.Plan;
+        status: import(".prisma/client").$Enums.BookingStatus;
+        totalAmount: number | null;
+        currency: string;
+        paymentRef: string | null;
+        paymentMethod: string;
+        downPayment: number | null;
+        installments: number | null;
+        travelDate: Date | null;
+        surgeryDate: Date | null;
+        notes: string | null;
     }>;
 }

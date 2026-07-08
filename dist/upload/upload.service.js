@@ -37,16 +37,19 @@ let UploadService = UploadService_1 = class UploadService {
         }
     }
     async analyzeAndStore(params) {
-        let fileBase64;
-        let fileType;
-        if (params.file) {
-            fileBase64 = params.file.buffer.toString('base64');
-            fileType = params.file.mimetype;
+        const docs = params.files?.length ? params.files : params.file ? [params.file] : [];
+        const images = docs
+            .filter((f) => f.mimetype?.startsWith('image/'))
+            .map((f) => ({ base64: f.buffer.toString('base64'), type: f.mimetype }));
+        const pdfTexts = [];
+        for (const f of docs) {
+            const txt = await this.extractPdfText(f);
+            if (txt)
+                pdfTexts.push(`--- ${f.originalname || 'document'} ---\n${txt}`);
         }
-        const reportText = await this.extractPdfText(params.file);
+        const reportText = pdfTexts.length ? pdfTexts.join('\n\n').slice(0, 16000) : undefined;
         const analysis = await this.ai.analyzeReport({
-            fileBase64,
-            fileType,
+            files: images,
             reportText,
             description: params.description,
             treatment: params.treatment,
@@ -59,8 +62,8 @@ let UploadService = UploadService_1 = class UploadService {
                 reportRef: analysis.reportId
                     ? `${analysis.reportId}-${Date.now().toString(36).slice(-6)}`
                     : `RPT-${Date.now()}`,
-                filename: params.file?.originalname,
-                fileType: params.file?.mimetype,
+                filename: docs.map((f) => f.originalname).filter(Boolean).join(', ') || undefined,
+                fileType: docs[0]?.mimetype,
                 language: analysis.language,
                 confidence: analysis.confidence,
                 conditionName: analysis.diagnosis?.condition,

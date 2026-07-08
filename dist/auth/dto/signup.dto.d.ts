@@ -4,4 +4,5 @@ export declare class SignupDto {
     password: string;
     country?: string;
     phone?: string;
+    medicalConsent?: boolean;
 }

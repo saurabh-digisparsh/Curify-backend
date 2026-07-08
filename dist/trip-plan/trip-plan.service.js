@@ -56,7 +56,7 @@ let TripPlanService = class TripPlanService {
             throw new common_1.NotFoundException('Hospital not found');
         const template = await this.getTemplate(params.treatment, hospital.city);
         const [flights, insurance] = await Promise.all([
-            this.getFlights(params.country, hospital.city),
+            this.getFlights(params.departureCity || params.country, hospital.city),
             this.getInsurance(),
         ]);
         const staticData = {
@@ -112,6 +112,12 @@ let TripPlanService = class TripPlanService {
             diagnosis: params.diagnosis,
             treatment: params.treatment,
             country: params.country,
+            departureCity: params.departureCity,
+            travelDate: params.travelDate,
+            travelers: params.travelers,
+            stayNights: params.stayNights,
+            accommodation: params.accommodation,
+            notes: params.notes,
         });
         try {
             await this.prisma.tripPlanTemplate.create({

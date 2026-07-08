@@ -312,7 +312,7 @@ export const BRAND_TERMS = [
 export function scoreSignals(text: string): {
   hasProcedure: boolean; hasCost: boolean; hasOrigin: boolean; hasMedTourism: boolean;
   hasPartner: boolean; partners: string[];
-  signalCount: number; temperature: 'hot' | 'warm' | 'cold';
+  signalCount: number; temperature: 'hot-corridor' | 'hot-generic' | 'warm' | 'cold';
   procedures: string[]; origins: string[]; intentScore: number;
 } {
   const t = (text || '').toLowerCase();
@@ -326,9 +326,13 @@ export function scoreSignals(text: string): {
   // Medical-tourism relevance — corridor context (incl. a bare "India" or brand mention).
   const hasMedTourism =
     MEDTOURISM_TERMS.some((x) => t.includes(x)) || BRAND_TERMS.some((x) => t.includes(x)) || /\bindia\b/.test(t);
-  // The 3 hard ICP signals (procedure + cost + origin) still set temperature.
+  // The 3 hard ICP signals (procedure + cost + origin) set the base heat; corridor fit
+  // (hasMedTourism) then splits a hot lead into "ready for India" (hot-corridor) vs a
+  // strong-but-off-corridor "convert to India" prospect (hot-generic). See SCORING_HEURISTIC.md §6.
   const signalCount = [hasProcedure, hasCost, hasOrigin].filter(Boolean).length;
-  const temperature = signalCount >= 3 ? 'hot' : signalCount === 2 ? 'warm' : 'cold';
+  const temperature =
+    signalCount >= 3 ? (hasMedTourism ? 'hot-corridor' : 'hot-generic')
+    : signalCount === 2 ? 'warm' : 'cold';
   // Weighted 0-100: procedure 35, cost 25, origin 25, medical-tourism relevance 15.
   // A business-partner signal adds 25 so referral/facilitator posts (which often carry
   // no procedure/cost/origin) still surface instead of being buried as cold.

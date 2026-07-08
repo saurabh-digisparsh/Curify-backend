@@ -39,6 +39,9 @@ let BookingsService = class BookingsService {
                 totalAmount: data.totalAmount ?? null,
                 currency: data.currency ?? 'USD',
                 paymentRef: data.paymentRef ?? `CRF-${Date.now()}`,
+                paymentMethod: data.paymentMethod ?? 'FULL',
+                downPayment: data.downPayment ?? null,
+                installments: data.installments ?? null,
             },
         });
         await this.prisma.bookingMilestone.createMany({

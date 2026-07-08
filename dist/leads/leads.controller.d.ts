@@ -269,6 +269,11 @@ export declare class LeadsController {
             aiPersona: string | null;
             aiSummary: string | null;
             categoryReason: string | null;
+            categoryConfidence: number | null;
+            categoryVotes: import("@prisma/client/runtime/library").JsonValue | null;
+            needsReview: boolean;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
             categorizedAt: Date | null;
         }[];
         total: number;
@@ -328,6 +333,11 @@ export declare class LeadsController {
         aiPersona: string | null;
         aiSummary: string | null;
         categoryReason: string | null;
+        categoryConfidence: number | null;
+        categoryVotes: import("@prisma/client/runtime/library").JsonValue | null;
+        needsReview: boolean;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
         categorizedAt: Date | null;
     }>;
     remove(id: string): Promise<{
@@ -456,6 +466,24 @@ export declare class LeadsController {
         startedAt: string | null;
         finishedAt: string | null;
     };
+    rescore(): Promise<{
+        scanned: number;
+        updated: number;
+    }>;
+    resetReclassify(): Promise<any>;
+    scorecard(): Promise<{
+        total: number;
+        accuracy: number;
+        categories: string[];
+        matrix: Record<string, Record<string, number>>;
+        metrics: {
+            category: string;
+            support: number;
+            precision: number;
+            recall: number;
+            f1: number;
+        }[];
+    }>;
     analyticsPosts(category?: string, platform?: string, q?: string, page?: string, pageSize?: string): Promise<{
         items: any[];
         total: number;
@@ -463,7 +491,7 @@ export declare class LeadsController {
         pageSize: number;
         pageCount: number;
     }>;
-    captures(page?: string, pageSize?: string, platform?: string, category?: string, temperature?: string, minSignals?: string, q?: string, includeDeleted?: string, includeSpam?: string, sort?: string): Promise<{
+    captures(page?: string, pageSize?: string, platform?: string, category?: string, temperature?: string, minSignals?: string, q?: string, includeDeleted?: string, includeSpam?: string, sort?: string, needsReview?: string): Promise<{
         items: {
             id: string;
             createdAt: Date;
@@ -476,6 +504,11 @@ export declare class LeadsController {
             url: string | null;
             intentScore: number;
             categoryReason: string | null;
+            categoryConfidence: number | null;
+            categoryVotes: import("@prisma/client/runtime/library").JsonValue | null;
+            needsReview: boolean;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
             categorizedAt: Date | null;
             platform: import(".prisma/client").$Enums.CapturePlatform;
             datasetId: string | null;
@@ -490,6 +523,7 @@ export declare class LeadsController {
             temperature: string | null;
             origins: import("@prisma/client/runtime/library").JsonValue | null;
             isSpam: boolean;
+            aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
             jobId: string | null;
             keyword: string | null;
             comments: import("@prisma/client/runtime/library").JsonValue | null;
@@ -532,6 +566,11 @@ export declare class LeadsController {
         url: string | null;
         intentScore: number;
         categoryReason: string | null;
+        categoryConfidence: number | null;
+        categoryVotes: import("@prisma/client/runtime/library").JsonValue | null;
+        needsReview: boolean;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
         categorizedAt: Date | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
         datasetId: string | null;
@@ -546,6 +585,7 @@ export declare class LeadsController {
         temperature: string | null;
         origins: import("@prisma/client/runtime/library").JsonValue | null;
         isSpam: boolean;
+        aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
         jobId: string | null;
         keyword: string | null;
         comments: import("@prisma/client/runtime/library").JsonValue | null;
@@ -559,6 +599,13 @@ export declare class LeadsController {
     softDeleteCapture(id: string): Promise<{
         ok: boolean;
         softDeleted: boolean;
+    }>;
+    reviewCategory(id: string, body: {
+        category: string;
+    }, req: any): Promise<{
+        ok: boolean;
+        id: string;
+        category: "OTHER" | "LEAD" | "PARTNER" | "MARKETING" | "NEWS";
     }>;
     restoreCapture(id: string): Promise<{
         ok: boolean;

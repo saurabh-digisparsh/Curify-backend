@@ -15,16 +15,61 @@ model User {
   country   String?
   phone     String?
   role      Role     @default(USER)
+  // Timestamped consent to store/process medical documents (PHI). Captured in
+  // the chat flow before the first report upload; kept for compliance.
+  medicalConsentAt DateTime?
+  // Email verification: signup sends a tokenised link; login requires a
+  // verified email before the first password login.
+  emailVerifiedAt DateTime?
+  verifyToken     String?   @unique
+  verifyTokenExp  DateTime?
+  // OTP email verification (6-digit code typed in-chat / on the verify screen).
+  verifyOtp       String?
+  verifyOtpExp    DateTime?
+  verifyOtpTries  Int       @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   reports          Report[]
   bookings         Booking[]
   recoveryPlans    RecoveryPlan[]
+  journeys         Journey[]
   familyLinks      FamilyLink[]   @relation("PatientFamily")
   familyOf         FamilyLink[]   @relation("FamilyMember")
 
   @@map("users")
+}
+
+// One medical journey — a patient can run several (knee now, dental later).
+// Groups the chat answers, AI outputs and step progress so the dashboard can
+// resume any journey exactly where it stopped.
+model Journey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  status      String   @default("ACTIVE") // ACTIVE | COMPLETED | ARCHIVED
+  // Chat wizard answers
+  treatment   String?
+  city        String?
+  urgency     String?
+  homeCountry String?
+  description String?
+  // Step progress + AI output snapshots (shape mirrors the AI service JSON)
+  step        String   @default("intake") // intake | analysis | recommendation | hospital | plan | travel | recovery | done
+  reportId    String?
+  analysis    Json?
+  stayOrGo    Json?
+  hospitalId  String?
+  tripPlan    Json?
+  // Live chat with the selected hospital (patient ↔ Curify staff on the hospital's
+  // behalf): { messages: [{ id, sender, kind, body, reportId?, amountUsd?, at }] }.
+  hospitalChat Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+  @@map("journeys")
 }
 
 enum Role {
@@ -171,6 +216,10 @@ model Booking {
   totalAmount  Int?
   currency     String        @default("USD")
   paymentRef   String?
+  // Payment method: FULL (one-time) or BNPL (deposit + monthly instalments).
+  paymentMethod String       @default("FULL")
+  downPayment  Int?          // deposit paid today when paymentMethod = BNPL
+  installments Int?          // number of monthly instalments for the remainder
   travelDate   DateTime?
   surgeryDate  DateTime?
   notes        String?
@@ -425,9 +474,14 @@ model Lead {
   aiProcedure  String?   // extracted condition / procedure
   aiSummary    String?
   // AI category for the lead-analytics dashboard (classified from the transcript)
-  category       LeadCategory? // null until classified
-  categoryReason String?
-  categorizedAt  DateTime?
+  category           LeadCategory? // null until classified
+  categoryReason     String?
+  categoryConfidence Int?          // 0-100 (ensemble agreement / model self-report)
+  categoryVotes      Json?         // ensemble ballots, e.g. { "LEAD": 2, "PARTNER": 1 }
+  needsReview        Boolean       @default(false) // low confidence / tag clash / split vote → human
+  reviewedBy         String?       // admin who confirmed/overrode the category
+  reviewedAt         DateTime?
+  categorizedAt      DateTime?
   // Workflow
   status    LeadStatus @default(NEW)
   notes     String?
@@ -439,6 +493,7 @@ model Lead {
   @@index([region])
   @@index([intentScore])
   @@index([category])
+  @@index([needsReview])
   @@map("leads")
 }
 
@@ -561,9 +616,15 @@ model SourceCapture {
   intentScore  Int     @default(0) // 0-100
   isSpam       Boolean @default(false) // academic-cheating/service spam — saved but hidden by default
   // AI category for the lead-analytics dashboard (classifyCategories, batched)
-  category       LeadCategory? // null until classified
-  categoryReason String?       // one-line AI rationale
-  categorizedAt  DateTime?
+  category           LeadCategory? // null until classified (human review overwrites this = the gold label)
+  aiCategory         LeadCategory? // the model's OWN prediction, preserved through human review (for the scorecard)
+  categoryReason     String?       // one-line AI rationale
+  categoryConfidence Int?          // 0-100 (ensemble agreement / model self-report)
+  categoryVotes      Json?         // ensemble ballots, e.g. { "LEAD": 2, "PARTNER": 1 }
+  needsReview        Boolean       @default(false) // low confidence / tag clash / split vote → human
+  reviewedBy         String?       // admin who confirmed/overrode the category
+  reviewedAt         DateTime?
+  categorizedAt      DateTime?
   // provenance
   datasetId  String?
   snapshotId String?
@@ -585,6 +646,7 @@ model SourceCapture {
   @@index([postedAt])
   @@index([isSpam])
   @@index([category])
+  @@index([needsReview])
   @@map("source_captures")
 }
 

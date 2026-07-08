@@ -28,14 +28,14 @@ let HospitalsController = class HospitalsController {
     getMeta() {
         return this.hospitalsService.getMeta();
     }
-    getDispatch(page, pageSize) {
-        return this.hospitalsService.getDispatch(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 20);
+    getDispatch(page, pageSize, search) {
+        return this.hospitalsService.getDispatch(page ? parseInt(page, 10) : 1, pageSize ? parseInt(pageSize, 10) : 20, search);
     }
-    getComparison(page, pageSize, city, sort, treatment, urgency) {
+    getComparison(page, pageSize, city, sort, treatment, urgency, search) {
         return this.hospitalsService.getComparison({
             page: page ? parseInt(page, 10) : 1,
             pageSize: pageSize ? parseInt(pageSize, 10) : 20,
-            city, sort, treatment, urgency,
+            city, sort, treatment, urgency, search,
         });
     }
     findAll() {
@@ -72,8 +72,9 @@ __decorate([
     (0, common_1.Get)('dispatch'),
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('pageSize')),
+    __param(2, (0, common_1.Query)('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", void 0)
 ], HospitalsController.prototype, "getDispatch", null);
 __decorate([
@@ -86,8 +87,9 @@ __decorate([
     __param(3, (0, common_1.Query)('sort')),
     __param(4, (0, common_1.Query)('treatment')),
     __param(5, (0, common_1.Query)('urgency')),
+    __param(6, (0, common_1.Query)('search')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], HospitalsController.prototype, "getComparison", null);
 __decorate([

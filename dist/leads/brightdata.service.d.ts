@@ -143,6 +143,7 @@ export declare class BrightDataService {
         includeDeleted?: boolean;
         includeSpam?: boolean;
         sort?: string;
+        needsReview?: boolean;
     }): Promise<{
         items: {
             id: string;
@@ -156,6 +157,11 @@ export declare class BrightDataService {
             url: string | null;
             intentScore: number;
             categoryReason: string | null;
+            categoryConfidence: number | null;
+            categoryVotes: Prisma.JsonValue | null;
+            needsReview: boolean;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
             categorizedAt: Date | null;
             platform: import(".prisma/client").$Enums.CapturePlatform;
             datasetId: string | null;
@@ -170,6 +176,7 @@ export declare class BrightDataService {
             temperature: string | null;
             origins: Prisma.JsonValue | null;
             isSpam: boolean;
+            aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
             jobId: string | null;
             keyword: string | null;
             comments: Prisma.JsonValue | null;
@@ -207,6 +214,10 @@ export declare class BrightDataService {
             [k: string]: number;
         };
         byCategory: Record<string, number>;
+    }>;
+    rescoreCaptures(): Promise<{
+        scanned: number;
+        updated: number;
     }>;
     private static readonly CATEGORIES;
     analytics(bucket?: 'day' | 'month' | 'quarter' | 'year'): Promise<{
@@ -304,6 +315,33 @@ export declare class BrightDataService {
         nothing?: undefined;
     }>;
     private runCategorize;
+    buildFewShotExamples(): Promise<{
+        examples: {
+            text: string;
+            category: string;
+            reason: string;
+        }[];
+        ids: string[];
+    }>;
+    resetAndReclassify(): Promise<any>;
+    setCategoryByHuman(id: string, category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER', reviewedBy?: string): Promise<{
+        ok: boolean;
+        id: string;
+        category: "OTHER" | "LEAD" | "PARTNER" | "MARKETING" | "NEWS";
+    }>;
+    classificationScorecard(): Promise<{
+        total: number;
+        accuracy: number;
+        categories: string[];
+        matrix: Record<string, Record<string, number>>;
+        metrics: {
+            category: string;
+            support: number;
+            precision: number;
+            recall: number;
+            f1: number;
+        }[];
+    }>;
     listJobs(): Prisma.PrismaPromise<{
         error: string | null;
         id: string;
@@ -342,6 +380,11 @@ export declare class BrightDataService {
         url: string | null;
         intentScore: number;
         categoryReason: string | null;
+        categoryConfidence: number | null;
+        categoryVotes: Prisma.JsonValue | null;
+        needsReview: boolean;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
         categorizedAt: Date | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
         datasetId: string | null;
@@ -356,6 +399,7 @@ export declare class BrightDataService {
         temperature: string | null;
         origins: Prisma.JsonValue | null;
         isSpam: boolean;
+        aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
         jobId: string | null;
         keyword: string | null;
         comments: Prisma.JsonValue | null;

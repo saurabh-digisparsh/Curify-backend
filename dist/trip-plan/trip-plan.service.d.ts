@@ -40,5 +40,13 @@ export declare class TripPlanService {
         diagnosis: string;
         treatment: string;
         country: string;
+        departureCity?: string;
+        travelDate?: string;
+        travelers?: number;
+        stayNights?: number;
+        passport?: string;
+        visaHelp?: string;
+        accommodation?: string;
+        notes?: string;
     }): Promise<any>;
 }

@@ -36,6 +36,9 @@ let UploadController = class UploadController {
             ...body,
         });
     }
+    async uploadMulti(files, body, req) {
+        return this.uploadService.analyzeAndStore({ userId: req.user.id, files, ...body });
+    }
     getAnalysis(id, req) {
         return this.uploadService.getReport(id, req.user.id, req.user.role === 'ADMIN');
     }
@@ -62,6 +65,27 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "upload", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Upload MULTIPLE medical documents and get one combined AI analysis' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.Post)('multi'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 8, {
+        storage: (0, multer_1.memoryStorage)(),
+        limits: { fileSize: 10 * 1024 * 1024 },
+        fileFilter: (_, file, cb) => {
+            if (ALLOWED_MIMES.includes(file.mimetype))
+                cb(null, true);
+            else
+                cb(new Error('Unsupported format. Use PDF, JPEG, PNG, or DOCX.'), false);
+        },
+    })),
+    __param(0, (0, common_1.UploadedFiles)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Array, Object, Object]),
+    __metadata("design:returntype", Promise)
+], UploadController.prototype, "uploadMulti", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get a stored analysis by ID (owner or admin only)' }),
     (0, common_1.Get)('analysis/:id'),

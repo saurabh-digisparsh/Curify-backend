@@ -65,7 +65,7 @@ let HospitalsService = class HospitalsService {
     }
     async getStats() {
         const SERVED = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
-        const [hospitalCount, countryCount, reviewCount, servedPatients] = await Promise.all([
+        const [hospitalCount, countryCount, reviewCount, servedPatients, ratingAgg] = await Promise.all([
             this.prisma.hospital.count({ where: { jciAccredited: true } }),
             this.prisma.hospital
                 .groupBy({ by: ['country'], where: { jciAccredited: true } })
@@ -76,12 +76,14 @@ let HospitalsService = class HospitalsService {
                 select: { userId: true },
                 distinct: ['userId'],
             }),
+            this.prisma.review.aggregate({ _avg: { rating: true } }),
         ]);
         return {
             hospitalCount,
             countryCount,
             reviewCount,
             patientCount: servedPatients.length,
+            avgRating: Math.round((ratingAgg._avg.rating ?? 0) * 10) / 10,
         };
     }
     async getMeta() {
@@ -92,7 +94,7 @@ let HospitalsService = class HospitalsService {
         const specialties = [...new Set(hospitals.map(h => h.specialty).filter(Boolean))].sort();
         return { cities, specialties };
     }
-    async getDispatch(page = 1, pageSize = 20) {
+    async getDispatch(page = 1, pageSize = 20, search = '') {
         page = Math.max(1, Number(page) || 1);
         pageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
         const hospitals = await this.prisma.hospital.findMany({
@@ -138,8 +140,10 @@ let HospitalsService = class HospitalsService {
             };
         });
         items.sort((x, y) => y.reviews - x.reviews);
+        const q = String(search || '').trim().toLowerCase();
+        const filtered = q ? items.filter((h) => h.title.toLowerCase().includes(q)) : items;
         const start = Math.max(0, (page - 1) * pageSize);
-        const paged = items.slice(start, start + pageSize);
+        const paged = filtered.slice(start, start + pageSize);
         return {
             global: {
                 totalReviews: reviews.length,
@@ -149,7 +153,7 @@ let HospitalsService = class HospitalsService {
             },
             page,
             pageSize,
-            pageCount: Math.ceil(items.length / pageSize),
+            pageCount: Math.max(1, Math.ceil(filtered.length / pageSize)),
             hospitals: paged,
         };
     }
@@ -228,6 +232,9 @@ let HospitalsService = class HospitalsService {
             const c = params.city.toLowerCase();
             list = list.filter((h) => h.city.toLowerCase().includes(c));
         }
+        const q = params.search?.trim().toLowerCase();
+        if (q)
+            list = list.filter((h) => h.name.toLowerCase().includes(q));
         if (params.sort === 'rating')
             list.sort((a, b) => (b.overallRating ?? 0) - (a.overallRating ?? 0));
         else if (params.sort === 'reviews')

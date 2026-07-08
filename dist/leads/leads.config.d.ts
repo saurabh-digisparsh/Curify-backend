@@ -39,7 +39,7 @@ export declare function scoreSignals(text: string): {
     hasPartner: boolean;
     partners: string[];
     signalCount: number;
-    temperature: 'hot' | 'warm' | 'cold';
+    temperature: 'hot-corridor' | 'hot-generic' | 'warm' | 'cold';
     procedures: string[];
     origins: string[];
     intentScore: number;
