@@ -30,6 +30,7 @@ const leads_module_1 = require("./leads/leads.module");
 const assistant_module_1 = require("./assistant/assistant.module");
 const journeys_module_1 = require("./journeys/journeys.module");
 const treatments_module_1 = require("./treatments/treatments.module");
+const inquiries_module_1 = require("./inquiries/inquiries.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -57,6 +58,7 @@ exports.AppModule = AppModule = __decorate([
             assistant_module_1.AssistantModule,
             journeys_module_1.JourneysModule,
             treatments_module_1.TreatmentsModule,
+            inquiries_module_1.InquiriesModule,
         ],
         providers: [
             { provide: core_1.APP_GUARD, useClass: ip_block_guard_1.IpBlockGuard },

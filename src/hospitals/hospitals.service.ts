@@ -30,6 +30,23 @@ function mapTreatmentToSpecialty(treatment: string): string | null {
   return null;
 }
 
+// Metro regions clubbed in the chat's city picker → the hospital-city substrings
+// they cover. "Delhi NCR" (id 'delhi') spans Delhi/New Delhi/Gurugram/Noida;
+// "Mumbai" spans Mumbai + Navi Mumbai. Any other id falls back to matching its own
+// name. Keep in sync with the CITIES chips in frontend AssistantPage.
+const CITY_ALIASES: Record<string, string[]> = {
+  delhi: ['delhi', 'gurugram', 'gurgaon', 'noida', 'ncr'],
+  mumbai: ['mumbai'], // "navi mumbai" contains "mumbai"
+};
+
+/** Does a hospital's city fall within the patient's chosen (possibly clubbed) city? */
+function cityMatches(hospitalCity: string | null, cityId?: string): boolean {
+  if (!cityId || cityId === 'ai-decide') return false;
+  const hc = (hospitalCity || '').toLowerCase();
+  const aliases = CITY_ALIASES[cityId] ?? [cityId.toLowerCase()];
+  return aliases.some((a) => hc.includes(a));
+}
+
 function scoreHospital(h: any, specialty: string | null, urgency: string): number {
   let score = 0;
   // Specialty match (highest weight)
@@ -228,6 +245,7 @@ export class HospitalsService {
     treatment: string;
     country: string;
     urgency: string;
+    city?: string; // patient's chosen city (clubbed id, e.g. 'delhi' = Delhi NCR)
   }) {
     const hospitals = await this.prisma.hospital.findMany({
       include: { surgeon: true, _count: { select: { reviews: true } } },
@@ -236,14 +254,27 @@ export class HospitalsService {
     const specialty = mapTreatmentToSpecialty(params.treatment);
 
     // Rule-based scoring — no AI needed. All hospitals come from our own database.
+    // The patient's city is honored as a HARD priority: hospitals in the chosen
+    // region rank above all others (via inRegion), then quality score breaks ties —
+    // so the top pick is in their city whenever we have one there, while other
+    // cities remain in the list as fallback (and 'Let AI Decide' keeps pure quality
+    // ranking). Keeps depth for rare specialties without a city with no coverage.
     const scored = hospitals
-      .map(h => ({ ...h, reviewCount: h._count.reviews, aiMatchScore: scoreHospital(h, specialty, params.urgency) }))
-      .sort((a, b) => b.aiMatchScore - a.aiMatchScore);
+      .map(h => ({
+        ...h,
+        reviewCount: h._count.reviews,
+        inRegion: cityMatches(h.city, params.city),
+        aiMatchScore: scoreHospital(h, specialty, params.urgency),
+      }))
+      .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (b.aiMatchScore - a.aiMatchScore));
 
     const top = scored[0];
+    const inRegionCount = scored.filter((h) => h.inRegion).length;
     const topRecommendation = top?.id ?? null;
     const recommendationReason = top
-      ? `Based on your ${params.treatment} with ${params.urgency} urgency, we matched ${scored.length} hospitals from our network. Top pick: ${top.name} — rated ${top.overallRating ?? '—'}/5 across ${top.reviewCount} verified reviews.`
+      ? `Based on your ${params.treatment} with ${params.urgency} urgency, we matched ${scored.length} hospitals from our network` +
+        (inRegionCount ? ` (${inRegionCount} in your preferred city)` : '') +
+        `. Top pick: ${top.name} — rated ${top.overallRating ?? '—'}/5 across ${top.reviewCount} verified reviews.`
       : 'No hospitals matched your criteria.';
 
     return {

@@ -40,6 +40,17 @@ function mapTreatmentToSpecialty(treatment) {
     }
     return null;
 }
+const CITY_ALIASES = {
+    delhi: ['delhi', 'gurugram', 'gurgaon', 'noida', 'ncr'],
+    mumbai: ['mumbai'],
+};
+function cityMatches(hospitalCity, cityId) {
+    if (!cityId || cityId === 'ai-decide')
+        return false;
+    const hc = (hospitalCity || '').toLowerCase();
+    const aliases = CITY_ALIASES[cityId] ?? [cityId.toLowerCase()];
+    return aliases.some((a) => hc.includes(a));
+}
 function scoreHospital(h, specialty, urgency) {
     let score = 0;
     if (specialty && h.specialty === specialty)
@@ -200,12 +211,20 @@ let HospitalsService = class HospitalsService {
         const surgeons = await this.prisma.surgeon.findMany();
         const specialty = mapTreatmentToSpecialty(params.treatment);
         const scored = hospitals
-            .map(h => ({ ...h, reviewCount: h._count.reviews, aiMatchScore: scoreHospital(h, specialty, params.urgency) }))
-            .sort((a, b) => b.aiMatchScore - a.aiMatchScore);
+            .map(h => ({
+            ...h,
+            reviewCount: h._count.reviews,
+            inRegion: cityMatches(h.city, params.city),
+            aiMatchScore: scoreHospital(h, specialty, params.urgency),
+        }))
+            .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (b.aiMatchScore - a.aiMatchScore));
         const top = scored[0];
+        const inRegionCount = scored.filter((h) => h.inRegion).length;
         const topRecommendation = top?.id ?? null;
         const recommendationReason = top
-            ? `Based on your ${params.treatment} with ${params.urgency} urgency, we matched ${scored.length} hospitals from our network. Top pick: ${top.name} — rated ${top.overallRating ?? '—'}/5 across ${top.reviewCount} verified reviews.`
+            ? `Based on your ${params.treatment} with ${params.urgency} urgency, we matched ${scored.length} hospitals from our network` +
+                (inRegionCount ? ` (${inRegionCount} in your preferred city)` : '') +
+                `. Top pick: ${top.name} — rated ${top.overallRating ?? '—'}/5 across ${top.reviewCount} verified reviews.`
             : 'No hospitals matched your criteria.';
         return {
             hospitals: scored,

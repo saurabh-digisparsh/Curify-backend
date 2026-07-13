@@ -14,12 +14,14 @@ const auth_service_1 = require("./auth.service");
 const mail_service_1 = require("./mail.service");
 const auth_controller_1 = require("./auth.controller");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
+const inquiries_module_1 = require("../inquiries/inquiries.module");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            inquiries_module_1.InquiriesModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET,

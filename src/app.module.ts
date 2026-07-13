@@ -21,6 +21,7 @@ import { LeadsModule } from './leads/leads.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { JourneysModule } from './journeys/journeys.module';
 import { TreatmentsModule } from './treatments/treatments.module';
+import { InquiriesModule } from './inquiries/inquiries.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { TreatmentsModule } from './treatments/treatments.module';
     AssistantModule,
     JourneysModule,
     TreatmentsModule,
+    InquiriesModule,
   ],
   providers: [
     // Guard order matters: reject admin-blocked IPs FIRST (so they don't even

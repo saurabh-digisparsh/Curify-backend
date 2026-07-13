@@ -16,11 +16,13 @@ const bcrypt = require("bcryptjs");
 const crypto_1 = require("crypto");
 const prisma_service_1 = require("../prisma/prisma.service");
 const mail_service_1 = require("./mail.service");
+const inquiries_service_1 = require("../inquiries/inquiries.service");
 let AuthService = class AuthService {
-    constructor(prisma, jwt, mail) {
+    constructor(prisma, jwt, mail, inquiries) {
         this.prisma = prisma;
         this.jwt = jwt;
         this.mail = mail;
+        this.inquiries = inquiries;
     }
     async issueOtp(user) {
         const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -74,6 +76,7 @@ let AuthService = class AuthService {
             where: { id: user.id },
             data: { emailVerifiedAt: new Date(), verifyOtp: null, verifyOtpExp: null, verifyToken: null, verifyTokenExp: null },
         });
+        await this.inquiries.markConverted(verified.email, verified.id).catch(() => { });
         const { password, ...userData } = verified;
         return { user: userData, token: this.signToken(verified.id, verified.email), verified: true };
     }
@@ -90,6 +93,7 @@ let AuthService = class AuthService {
             where: { id: user.id },
             data: { emailVerifiedAt: new Date(), verifyOtp: null, verifyOtpExp: null, verifyToken: null, verifyTokenExp: null },
         });
+        await this.inquiries.markConverted(user.email, user.id).catch(() => { });
         return { verified: true, email: user.email };
     }
     async resendVerification(email) {
@@ -145,6 +149,6 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService, mail_service_1.MailService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService, mail_service_1.MailService, inquiries_service_1.InquiriesService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

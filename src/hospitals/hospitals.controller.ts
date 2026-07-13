@@ -91,7 +91,7 @@ export class HospitalsController {
   @ApiOperation({ summary: 'Rule-based hospital matching for a patient' })
   @Post('match')
   match(
-    @Body() body: { diagnosis: string; treatment: string; country: string; urgency: string },
+    @Body() body: { diagnosis: string; treatment: string; country: string; urgency: string; city?: string },
   ) {
     return this.hospitalsService.matchForPatient(body);
   }

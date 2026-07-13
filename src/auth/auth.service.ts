@@ -6,10 +6,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from './mail.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { InquiriesService } from '../inquiries/inquiries.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService, private mail: MailService) {}
+  constructor(private prisma: PrismaService, private jwt: JwtService, private mail: MailService, private inquiries: InquiriesService) {}
 
   /** Mint a fresh 6-digit OTP + link token pair and email them. Shared by
    *  signup and resend so both use the same OTP verification. */
@@ -47,6 +48,9 @@ export class AuthService {
       },
     });
 
+    // NOTE: the chat lead is NOT converted here. An unverified signup is not yet a
+    // real user (it can't even log in — see login()), so it stays a chat lead until
+    // the email OTP/link is confirmed (see verifyOtp / verifyEmail).
     await this.issueOtp(user);
     // No session token here — the email must be verified (OTP) first.
     return { requiresVerification: true, email: user.email, message: 'Verification code sent — check your inbox.' };
@@ -73,6 +77,8 @@ export class AuthService {
       where: { id: user.id },
       data: { emailVerifiedAt: new Date(), verifyOtp: null, verifyOtpExp: null, verifyToken: null, verifyTokenExp: null },
     });
+    // Email confirmed → NOW they're a real user: convert the chat lead (best-effort).
+    await this.inquiries.markConverted(verified.email, verified.id).catch(() => {});
     const { password, ...userData } = verified;
     return { user: userData, token: this.signToken(verified.id, verified.email), verified: true };
   }
@@ -89,6 +95,8 @@ export class AuthService {
       where: { id: user.id },
       data: { emailVerifiedAt: new Date(), verifyOtp: null, verifyOtpExp: null, verifyToken: null, verifyTokenExp: null },
     });
+    // Email confirmed via link → convert the chat lead now (not at signup).
+    await this.inquiries.markConverted(user.email, user.id).catch(() => {});
     return { verified: true, email: user.email };
   }
 

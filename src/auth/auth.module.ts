@@ -5,9 +5,11 @@ import { AuthService } from './auth.service';
 import { MailService } from './mail.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { InquiriesModule } from '../inquiries/inquiries.module';
 
 @Module({
   imports: [
+    InquiriesModule, // markConverted() when a pre-signup chat lead signs up
     PassportModule,
     JwtModule.register({
       // JWT_SECRET is required (validated at boot in main.ts) — no insecure fallback.

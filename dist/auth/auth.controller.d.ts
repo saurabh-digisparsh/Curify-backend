@@ -13,14 +13,14 @@ export declare class AuthController {
     login(dto: LoginDto): Promise<{
         user: {
             id: string;
-            name: string | null;
             email: string;
-            verifyToken: string | null;
+            name: string | null;
             country: string | null;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
             emailVerifiedAt: Date | null;
+            verifyToken: string | null;
             verifyTokenExp: Date | null;
             verifyOtp: string | null;
             verifyOtpExp: Date | null;
@@ -32,14 +32,14 @@ export declare class AuthController {
     }>;
     getMe(req: any): Promise<{
         id: string;
-        name: string | null;
         email: string;
-        verifyToken: string | null;
+        name: string | null;
         country: string | null;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
+        verifyToken: string | null;
         verifyTokenExp: Date | null;
         verifyOtp: string | null;
         verifyOtpExp: Date | null;
@@ -60,14 +60,14 @@ export declare class AuthController {
     }): Promise<{
         user: {
             id: string;
-            name: string | null;
             email: string;
-            verifyToken: string | null;
+            name: string | null;
             country: string | null;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
             emailVerifiedAt: Date | null;
+            verifyToken: string | null;
             verifyTokenExp: Date | null;
             verifyOtp: string | null;
             verifyOtpExp: Date | null;
@@ -85,14 +85,14 @@ export declare class AuthController {
     }>;
     profile(req: any, dto: ProfileDto): Promise<{
         id: string;
-        name: string | null;
         email: string;
-        verifyToken: string | null;
+        name: string | null;
         country: string | null;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
+        verifyToken: string | null;
         verifyTokenExp: Date | null;
         verifyOtp: string | null;
         verifyOtpExp: Date | null;

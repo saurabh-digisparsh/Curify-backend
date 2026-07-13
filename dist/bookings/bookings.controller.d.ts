@@ -22,8 +22,8 @@ export declare class BookingsController {
             id: string;
             name: string;
             country: string;
-            createdAt: Date;
             city: string;
+            createdAt: Date;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
@@ -69,6 +69,7 @@ export declare class BookingsController {
         }[];
     } & {
         id: string;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
         userId: string;
@@ -82,7 +83,6 @@ export declare class BookingsController {
         paymentMethod: string;
         downPayment: number | null;
         installments: number | null;
-        travelDate: Date | null;
         surgeryDate: Date | null;
         notes: string | null;
     }>;

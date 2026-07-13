@@ -5,16 +5,16 @@ export declare class TreatmentsService {
     private ai;
     constructor(prisma: PrismaService, ai: AiService);
     list(): import(".prisma/client").Prisma.PrismaPromise<{
+        specialty: string;
         slug: string;
         label: string;
-        specialty: string;
     }[]>;
     classify(text: string): Promise<{
         matched: boolean;
         created: boolean;
+        specialty: string;
         slug: string;
         label: string;
-        specialty: string;
     }>;
     private add;
     private slugify;

@@ -383,6 +383,32 @@ model Treatment {
   @@map("treatments")
 }
 
+// First-party lead captured from the intake chat BEFORE signup, so an abandoned
+// chat is still a follow-up-able lead. Deliberately holds identity + funnel
+// metadata ONLY — never the free-text symptom description (PHI stays with the
+// authenticated Journey). Distinct from the scraping `Lead` model. `email` is the
+// upsert key; on signup the matching row is marked CONVERTED and linked to userId.
+model Inquiry {
+  id          String    @id @default(cuid())
+  name        String?
+  email       String    @unique
+  phone       String?
+  country     String?
+  treatment   String?
+  city        String?
+  urgency     String?
+  travelDate  DateTime?
+  insurance   String?
+  source      String    @default("chat")
+  status      String    @default("NEW") // NEW | CONVERTED
+  userId      String? // set when the lead signs up
+  convertedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("inquiries")
+}
+
 model BookingStatusUpdate {
   id        String   @id @default(cuid())
   bookingId String

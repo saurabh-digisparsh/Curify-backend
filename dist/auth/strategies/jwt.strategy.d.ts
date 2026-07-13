@@ -11,9 +11,9 @@ export declare class JwtStrategy extends JwtStrategy_base {
         id: string;
         name: string | null;
         email: string;
-        verifyToken: string | null;
-        country: string | null;
         phone: string | null;
+        country: string | null;
+        verifyToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
