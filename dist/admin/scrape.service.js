@@ -22,6 +22,12 @@ const regions_1 = require("../common/regions");
 const ROWS_BEGIN = '===ROWS_BEGIN===';
 const ROWS_END = '===ROWS_END===';
 const SCRAPERS_DIR = path.join(process.cwd(), 'scripts', 'scrapers');
+function toReviewDate(s) {
+    if (!s)
+        return null;
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
 function slugify(name) {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -87,6 +93,21 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
             },
         });
         this.logger.log(`hospital-rotation: scraping #${idx + 1}/${hospitals.length} — '${h.name}' (${h.city})`);
+        void this.runHospitalRotation(job.id, h);
+        return job;
+    }
+    async scrapeOneHospital(hospitalId, triggeredBy) {
+        const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId }, select: { id: true, name: true, city: true } });
+        if (!h)
+            throw new common_1.NotFoundException('Hospital not found');
+        const job = await this.prisma.scrapeJob.create({
+            data: {
+                target: 'hospital-rotation',
+                params: { hospitalId: h.id, hospitalName: h.name, hospitalCity: h.city, onboarding: true },
+                status: 'RUNNING', triggeredBy, startedAt: new Date(),
+            },
+        });
+        this.logger.log(`onboarding scrape: fetching reviews for '${h.name}' (${h.city})`);
         void this.runHospitalRotation(job.id, h);
         return job;
     }
@@ -471,7 +492,7 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
                         surgeonId: surgeonId ?? undefined,
                         reviewerName: (r.name || 'Anonymous').slice(0, 120),
                         rating: isNaN(rating) || rating < 1 || rating > 5 ? 5 : rating,
-                        reviewDate: r.date || null,
+                        reviewDate: toReviewDate(r.date),
                         text: text.slice(0, 5000),
                         lang: r.lang || 'en',
                         nationality: r.country || null,
@@ -633,7 +654,7 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
                     const data = {
                         reviewerName: (row.name || row.reviewerName || 'Anonymous').slice(0, 120),
                         rating: isNaN(rating) || rating < 1 || rating > 5 ? 5 : rating,
-                        reviewDate: row.date || null,
+                        reviewDate: toReviewDate(row.date),
                         text: text.slice(0, 5000),
                         lang: row.lang || 'en',
                         nationality: row.country || null,

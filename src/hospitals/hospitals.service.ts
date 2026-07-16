@@ -1,7 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { isRealCountry, natRegion } from '../common/regions';
+
+// Self-onboarded hospitals are hidden from every patient-facing query until an
+// admin approves them. Scraped/legacy rows have approvalStatus = null and stay
+// visible; onboarded rows only surface once APPROVED.
+// ponytail: onboarded rows hidden from matching until approvalStatus = APPROVED
+const VISIBLE: Prisma.HospitalWhereInput = {
+  OR: [{ approvalStatus: null }, { approvalStatus: 'APPROVED' }],
+};
+// Same gate for surgeons: a doctor added during onboarding (hospitalId set) is
+// hidden until its onboarding hospital is approved. Directory surgeons (no
+// onboarding hospital) are always visible.
+const VISIBLE_SURGEON: Prisma.SurgeonWhereInput = {
+  OR: [{ hospitalId: null }, { onboardingHospital: { approvalStatus: 'APPROVED' } }],
+};
+
+// Doctor fields safe to expose to a patient on the hospital-details screen — never
+// the slotToken (doctor's private link secret) or email (PII). openSlots count lets
+// the UI show who's bookable for a video consult without a second round-trip.
+const PATIENT_DOCTOR_SELECT = {
+  id: true, name: true, title: true, specialization: true, photoUrl: true,
+  yearsExperience: true, totalProcedures: true, successRate: true,
+  education: true, degrees: true, languages: true, awards: true, patientRating: true,
+} as const;
+// NB: teleconsultEnabled lives on OnboardingDoctor, NOT on Surgeon (the type of
+// hospital.doctors). It's merged in by findOne() via publishedSurgeonId — putting
+// it in this Surgeon select would make Prisma reject the query.
 
 const PROCEDURE_TO_SPECIALTY: Record<string, string> = {
   'acl reconstruction': 'Orthopedic',
@@ -69,6 +96,9 @@ function scoreHospital(h: any, specialty: string | null, urgency: string): numbe
     const priceBonus = Math.max(0, (6000 - (h.quotedPriceUsd ?? 6000)) / 6000) * 5;
     score += priceBonus;
   }
+  // Admin-designated Priority partners get the single strongest boost so they
+  // are preferentially recommended to patients (set in the admin dashboard).
+  if (h.priority) score += 50;
   return Math.round(score);
 }
 
@@ -81,10 +111,10 @@ export class HospitalsService {
     const [hospitalCount, countryCount, reviewCount, servedPatients, ratingAgg] =
       await Promise.all([
         // Homepage labels this "JCI-Accredited Hospitals" → only count JCI ones.
-        this.prisma.hospital.count({ where: { jciAccredited: true } }),
+        this.prisma.hospital.count({ where: { jciAccredited: true, ...VISIBLE } }),
         // Distinct countries among JCI-accredited hospitals.
         this.prisma.hospital
-          .groupBy({ by: ['country'], where: { jciAccredited: true } })
+          .groupBy({ by: ['country'], where: { jciAccredited: true, ...VISIBLE } })
           .then((r) => r.length),
         // Reviews are deduped per (hospitalId, contentHash) at insert, so every row
         // is already a distinct patient review. (A global contentHash group-by would
@@ -111,6 +141,7 @@ export class HospitalsService {
 
   async getMeta() {
     const hospitals = await this.prisma.hospital.findMany({
+      where: VISIBLE,
       select: { city: true, specialty: true },
     });
     const cities = [...new Set(hospitals.map(h => h.city).filter(Boolean))].sort();
@@ -124,6 +155,7 @@ export class HospitalsService {
     page = Math.max(1, Number(page) || 1);
     pageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
     const hospitals = await this.prisma.hospital.findMany({
+      where: VISIBLE,
       select: { id: true, name: true, city: true, country: true, overallRating: true, jciAccredited: true, imageUrl: true },
     });
     const reviews = await this.prisma.review.findMany({
@@ -207,9 +239,10 @@ export class HospitalsService {
 
   async findAll() {
     const hospitals = await this.prisma.hospital.findMany({
+      where: VISIBLE,
       include: { surgeon: true, _count: { select: { reviews: true } } },
     });
-    const surgeons = await this.prisma.surgeon.findMany();
+    const surgeons = await this.prisma.surgeon.findMany({ where: VISIBLE_SURGEON });
     return {
       hospitals: hospitals.map((h) => ({ ...h, reviewCount: h._count.reviews })),
       surgeons,
@@ -217,11 +250,41 @@ export class HospitalsService {
   }
 
   async findOne(id: string) {
-    const hospital = await this.prisma.hospital.findUnique({
-      where: { id },
-      include: { surgeon: true, reviews: true },
+    // findFirst (not findUnique) so the visibility gate can hide unapproved
+    // onboarded hospitals — they 404 for patients just like a missing id.
+    const hospital = await this.prisma.hospital.findFirst({
+      where: { id, ...VISIBLE },
+      include: {
+        surgeon: true,
+        reviews: true,
+        // The hospital's own onboarded doctors — the "top 3 surgeons" the patient
+        // picks from to schedule a video consult. Ordered by seniority so the most
+        // experienced surface first.
+        doctors: {
+          select: PATIENT_DOCTOR_SELECT,
+          orderBy: [{ yearsExperience: 'desc' }, { createdAt: 'asc' }],
+        },
+      },
     });
     if (!hospital) throw new NotFoundException('Hospital not found');
+
+    // Teleconsult booking runs on OnboardingDoctor (see TeleconsultService), which
+    // links to its published Surgeon via publishedSurgeonId. Attach each doctor's
+    // bookable id + enabled flag so the journey can show the scheduling section and
+    // book against the RIGHT id (a Surgeon id would 404 in booking).
+    const surgeonIds = hospital.doctors.map((d) => d.id);
+    if (surgeonIds.length) {
+      const onboarded = await this.prisma.onboardingDoctor.findMany({
+        where: { publishedSurgeonId: { in: surgeonIds }, teleconsultEnabled: true },
+        select: { id: true, publishedSurgeonId: true },
+      });
+      const bookIdBySurgeon = new Map(onboarded.map((o) => [o.publishedSurgeonId, o.id]));
+      hospital.doctors = hospital.doctors.map((d) => ({
+        ...d,
+        teleconsultEnabled: bookIdBySurgeon.has(d.id),
+        bookingDoctorId: bookIdBySurgeon.get(d.id) ?? null,
+      })) as any;
+    }
     return hospital;
   }
 
@@ -234,7 +297,8 @@ export class HospitalsService {
     pageSize = Math.min(200, Math.max(1, Number(pageSize) || 50));
     return this.prisma.review.findMany({
       where: { hospitalId },
-      orderBy: { createdAt: 'desc' },
+      // Newest review first, by the review's own date; undated reviews sink to the end.
+      orderBy: { reviewDate: { sort: 'desc', nulls: 'last' } },
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
@@ -248,9 +312,10 @@ export class HospitalsService {
     city?: string; // patient's chosen city (clubbed id, e.g. 'delhi' = Delhi NCR)
   }) {
     const hospitals = await this.prisma.hospital.findMany({
+      where: VISIBLE,
       include: { surgeon: true, _count: { select: { reviews: true } } },
     });
-    const surgeons = await this.prisma.surgeon.findMany();
+    const surgeons = await this.prisma.surgeon.findMany({ where: VISIBLE_SURGEON });
     const specialty = mapTreatmentToSpecialty(params.treatment);
 
     // Rule-based scoring — no AI needed. All hospitals come from our own database.
@@ -266,7 +331,8 @@ export class HospitalsService {
         inRegion: cityMatches(h.city, params.city),
         aiMatchScore: scoreHospital(h, specialty, params.urgency),
       }))
-      .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (b.aiMatchScore - a.aiMatchScore));
+      // City preference first, then admin Priority partners, then quality score.
+      .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (Number(!!b.priority) - Number(!!a.priority)) || (b.aiMatchScore - a.aiMatchScore));
 
     const top = scored[0];
     const inRegionCount = scored.filter((h) => h.inRegion).length;
@@ -299,6 +365,7 @@ export class HospitalsService {
     const pageSize = Math.min(50, Math.max(1, Number(params.pageSize) || 20));
 
     const all = await this.prisma.hospital.findMany({
+      where: VISIBLE,
       include: { surgeon: true, _count: { select: { reviews: true } } },
     });
     let list = all.map((h) => ({ ...h, reviewCount: h._count.reviews }));

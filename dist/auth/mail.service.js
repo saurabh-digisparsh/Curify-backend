@@ -57,6 +57,24 @@ let MailService = class MailService {
             console.warn(`📧 [FALLBACK] OTP for ${email}: ${otp}  (link: ${url})`);
         }
     }
+    async send(to, subject, html, devHint, attachments) {
+        if (!this.transporter) {
+            console.warn(`📧 [DEV] "${subject}" → ${to}${devHint ? `  (${devHint})` : ''}`);
+            return;
+        }
+        try {
+            await this.transporter.sendMail({
+                from: process.env.MAIL_FROM || 'Curify <no-reply@curify.health>',
+                to, subject, html, attachments,
+            });
+            console.log(`📧 "${subject}" sent to ${to}`);
+        }
+        catch (err) {
+            console.error(`📧 SMTP send failed for ${to}: ${err.message}`);
+            if (devHint)
+                console.warn(`📧 [FALLBACK] ${to}: ${devHint}`);
+        }
+    }
 };
 exports.MailService = MailService;
 exports.MailService = MailService = __decorate([

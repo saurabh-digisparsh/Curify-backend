@@ -14,6 +14,17 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ai_service_1 = require("../ai/ai.service");
 const regions_1 = require("../common/regions");
+const VISIBLE = {
+    OR: [{ approvalStatus: null }, { approvalStatus: 'APPROVED' }],
+};
+const VISIBLE_SURGEON = {
+    OR: [{ hospitalId: null }, { onboardingHospital: { approvalStatus: 'APPROVED' } }],
+};
+const PATIENT_DOCTOR_SELECT = {
+    id: true, name: true, title: true, specialization: true, photoUrl: true,
+    yearsExperience: true, totalProcedures: true, successRate: true,
+    education: true, degrees: true, languages: true, awards: true, patientRating: true,
+};
 const PROCEDURE_TO_SPECIALTY = {
     'acl reconstruction': 'Orthopedic',
     'knee replacement': 'Orthopedic',
@@ -67,6 +78,8 @@ function scoreHospital(h, specialty, urgency) {
         const priceBonus = Math.max(0, (6000 - (h.quotedPriceUsd ?? 6000)) / 6000) * 5;
         score += priceBonus;
     }
+    if (h.priority)
+        score += 50;
     return Math.round(score);
 }
 let HospitalsService = class HospitalsService {
@@ -77,9 +90,9 @@ let HospitalsService = class HospitalsService {
     async getStats() {
         const SERVED = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
         const [hospitalCount, countryCount, reviewCount, servedPatients, ratingAgg] = await Promise.all([
-            this.prisma.hospital.count({ where: { jciAccredited: true } }),
+            this.prisma.hospital.count({ where: { jciAccredited: true, ...VISIBLE } }),
             this.prisma.hospital
-                .groupBy({ by: ['country'], where: { jciAccredited: true } })
+                .groupBy({ by: ['country'], where: { jciAccredited: true, ...VISIBLE } })
                 .then((r) => r.length),
             this.prisma.review.count(),
             this.prisma.booking.findMany({
@@ -99,6 +112,7 @@ let HospitalsService = class HospitalsService {
     }
     async getMeta() {
         const hospitals = await this.prisma.hospital.findMany({
+            where: VISIBLE,
             select: { city: true, specialty: true },
         });
         const cities = [...new Set(hospitals.map(h => h.city).filter(Boolean))].sort();
@@ -109,6 +123,7 @@ let HospitalsService = class HospitalsService {
         page = Math.max(1, Number(page) || 1);
         pageSize = Math.min(50, Math.max(1, Number(pageSize) || 20));
         const hospitals = await this.prisma.hospital.findMany({
+            where: VISIBLE,
             select: { id: true, name: true, city: true, country: true, overallRating: true, jciAccredited: true, imageUrl: true },
         });
         const reviews = await this.prisma.review.findMany({
@@ -177,21 +192,42 @@ let HospitalsService = class HospitalsService {
     }
     async findAll() {
         const hospitals = await this.prisma.hospital.findMany({
+            where: VISIBLE,
             include: { surgeon: true, _count: { select: { reviews: true } } },
         });
-        const surgeons = await this.prisma.surgeon.findMany();
+        const surgeons = await this.prisma.surgeon.findMany({ where: VISIBLE_SURGEON });
         return {
             hospitals: hospitals.map((h) => ({ ...h, reviewCount: h._count.reviews })),
             surgeons,
         };
     }
     async findOne(id) {
-        const hospital = await this.prisma.hospital.findUnique({
-            where: { id },
-            include: { surgeon: true, reviews: true },
+        const hospital = await this.prisma.hospital.findFirst({
+            where: { id, ...VISIBLE },
+            include: {
+                surgeon: true,
+                reviews: true,
+                doctors: {
+                    select: PATIENT_DOCTOR_SELECT,
+                    orderBy: [{ yearsExperience: 'desc' }, { createdAt: 'asc' }],
+                },
+            },
         });
         if (!hospital)
             throw new common_1.NotFoundException('Hospital not found');
+        const surgeonIds = hospital.doctors.map((d) => d.id);
+        if (surgeonIds.length) {
+            const onboarded = await this.prisma.onboardingDoctor.findMany({
+                where: { publishedSurgeonId: { in: surgeonIds }, teleconsultEnabled: true },
+                select: { id: true, publishedSurgeonId: true },
+            });
+            const bookIdBySurgeon = new Map(onboarded.map((o) => [o.publishedSurgeonId, o.id]));
+            hospital.doctors = hospital.doctors.map((d) => ({
+                ...d,
+                teleconsultEnabled: bookIdBySurgeon.has(d.id),
+                bookingDoctorId: bookIdBySurgeon.get(d.id) ?? null,
+            }));
+        }
         return hospital;
     }
     async getReviews(hospitalId, page = 1, pageSize = 200) {
@@ -199,16 +235,17 @@ let HospitalsService = class HospitalsService {
         pageSize = Math.min(200, Math.max(1, Number(pageSize) || 50));
         return this.prisma.review.findMany({
             where: { hospitalId },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { reviewDate: { sort: 'desc', nulls: 'last' } },
             skip: (page - 1) * pageSize,
             take: pageSize,
         });
     }
     async matchForPatient(params) {
         const hospitals = await this.prisma.hospital.findMany({
+            where: VISIBLE,
             include: { surgeon: true, _count: { select: { reviews: true } } },
         });
-        const surgeons = await this.prisma.surgeon.findMany();
+        const surgeons = await this.prisma.surgeon.findMany({ where: VISIBLE_SURGEON });
         const specialty = mapTreatmentToSpecialty(params.treatment);
         const scored = hospitals
             .map(h => ({
@@ -217,7 +254,7 @@ let HospitalsService = class HospitalsService {
             inRegion: cityMatches(h.city, params.city),
             aiMatchScore: scoreHospital(h, specialty, params.urgency),
         }))
-            .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (b.aiMatchScore - a.aiMatchScore));
+            .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (Number(!!b.priority) - Number(!!a.priority)) || (b.aiMatchScore - a.aiMatchScore));
         const top = scored[0];
         const inRegionCount = scored.filter((h) => h.inRegion).length;
         const topRecommendation = top?.id ?? null;
@@ -237,6 +274,7 @@ let HospitalsService = class HospitalsService {
         const page = Math.max(1, Number(params.page) || 1);
         const pageSize = Math.min(50, Math.max(1, Number(params.pageSize) || 20));
         const all = await this.prisma.hospital.findMany({
+            where: VISIBLE,
             include: { surgeon: true, _count: { select: { reviews: true } } },
         });
         let list = all.map((h) => ({ ...h, reviewCount: h._count.reviews }));

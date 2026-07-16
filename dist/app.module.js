@@ -25,12 +25,15 @@ const trip_plan_module_1 = require("./trip-plan/trip-plan.module");
 const recovery_module_1 = require("./recovery/recovery.module");
 const family_dashboard_module_1 = require("./family-dashboard/family-dashboard.module");
 const bookings_module_1 = require("./bookings/bookings.module");
+const payments_module_1 = require("./payments/payments.module");
 const admin_module_1 = require("./admin/admin.module");
 const leads_module_1 = require("./leads/leads.module");
 const assistant_module_1 = require("./assistant/assistant.module");
 const journeys_module_1 = require("./journeys/journeys.module");
 const treatments_module_1 = require("./treatments/treatments.module");
 const inquiries_module_1 = require("./inquiries/inquiries.module");
+const hospital_partner_module_1 = require("./hospital-partner/hospital-partner.module");
+const masters_module_1 = require("./masters/masters.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,11 +57,14 @@ exports.AppModule = AppModule = __decorate([
             recovery_module_1.RecoveryModule,
             family_dashboard_module_1.FamilyDashboardModule,
             bookings_module_1.BookingsModule,
+            payments_module_1.PaymentsModule,
             leads_module_1.LeadsModule,
             assistant_module_1.AssistantModule,
             journeys_module_1.JourneysModule,
             treatments_module_1.TreatmentsModule,
             inquiries_module_1.InquiriesModule,
+            hospital_partner_module_1.HospitalPartnerModule,
+            masters_module_1.MastersModule,
         ],
         providers: [
             { provide: core_1.APP_GUARD, useClass: ip_block_guard_1.IpBlockGuard },

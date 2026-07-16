@@ -32,10 +32,17 @@ model User {
 
   reports          Report[]
   bookings         Booking[]
+  payments         Payment[]
   recoveryPlans    RecoveryPlan[]
   journeys         Journey[]
+  tripServiceSteps TripServiceStep[]
+  teleconsults     Teleconsult[]  @relation("PatientTeleconsults")
   familyLinks      FamilyLink[]   @relation("PatientFamily")
   familyOf         FamilyLink[]   @relation("FamilyMember")
+  // The published hospital this account owns (role = HOSPITAL), created at go-live.
+  hospital         Hospital?            @relation("HospitalOwner")
+  // The onboarding application this account was provisioned from.
+  hospitalApplication HospitalApplication? @relation("ApplicationOwner")
 
   @@map("users")
 }
@@ -70,6 +77,8 @@ model Journey {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  teleconsults Teleconsult[]
+
   @@index([userId, updatedAt])
   @@map("journeys")
 }
@@ -78,6 +87,78 @@ enum Role {
   ADMIN
   USER
   AGENT
+  HOSPITAL
+}
+
+// Onboarding lifecycle for a hospital-authored profile. `null` on a Hospital row
+// means it came from the scraping/enrichment pipeline (always public); a set
+// value means it was self-onboarded and is only visible once APPROVED.
+enum ApprovalStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+// Admin verdict on a single uploaded verification document.
+enum DocStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ─── Hospital onboarding (BRD: public self-serve application → go-live) ───────
+
+// Lifecycle of a self-serve hospital application (BRD flow Section 1).
+enum OnboardingStatus {
+  DRAFT              // application started
+  CONTACT_VERIFYING  // authorised contact captured, OTPs pending
+  ACCREDITATION      // choosing/verifying NABH/JCI
+  VALIDATING         // non-accredited doc check in progress
+  AGREEMENT          // ready to e-sign the commission agreement
+  PROVISIONED        // credentials issued; awaiting first sign-in + setup
+  SETUP              // dashboard setup (doctors, pricing, availability)
+  LIVE               // published into patient matching
+  REJECTED
+}
+
+enum AccreditationBody {
+  NABH
+  JCI
+}
+
+// How an accreditation was confirmed (BRD Appendix A: no live API).
+enum AccreditationSource {
+  REGISTRY
+  CERT_UPLOAD
+}
+
+// Required documents for non-accredited hospitals (FR-11).
+enum OnboardingDocType {
+  REGISTRATION           // hospital/clinical-establishment registration
+  COUNCIL_REGISTRATION   // practitioner council registrations
+  FIRE_BUILDING_SAFETY
+  BIOMEDICAL_WASTE       // biomedical-waste authorisation
+  INDEMNITY_INSURANCE
+  SIGNATORY_ID           // authorised-signatory ID
+  // Doctor-level
+  DOCTOR_PHOTO
+  DOCTOR_DEGREE
+  OTHER
+}
+
+// Who set an availability window (FR-27/28).
+enum AvailabilitySource {
+  SELF
+  COORDINATOR
+  CALENDAR
+}
+
+// Onboarding doctor review state (FR-22/23).
+enum OnboardingDoctorStatus {
+  APPROVED
+  IN_REVIEW
+  ON_LEAVE
 }
 
 model Report {
@@ -104,7 +185,8 @@ model Report {
   urgency          String?
   createdAt        DateTime @default(now())
 
-  user    User?    @relation(fields: [userId], references: [id])
+  // Cascade: deleting a user removes their reports (right-to-erasure).
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   booking Booking?
 
   @@map("reports")
@@ -143,11 +225,23 @@ model Hospital {
   longitude            Float?
   googleMapsUri        String?
 
+  // ─── Published onboarded hospital (created at go-live) ──────────────────────
+  // ownerUserId is set only for onboarded rows; scraped rows leave it null.
+  // approvalStatus null = scraped/legacy (always public); APPROVED = published &
+  // visible in matching (see the visibility gate in hospitals.service).
+  ownerUserId          String?         @unique
+  approvalStatus       ApprovalStatus?
+  nabhAccredited       Boolean         @default(false)
+  priority             Boolean         @default(false) // fast-track (accredited) ranking
+
   createdAt            DateTime @default(now())
 
-  surgeon  Surgeon?  @relation(fields: [surgeonId], references: [id])
-  reviews  Review[]
-  bookings Booking[]
+  owner     User?                @relation("HospitalOwner", fields: [ownerUserId], references: [id])
+  surgeon   Surgeon?             @relation("PrimarySurgeon", fields: [surgeonId], references: [id])
+  doctors   Surgeon[]            @relation("HospitalDoctors")
+  published HospitalApplication? @relation("PublishedHospital")
+  reviews   Review[]
+  bookings  Booking[]
 
   @@map("hospitals")
 }
@@ -173,11 +267,313 @@ model Surgeon {
   patientRating   Float?
   avgSurgeryTime  String?
   nextAvailable   String?
+  // ─── Published onboarded doctor (created at go-live from OnboardingDoctor) ──
+  // hospitalId links a published doctor to its published hospital (many per
+  // hospital). Scraped/legacy surgeons leave it null.
+  hospitalId        String?
+  email             String?
+  medicalCouncilReg String?
+  degrees           Json?
   createdAt       DateTime @default(now())
 
-  hospitals Hospital[]
+  // Hospitals for which THIS surgeon is the single primary/featured surgeon.
+  primaryOf   Hospital[]         @relation("PrimarySurgeon")
+  // The published hospital that owns this doctor.
+  onboardingHospital Hospital?    @relation("HospitalDoctors", fields: [hospitalId], references: [id])
 
   @@map("surgeons")
+}
+
+// ─── Hospital onboarding entities (BRD §11) ───────────────────────────────────
+// The self-serve application. Lives pre-login; mapped into Hospital/Surgeon only
+// at go-live. ownerUserId is set at provisioning; publishedHospitalId at go-live.
+model HospitalApplication {
+  id                  String   @id @default(cuid())
+  // Profile (FR-2 / FR-3)
+  legalName           String
+  city                String
+  address             String?
+  registrationNo      String?
+  ownership           String?
+  website             String?
+  totalBeds           Int?
+  icuBeds             Int?
+  airportDistanceKm   Int?
+  specialties         String[]
+  insurers            String[]
+  languages           String[]
+  intlFacilities      String[]
+  // Pricing & capacity (FR-21) — applied to the published Hospital at go-live.
+  quotedPriceUsd      Int?
+  patientsPerYear     Int?
+  imageUrl            String?
+  procedures          String[]
+  // Package narrative (shown on the patient comparison card) — the panel edits
+  // these; AI seeds pros/cons/included when the hospital asks. Published to Hospital.
+  localBenchmarkUsd   Int?
+  included            String[]
+  notIncluded         String[]
+  pros                Json?
+  cons                Json?
+  // Lifecycle
+  status              OnboardingStatus @default(DRAFT)
+  priority            Boolean          @default(false) // fast-track (verified accreditation)
+  notAccredited       Boolean          @default(false)
+  // Secret handle returned at apply; authorises the pre-login flow steps (NFR-1).
+  sessionToken        String?          @unique
+  ownerUserId         String?          @unique // set at provisioning
+  publishedHospitalId String?          @unique // set at go-live
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  contact        AuthorisedContact?
+  accreditations AccreditationRecord[]
+  documents      OnboardingDocument[]
+  agreement      CommissionAgreement?
+  doctors        OnboardingDoctor[]
+  owner          User?     @relation("ApplicationOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  published      Hospital? @relation("PublishedHospital", fields: [publishedHospitalId], references: [id], onDelete: SetNull)
+
+  @@map("hospital_applications")
+}
+
+// Authorised contact + dual-channel OTP verification (FR-5 / FR-7).
+model AuthorisedContact {
+  id                 String   @id @default(cuid())
+  applicationId      String   @unique
+  name               String
+  designation        String?
+  workEmail          String
+  whatsapp           String
+  emailVerifiedAt    DateTime?
+  whatsappVerifiedAt DateTime?
+  emailOtp           String?
+  emailOtpExp        DateTime?
+  emailOtpTries      Int       @default(0)
+  waOtp              String?
+  waOtpExp           DateTime?
+  waOtpTries         Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  application HospitalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@map("authorised_contacts")
+}
+
+// Accreditation record — registry-verified or certificate-upload (FR-9/10/13, BR-1/2/8).
+model AccreditationRecord {
+  id            String              @id @default(cuid())
+  applicationId String
+  body          AccreditationBody
+  identifier    String?
+  verifiedAt    DateTime?
+  validUntil    DateTime?
+  source        AccreditationSource @default(CERT_UPLOAD)
+  status        DocStatus           @default(PENDING)
+  createdAt     DateTime            @default(now())
+
+  application HospitalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@index([applicationId])
+  @@map("accreditation_records")
+}
+
+// Verification documents for non-accredited hospitals (FR-11). Disk-stored,
+// streamed via an auth-guarded route. doctorId set for doctor-level docs.
+model OnboardingDocument {
+  id                 String            @id @default(cuid())
+  applicationId      String
+  doctorId           String?
+  type               OnboardingDocType
+  autoClassifiedType OnboardingDocType?
+  fileUrl            String            // filename on disk (uploads/hospital-docs/…)
+  originalName       String?
+  status             DocStatus         @default(PENDING)
+  note               String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  application HospitalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  doctor      OnboardingDoctor?   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  @@index([applicationId])
+  @@map("onboarding_documents")
+}
+
+// Fixed-commission agreement, typed-name e-signature (FR-14/15/16, BR-3).
+model CommissionAgreement {
+  id            String   @id @default(cuid())
+  applicationId String   @unique
+  version       String
+  percentage    Float
+  payoutRail    String?
+  signatoryName String
+  ip            String?
+  terms         Json?
+  signedAt      DateTime @default(now())
+
+  application HospitalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  @@map("commission_agreements")
+}
+
+// Doctor captured during onboarding (FR-21). Mapped → Surgeon at go-live via
+// publishedSurgeonId. availabilityToken backs the private (WhatsApp) link.
+model OnboardingDoctor {
+  id                  String                 @id @default(cuid())
+  applicationId       String
+  photoUrl            String?
+  name                String
+  qualifications      String?
+  specialty           String?
+  subspecialty        String?
+  yearsExperience     Int?
+  registrationNo      String?
+  languages           String[]
+  bio                 String?
+  proceduresPerformed Int?
+  email               String?
+  teleconsultEnabled  Boolean                @default(false)
+  status              OnboardingDoctorStatus @default(IN_REVIEW)
+  timezone            String                 @default("Asia/Kolkata") // IANA (FR-42)
+  availabilityToken   String?                @unique
+  publishedSurgeonId  String?                @unique // set at go-live
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  application HospitalApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  windows     AvailabilityWindow[]
+  documents   OnboardingDocument[]
+  teleconsults Teleconsult[]
+  @@index([applicationId])
+  @@map("onboarding_doctors")
+}
+
+enum TeleconsultStatus {
+  SCHEDULED
+  IN_PROGRESS // doctor has joined the room — "connected / live now"
+  COMPLETED
+  CANCELLED
+}
+
+// Who shared a document during a teleconsult (used by the monitoring view).
+enum TeleconsultDocSender {
+  DOCTOR
+  PATIENT
+}
+
+// A booked patient↔doctor video consultation. Links a patient (User) to the
+// onboarding doctor they'll meet (doctor joins via their availabilityToken, no
+// login). roomName is the unguessable video room — only ever handed out through
+// the two ownership-checked token endpoints.
+model Teleconsult {
+  id          String            @id @default(cuid())
+  patientId   String
+  doctorId    String            // OnboardingDoctor
+  // The journey this consult belongs to — a journey may have only ONE active
+  // consult at a time (enforced in TeleconsultService.book). Nullable so legacy /
+  // dashboard-initiated consults without a journey still work.
+  journeyId   String?
+  scheduledAt DateTime
+  roomName    String            @unique @default(cuid())
+  status      TeleconsultStatus @default(SCHEDULED)
+  // Lifecycle timestamps for monitoring: startedAt = doctor first joined
+  // (connected), endedAt = marked complete. Duration = endedAt − startedAt.
+  startedAt   DateTime?
+  endedAt     DateTime?
+  // Price quotation the doctor gives the patient after/around the consult.
+  quoteAmount   Int?
+  quoteCurrency String   @default("USD")
+  quoteNote     String?
+  quotedAt      DateTime?
+  // When the patient accepted the quote — the go-signal that unlocks trip planning
+  // (the accepted amount becomes the plan's treatment cost). Null = not yet accepted.
+  quoteAcceptedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  patient   User                  @relation("PatientTeleconsults", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    OnboardingDoctor      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  journey   Journey?              @relation(fields: [journeyId], references: [id], onDelete: SetNull)
+  documents TeleconsultDocument[]
+
+  @@index([patientId])
+  @@index([doctorId, scheduledAt])
+  @@index([journeyId])
+  @@map("teleconsults")
+}
+
+// A file shared during a teleconsult (prescription, lab report, scan, quotation…).
+// Stored on disk like verification docs; streamed via ownership-checked routes.
+model TeleconsultDocument {
+  id            String              @id @default(cuid())
+  teleconsultId String
+  sender        TeleconsultDocSender
+  kind          String?             // e.g. "Prescription", "Lab report", "Scan"
+  fileUrl       String              // filename on disk (HOSPITAL_DOCS_DIR)
+  originalName  String?
+  createdAt     DateTime            @default(now())
+
+  teleconsult Teleconsult @relation(fields: [teleconsultId], references: [id], onDelete: Cascade)
+
+  @@index([teleconsultId])
+  @@map("teleconsult_documents")
+}
+
+// Recurring weekly availability window set by the doctor via the link (FR-27).
+model AvailabilityWindow {
+  id        String             @id @default(cuid())
+  doctorId  String
+  weekday   Int                // 0 = Sunday … 6 = Saturday
+  start     String             // "HH:mm"
+  end       String             // "HH:mm"
+  recurring Boolean            @default(true)
+  source    AvailabilitySource @default(SELF)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  doctor OnboardingDoctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  @@index([doctorId, weekday])
+  @@map("availability_windows")
+}
+
+// ─── Reference master data (dropdown options for doctor profiles) ─────────────
+// Editable lookup tables so the doctor form's dropdowns are DB-driven, not
+// hardcoded. Seeded for production (scripts/seed_masters.ts).
+model Specialty {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@map("master_specialties")
+}
+
+model Qualification {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@map("master_qualifications")
+}
+
+model Language {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@map("master_languages")
+}
+
+model Timezone {
+  id        String  @id @default(cuid())
+  name      String  @unique // IANA, e.g. Asia/Kolkata
+  label     String?         // e.g. "India (IST)"
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@map("master_timezones")
 }
 
 model Review {
@@ -189,7 +585,7 @@ model Review {
   age          Int?
   procedure    String?
   rating       Int
-  reviewDate   String?
+  reviewDate   DateTime?
   text         String
   textEn       String?  // English translation (set only when lang != en); powers the review language toggle
   region       String?  // derived from nationality via the canonical region map (persisted for queries)
@@ -228,16 +624,74 @@ model Booking {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id])
-  report   Report?   @relation(fields: [reportId], references: [id])
+  // Cascade: deleting a user removes their bookings (and, below, everything
+  // hanging off a booking). report is SetNull so deleting a report never blocks.
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report   Report?   @relation(fields: [reportId], references: [id], onDelete: SetNull)
   hospital Hospital  @relation(fields: [hospitalId], references: [id])
 
   recoveryPlan    RecoveryPlan?
   familyLinks     FamilyLink[]
   statusUpdates   BookingStatusUpdate[]
   milestones      BookingMilestone[]
+  payment         Payment?
 
   @@map("bookings")
+}
+
+// Money ledger for a checkout. One Payment per Razorpay order. This is the
+// idempotency anchor and source of truth for what was actually charged — the
+// Booking (the business object) is only confirmed once a Payment is CAPTURED.
+// See docs/razorpay/RAZORPAY_INTEGRATION.md for the ACID rules.
+model Payment {
+  id                 String        @id @default(cuid())
+  bookingId          String?       @unique // linked once the booking is confirmed
+  userId             String
+  // Razorpay identifiers — both unique so a replayed verify/webhook is a no-op.
+  razorpayOrderId    String        @unique // order_... (created first, server-side)
+  razorpayPaymentId  String?       @unique // pay_...   (after the customer pays)
+  razorpaySignature  String?
+  // Money — amount is in the smallest currency unit (paise when currency=INR).
+  amount             Int
+  currency           String        @default("INR")
+  method             String?       // card | emi | paylater | cardless_emi | upi | netbanking
+  emiMonths          Int?          // tenure when method = emi
+  status             PaymentStatus @default(CREATED)
+  // Audit
+  notes              Json?
+  failureReason      String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  events  PaymentEvent[]
+
+  @@map("payments")
+}
+
+// One row per Razorpay webhook delivery. eventId is unique → replayed webhooks
+// (Razorpay retries on non-2xx) are dropped idempotently.
+model PaymentEvent {
+  id        String   @id @default(cuid())
+  paymentId String
+  eventId   String   @unique // x-razorpay-event-id header
+  type      String            // payment.captured, order.paid, refund.created, payment.dispute.created ...
+  payload   Json
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("payment_events")
+}
+
+enum PaymentStatus {
+  CREATED    // order made, awaiting payment
+  AUTHORIZED // funds held (payment_capture = manual)
+  CAPTURED   // money settled — success
+  FAILED
+  REFUNDED
+  DISPUTED   // chargeback opened
 }
 
 enum Plan {
@@ -265,8 +719,9 @@ model RecoveryPlan {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user    User    @relation(fields: [userId], references: [id])
-  booking Booking @relation(fields: [bookingId], references: [id])
+  // Cascade from both the user and the booking it belongs to.
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("recovery_plans")
 }
@@ -282,9 +737,11 @@ model FamilyLink {
   accessCode String   @unique @default(cuid())
   createdAt  DateTime @default(now())
 
-  patient User    @relation("PatientFamily", fields: [patientId], references: [id])
-  member  User?   @relation("FamilyMember", fields: [memberId], references: [id])
-  booking Booking @relation(fields: [bookingId], references: [id])
+  // patient/booking cascade with the patient's account; member only unlinks
+  // (deleting a family MEMBER account must not delete the patient's link record).
+  patient User    @relation("PatientFamily", fields: [patientId], references: [id], onDelete: Cascade)
+  member  User?   @relation("FamilyMember", fields: [memberId], references: [id], onDelete: SetNull)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("family_links")
 }
@@ -355,6 +812,32 @@ model InsurancePlan {
   @@map("insurance_plans")
 }
 
+// One row per booking-service step in "Generate My Trip" (visa/flight/hotel/cab
+// + the internal quotation). Persists the patient's progress through the vendor
+// hand-off checklist: which steps are confirmed/skipped, the uploaded proof
+// (granted e-Visa, flight ticket) and any validation result. Deep-links are
+// recomputed on read, not stored, so vendor URL changes don't need a migration.
+model TripServiceStep {
+  id            String   @id @default(cuid())
+  userId        String
+  hospitalId    String
+  type          String   // quotation | visa | flight | hotel | cab
+  provider      String
+  status        String   @default("not_started") // not_started | pending | confirmed | skipped
+  // Relative path (under uploads/trip-proofs) of the uploaded proof document.
+  proofPath     String?
+  // Validation result / user-supplied metadata (visa number, expiry, notes).
+  meta          Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // One step of each type per patient+hospital trip.
+  @@unique([userId, hospitalId, type])
+  @@map("trip_service_steps")
+}
+
 model RecoveryProtocol {
   id        String @id @default(cuid())
   procedure String @unique
@@ -418,7 +901,7 @@ model BookingStatusUpdate {
   postedBy  String?
   createdAt DateTime @default(now())
 
-  booking Booking @relation(fields: [bookingId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("booking_status_updates")
 }
@@ -431,7 +914,7 @@ model BookingMilestone {
   active    Boolean @default(false)
   sequence  Int
 
-  booking Booking @relation(fields: [bookingId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("booking_milestones")
 }

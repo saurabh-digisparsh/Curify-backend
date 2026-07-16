@@ -16,6 +16,7 @@ export declare class ScrapeService {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -24,7 +25,6 @@ export declare class ScrapeService {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
@@ -35,6 +35,7 @@ export declare class ScrapeService {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -43,7 +44,6 @@ export declare class ScrapeService {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }[]>;
     scrapeAllHospitals(triggeredBy: string): Promise<{
@@ -54,6 +54,7 @@ export declare class ScrapeService {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -62,7 +63,6 @@ export declare class ScrapeService {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     scrapeNextHospital(triggeredBy: string): Promise<{
@@ -73,6 +73,7 @@ export declare class ScrapeService {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -81,7 +82,25 @@ export declare class ScrapeService {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
+        finishedAt: Date | null;
+    }>;
+    scrapeOneHospital(hospitalId: string, triggeredBy: string): Promise<{
+        error: string | null;
+        params: import("@prisma/client/runtime/library").JsonValue | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        summary: import("@prisma/client/runtime/library").JsonValue | null;
+        status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
+        target: string;
+        created: number;
+        updated: number;
+        skipped: number;
+        stages: import("@prisma/client/runtime/library").JsonValue | null;
+        logPath: string | null;
+        output: string | null;
+        triggeredBy: string | null;
         finishedAt: Date | null;
     }>;
     private runHospitalRotation;
@@ -94,6 +113,7 @@ export declare class ScrapeService {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -102,7 +122,6 @@ export declare class ScrapeService {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     private static readonly FULL_STAGES;

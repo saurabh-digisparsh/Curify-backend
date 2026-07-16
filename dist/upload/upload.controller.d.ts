@@ -11,7 +11,7 @@ export declare class UploadController {
         success: boolean;
         reportId: string;
         reportRef: string;
-        analysis: any;
+        status: string;
     }>;
     uploadMulti(files: Express.Multer.File[], body: {
         description?: string;
@@ -22,7 +22,7 @@ export declare class UploadController {
         success: boolean;
         reportId: string;
         reportRef: string;
-        analysis: any;
+        status: string;
     }>;
     getAnalysis(id: string, req: any): Promise<any>;
 }

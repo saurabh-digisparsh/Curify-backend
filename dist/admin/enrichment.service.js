@@ -93,6 +93,20 @@ let EnrichmentService = EnrichmentService_1 = class EnrichmentService {
         });
         return true;
     }
+    async suggestNarrative(params) {
+        const data = await this.ai.generateHospitalEnrichment({
+            name: params.name, city: params.city, country: params.country || 'India',
+            overallRating: params.overallRating ?? null, jciAccredited: params.jciAccredited ?? false,
+            reviews: params.reviews ?? [],
+        });
+        return {
+            included: Array.isArray(data?.included) ? data.included : [],
+            notIncluded: Array.isArray(data?.notIncluded) ? data.notIncluded : [],
+            pros: Array.isArray(data?.pros) ? data.pros : [],
+            cons: Array.isArray(data?.cons) ? data.cons : [],
+            localBenchmarkUsd: data?.localBenchmarkUsd ? Math.round(data.localBenchmarkUsd) : null,
+        };
+    }
     async enrichMissing(opts = {}) {
         const where = opts.force ? {} : { quotedPriceUsd: null };
         const hospitals = await this.prisma.hospital.findMany({ where, select: { id: true, name: true } });

@@ -41,7 +41,7 @@ exports.AdminModule = AdminModule = __decorate([
             settings_controller_1.AdminSettingsController,
         ],
         providers: [users_service_1.UsersService, stats_service_1.StatsService, data_service_1.DataService, scrape_service_1.ScrapeService, scrape_scheduler_1.ScrapeScheduler, enrichment_service_1.EnrichmentService, review_lang_service_1.ReviewLangService, file_import_service_1.FileImportService, sentinel_service_1.SentinelService, settings_service_1.SettingsService],
-        exports: [sentinel_service_1.SentinelService, settings_service_1.SettingsService],
+        exports: [sentinel_service_1.SentinelService, settings_service_1.SettingsService, enrichment_service_1.EnrichmentService, scrape_service_1.ScrapeService],
     })
 ], AdminModule);
 //# sourceMappingURL=admin.module.js.map

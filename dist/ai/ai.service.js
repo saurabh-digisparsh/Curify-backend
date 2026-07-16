@@ -19,18 +19,22 @@ let AiService = class AiService {
         const basicAuth = process.env.AI_BASIC_AUTH;
         const key = process.env.OPENAI_API_KEY;
         const hasOpenAiKey = !!key && key !== 'your_openai_api_key_here';
+        const primaryTimeout = Number(process.env.AI_TIMEOUT_MS) || 45_000;
+        const fallbackTimeout = Number(process.env.AI_FALLBACK_TIMEOUT_MS) || 60_000;
         if (baseURL) {
             this.primary = {
                 client: new openai_1.default({
                     apiKey: key || 'ollama',
                     baseURL,
+                    timeout: primaryTimeout,
+                    maxRetries: 1,
                     ...(basicAuth ? { defaultHeaders: { Authorization: `Basic ${basicAuth}` } } : {}),
                 }),
                 model: process.env.AI_MODEL || 'qwen2.5vl:7b',
                 label: `ollama:${baseURL}`,
             };
             this.fallback = hasOpenAiKey
-                ? { client: new openai_1.default({ apiKey: key }), model: process.env.AI_FALLBACK_MODEL || 'gpt-4.1-mini', label: 'openai' }
+                ? { client: new openai_1.default({ apiKey: key, timeout: fallbackTimeout, maxRetries: 1 }), model: process.env.AI_FALLBACK_MODEL || 'gpt-4.1-mini', label: 'openai' }
                 : null;
             if (!this.fallback) {
                 console.warn('⚠️  Ollama gateway configured but no OPENAI_API_KEY — running without an AI fallback');
@@ -40,7 +44,7 @@ let AiService = class AiService {
             if (!hasOpenAiKey) {
                 console.warn('⚠️  No AI provider configured (set AI_BASE_URL for an OpenAI-compatible endpoint, or OPENAI_API_KEY) — AI features will fail at runtime');
             }
-            this.primary = { client: new openai_1.default({ apiKey: key || 'missing' }), model: process.env.AI_MODEL || 'gpt-4.1-mini', label: 'openai' };
+            this.primary = { client: new openai_1.default({ apiKey: key || 'missing', timeout: fallbackTimeout, maxRetries: 1 }), model: process.env.AI_MODEL || 'gpt-4.1-mini', label: 'openai' };
             this.fallback = null;
         }
         console.log(`🤖 AI provider: ${this.primary.label} (model ${this.primary.model})` +
@@ -701,60 +705,19 @@ Rank these hospitals for this specific patient.`,
             },
         ], 1500);
     }
-    async generateTripPlan(params) {
+    async enrichTripTips(params) {
         return this.chat([
             {
                 role: 'system',
-                content: `You are Curify's trip planning AI. Generate a personalized medical trip timeline.
-Respond with valid JSON matching this schema:
-{
-  "timeline": [
-    {
-      "day": -14,
-      "phase": "preparation|arrival|pre-surgery|surgery|recovery|return|follow-up",
-      "title": "event title",
-      "description": "brief description",
-      "icon": "emoji",
-      "status": "upcoming"
-    }
-  ],
-  "costs": {
-    "surgery": { "item": "description", "amount": 4500, "note": "explanation" },
-    "flights": { "item": "description", "amount": 980, "note": "explanation" },
-    "visa": { "item": "description", "amount": 25, "note": "explanation" },
-    "hotel": { "item": "description", "amount": 350, "note": "explanation" },
-    "companion": { "item": "description", "amount": 450, "note": "explanation" },
-    "insurance": { "item": "description", "amount": 150, "note": "explanation" },
-    "misc": { "item": "description", "amount": 200, "note": "explanation" },
-    "emergency": { "item": "description", "amount": 665, "note": "explanation" }
-  },
-  "totalEstimate": 7320,
-  "insuranceAlert": {
-    "type": "warning",
-    "text": "insurance advisory",
-    "recommendation": "recommended plan"
-  },
-  "travelTips": ["tip1", "tip2", "tip3"]
-}`,
+                content: `You write concise medical-travel guidance. Respond with valid JSON only:
+{ "travelTips": ["tip", "tip", "tip"], "insuranceAlert": { "type": "info|warning", "text": "one-line advisory", "recommendation": "plan or action" } }
+3-5 practical, specific tips. No preamble.`,
             },
             {
                 role: 'user',
-                content: `Generate trip plan:
-Hospital: ${params.hospital.name}, ${params.hospital.city}
-Surgeon: ${params.surgeon?.name || 'Assigned surgeon'}
-Surgery price: $${params.hospital.quotedPriceUsd}
-Procedure: ${params.treatment || params.diagnosis}
-Patient from: ${params.country || 'Nigeria'}
-Departure city: ${params.departureCity || params.country || 'Nigeria'}
-Preferred travel date: ${params.travelDate || 'flexible'}
-Travellers (incl. patient): ${params.travelers || 1}
-Length of stay: ${params.stayNights ? `${params.stayNights} nights` : 'estimate from the procedure recovery time'}
-Accommodation preference: ${params.accommodation || 'standard'}
-${params.notes ? `Special assistance / notes: ${params.notes}` : ''}
-Included: ${(params.hospital.included || []).join(', ')}
-Tailor flight origin, visa steps, hotel/companion costs and the timeline to the above travel details.`,
+                content: `Patient from ${params.country || 'abroad'} travelling to ${params.hospitalName}, ${params.city}, India for ${params.treatment || 'treatment'}, staying ~${params.stayNights || 14} days. Give travel tips and an insurance advisory.`,
             },
-        ], 2000);
+        ], 400, () => ({}));
     }
     async generateRecoveryPlan(params) {
         return this.chat([

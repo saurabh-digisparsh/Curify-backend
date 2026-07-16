@@ -12,6 +12,15 @@ const ROWS_BEGIN = '===ROWS_BEGIN===';
 const ROWS_END = '===ROWS_END===';
 const SCRAPERS_DIR = path.join(process.cwd(), 'scripts', 'scrapers');
 
+// Scraped review dates arrive as free-text ("Aug 15, 2024", ISO, sometimes relative).
+// Parse absolute forms into a Date; unparseable/relative strings ("2 months ago") → null.
+// ponytail: no relative-date parser — add one if the scraper starts returning those.
+function toReviewDate(s?: string | null): Date | null {
+  if (!s) return null;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -103,6 +112,27 @@ export class ScrapeService {
     this.logger.log(`hospital-rotation: scraping #${idx + 1}/${hospitals.length} — '${h.name}' (${h.city})`);
     // Full pipeline (JCI → reviews → surgeons → surgeon-reviews → prices) for this one hospital,
     // capturing the review-count delta + per-review new/updated/rejected log for the detail view.
+    void this.runHospitalRotation(job.id, h);
+    return job;
+  }
+
+  /**
+   * Scrape reviews for ONE specific hospital by id — used by hospital onboarding
+   * go-live to fetch reviews for a freshly-published hospital that has none yet.
+   * Fire-and-forget: returns the created job; the review pipeline runs in the
+   * background and maps reviews onto this hospital's id.
+   */
+  async scrapeOneHospital(hospitalId: string, triggeredBy: string) {
+    const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId }, select: { id: true, name: true, city: true } });
+    if (!h) throw new NotFoundException('Hospital not found');
+    const job = await this.prisma.scrapeJob.create({
+      data: {
+        target: 'hospital-rotation',
+        params: { hospitalId: h.id, hospitalName: h.name, hospitalCity: h.city, onboarding: true } as any,
+        status: 'RUNNING', triggeredBy, startedAt: new Date(),
+      },
+    });
+    this.logger.log(`onboarding scrape: fetching reviews for '${h.name}' (${h.city})`);
     void this.runHospitalRotation(job.id, h);
     return job;
   }
@@ -521,7 +551,7 @@ export class ScrapeService {
             surgeonId: surgeonId ?? undefined,
             reviewerName: (r.name || 'Anonymous').slice(0, 120),
             rating: isNaN(rating) || rating < 1 || rating > 5 ? 5 : rating,
-            reviewDate: r.date || null,
+            reviewDate: toReviewDate(r.date),
             text: text.slice(0, 5000),
             lang: r.lang || 'en',
             nationality: r.country || null,
@@ -668,7 +698,7 @@ export class ScrapeService {
           const data = {
             reviewerName: (row.name || row.reviewerName || 'Anonymous').slice(0, 120),
             rating: isNaN(rating) || rating < 1 || rating > 5 ? 5 : rating,
-            reviewDate: row.date || null,
+            reviewDate: toReviewDate(row.date),
             text: text.slice(0, 5000),
             lang: row.lang || 'en',
             nationality: row.country || null,

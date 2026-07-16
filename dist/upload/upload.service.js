@@ -38,51 +38,66 @@ let UploadService = UploadService_1 = class UploadService {
     }
     async analyzeAndStore(params) {
         const docs = params.files?.length ? params.files : params.file ? [params.file] : [];
-        const images = docs
-            .filter((f) => f.mimetype?.startsWith('image/'))
-            .map((f) => ({ base64: f.buffer.toString('base64'), type: f.mimetype }));
-        const pdfTexts = [];
-        for (const f of docs) {
-            const txt = await this.extractPdfText(f);
-            if (txt)
-                pdfTexts.push(`--- ${f.originalname || 'document'} ---\n${txt}`);
-        }
-        const reportText = pdfTexts.length ? pdfTexts.join('\n\n').slice(0, 16000) : undefined;
-        const analysis = await this.ai.analyzeReport({
-            files: images,
-            reportText,
-            description: params.description,
-            treatment: params.treatment,
-            country: params.country,
-            urgency: params.urgency,
-        });
+        const hasPdf = docs.some((f) => f.mimetype === 'application/pdf');
         const report = await this.prisma.report.create({
             data: {
                 userId: params.userId || null,
-                reportRef: analysis.reportId
-                    ? `${analysis.reportId}-${Date.now().toString(36).slice(-6)}`
-                    : `RPT-${Date.now()}`,
+                reportRef: `RPT-${Date.now()}`,
                 filename: docs.map((f) => f.originalname).filter(Boolean).join(', ') || undefined,
                 fileType: docs[0]?.mimetype,
-                language: analysis.language,
-                confidence: analysis.confidence,
-                conditionName: analysis.diagnosis?.condition,
-                conditionMedical: analysis.diagnosis?.medical,
-                conditionPlain: analysis.diagnosis?.plain,
-                severity: analysis.diagnosis?.severity,
-                patientAge: analysis.extractedData?.patientAge,
-                patientName: analysis.extractedData?.patientName,
-                scanType: analysis.extractedData?.scanType,
-                scanDate: analysis.extractedData?.scanDate,
-                referringDoctor: analysis.extractedData?.referringDoctor,
-                flags: analysis.flags,
-                rawAnalysis: analysis,
                 treatment: params.treatment,
                 country: params.country,
                 urgency: params.urgency,
+                rawAnalysis: { status: 'PROCESSING', phase: hasPdf ? 'reading' : 'analyzing', startedAt: Date.now() },
             },
         });
-        return { success: true, reportId: report.id, reportRef: report.reportRef, analysis };
+        this.runAnalysisJob(report.id, docs, params).catch((err) => this.logger.error(`Analysis job ${report.id} crashed: ${err?.message}`));
+        return { success: true, reportId: report.id, reportRef: report.reportRef, status: 'PROCESSING' };
+    }
+    async runAnalysisJob(reportId, docs, params) {
+        const setPhase = (phase) => this.prisma.report.update({ where: { id: reportId }, data: { rawAnalysis: { status: 'PROCESSING', phase } } });
+        try {
+            const images = docs
+                .filter((f) => f.mimetype?.startsWith('image/'))
+                .map((f) => ({ base64: f.buffer.toString('base64'), type: f.mimetype }));
+            const pdfTexts = [];
+            for (const f of docs) {
+                const txt = await this.extractPdfText(f);
+                if (txt)
+                    pdfTexts.push(`--- ${f.originalname || 'document'} ---\n${txt}`);
+            }
+            const reportText = pdfTexts.length ? pdfTexts.join('\n\n').slice(0, 16000) : undefined;
+            await setPhase('analyzing');
+            const analysis = await this.ai.analyzeReport({
+                files: images, reportText,
+                description: params.description, treatment: params.treatment, country: params.country, urgency: params.urgency,
+            });
+            await this.prisma.report.update({
+                where: { id: reportId },
+                data: {
+                    reportRef: analysis.reportId ? `${analysis.reportId}-${reportId.slice(-6)}` : undefined,
+                    language: analysis.language,
+                    confidence: analysis.confidence,
+                    conditionName: analysis.diagnosis?.condition,
+                    conditionMedical: analysis.diagnosis?.medical,
+                    conditionPlain: analysis.diagnosis?.plain,
+                    severity: analysis.diagnosis?.severity,
+                    patientAge: analysis.extractedData?.patientAge,
+                    patientName: analysis.extractedData?.patientName,
+                    scanType: analysis.extractedData?.scanType,
+                    scanDate: analysis.extractedData?.scanDate,
+                    referringDoctor: analysis.extractedData?.referringDoctor,
+                    flags: analysis.flags,
+                    rawAnalysis: analysis,
+                },
+            });
+        }
+        catch (err) {
+            this.logger.error(`Analysis job ${reportId} failed: ${err?.message}`);
+            await this.prisma.report
+                .update({ where: { id: reportId }, data: { rawAnalysis: { status: 'ERROR', error: 'Analysis failed — please try again.' } } })
+                .catch(() => undefined);
+        }
     }
     async getReport(id, requesterId, isAdmin = false) {
         const report = await this.prisma.report.findUnique({ where: { id } });
@@ -92,8 +107,14 @@ let UploadService = UploadService_1 = class UploadService {
             throw new common_1.NotFoundException('Report not found');
         }
         const raw = report.rawAnalysis ?? null;
+        if (raw && raw.status === 'PROCESSING') {
+            return { status: 'PROCESSING', phase: raw.phase || 'analyzing', reportId: report.id };
+        }
+        if (raw && raw.status === 'ERROR') {
+            return { status: 'ERROR', error: raw.error || 'Analysis failed.', reportId: report.id };
+        }
         if (raw && raw.diagnosis) {
-            return { ...raw, reportRef: report.reportRef, reportId: report.id };
+            return { ...raw, status: 'DONE', reportRef: report.reportRef, reportId: report.id };
         }
         return report;
     }

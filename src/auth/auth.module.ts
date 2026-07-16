@@ -19,6 +19,6 @@ import { InquiriesModule } from '../inquiries/inquiries.module';
   ],
   providers: [AuthService, MailService, JwtStrategy],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, MailService], // MailService reused by hospital-partner notifications
 })
 export class AuthModule {}

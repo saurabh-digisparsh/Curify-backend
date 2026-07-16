@@ -18,7 +18,8 @@ export declare class UploadService {
         success: boolean;
         reportId: string;
         reportRef: string;
-        analysis: any;
+        status: string;
     }>;
+    private runAnalysisJob;
     getReport(id: string, requesterId: string, isAdmin?: boolean): Promise<any>;
 }

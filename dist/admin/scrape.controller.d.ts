@@ -35,6 +35,7 @@ export declare class AdminScrapeController {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -43,7 +44,6 @@ export declare class AdminScrapeController {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     scrapeAll(req: any): Promise<{
@@ -54,6 +54,7 @@ export declare class AdminScrapeController {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -62,7 +63,6 @@ export declare class AdminScrapeController {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     scrapeNext(req: any): Promise<{
@@ -73,6 +73,7 @@ export declare class AdminScrapeController {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -81,7 +82,6 @@ export declare class AdminScrapeController {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
     enrich(body: {
@@ -106,6 +106,7 @@ export declare class AdminScrapeController {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -114,7 +115,6 @@ export declare class AdminScrapeController {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }[]>;
     findOne(id: string): Promise<{
@@ -125,6 +125,7 @@ export declare class AdminScrapeController {
         updatedAt: Date;
         summary: import("@prisma/client/runtime/library").JsonValue | null;
         status: import(".prisma/client").$Enums.ScrapeStatus;
+        startedAt: Date | null;
         target: string;
         created: number;
         updated: number;
@@ -133,7 +134,6 @@ export declare class AdminScrapeController {
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
-        startedAt: Date | null;
         finishedAt: Date | null;
     }>;
 }

@@ -16,12 +16,15 @@ import { TripPlanModule } from './trip-plan/trip-plan.module';
 import { RecoveryModule } from './recovery/recovery.module';
 import { FamilyDashboardModule } from './family-dashboard/family-dashboard.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { LeadsModule } from './leads/leads.module';
 import { AssistantModule } from './assistant/assistant.module';
 import { JourneysModule } from './journeys/journeys.module';
 import { TreatmentsModule } from './treatments/treatments.module';
 import { InquiriesModule } from './inquiries/inquiries.module';
+import { HospitalPartnerModule } from './hospital-partner/hospital-partner.module';
+import { MastersModule } from './masters/masters.module';
 
 @Module({
   imports: [
@@ -44,11 +47,14 @@ import { InquiriesModule } from './inquiries/inquiries.module';
     RecoveryModule,
     FamilyDashboardModule,
     BookingsModule,
+    PaymentsModule,
     LeadsModule,
     AssistantModule,
     JourneysModule,
     TreatmentsModule,
     InquiriesModule,
+    HospitalPartnerModule,
+    MastersModule,
   ],
   providers: [
     // Guard order matters: reject admin-blocked IPs FIRST (so they don't even

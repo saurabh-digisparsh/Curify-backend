@@ -41,9 +41,9 @@ export declare class LeadsController {
             id: string;
             createdAt: Date;
             status: string;
+            startedAt: Date | null;
             created: number;
             updated: number;
-            startedAt: Date | null;
             finishedAt: Date | null;
             trigger: string | null;
             source: import(".prisma/client").$Enums.LeadSource;
@@ -58,9 +58,9 @@ export declare class LeadsController {
         id: string;
         createdAt: Date;
         status: string;
+        startedAt: Date | null;
         created: number;
         updated: number;
-        startedAt: Date | null;
         finishedAt: Date | null;
         trigger: string | null;
         source: import(".prisma/client").$Enums.LeadSource;
@@ -115,9 +115,9 @@ export declare class LeadsController {
             id: string;
             createdAt: Date;
             status: string;
+            startedAt: Date | null;
             created: number;
             updated: number;
-            startedAt: Date | null;
             finishedAt: Date | null;
             trigger: string | null;
             source: import(".prisma/client").$Enums.LeadSource;
@@ -153,8 +153,8 @@ export declare class LeadsController {
             createdAt: Date;
             updatedAt: Date;
             status: string;
-            mode: string;
             startedAt: Date | null;
+            mode: string;
             finishedAt: Date | null;
             trigger: string | null;
             platform: import(".prisma/client").$Enums.CapturePlatform;
@@ -200,9 +200,9 @@ export declare class LeadsController {
             query: string | null;
             id: string;
             description: string | null;
+            title: string;
             region: import(".prisma/client").$Enums.LeadRegion;
             lang: string | null;
-            title: string;
             source: import(".prisma/client").$Enums.LeadSource;
             viewCount: number | null;
             regionCode: string | null;
@@ -243,10 +243,10 @@ export declare class LeadsController {
             updatedAt: Date;
             description: string | null;
             status: import(".prisma/client").$Enums.LeadStatus;
+            title: string;
             notes: string | null;
             region: import(".prisma/client").$Enums.LeadRegion;
             lang: string | null;
-            title: string;
             category: import(".prisma/client").$Enums.LeadCategory | null;
             source: import(".prisma/client").$Enums.LeadSource;
             viewCount: number | null;
@@ -287,9 +287,9 @@ export declare class LeadsController {
         id: string;
         createdAt: Date;
         status: string;
+        startedAt: Date | null;
         created: number;
         updated: number;
-        startedAt: Date | null;
         finishedAt: Date | null;
         trigger: string | null;
         source: import(".prisma/client").$Enums.LeadSource;
@@ -307,10 +307,10 @@ export declare class LeadsController {
         updatedAt: Date;
         description: string | null;
         status: import(".prisma/client").$Enums.LeadStatus;
+        title: string;
         notes: string | null;
         region: import(".prisma/client").$Enums.LeadRegion;
         lang: string | null;
-        title: string;
         category: import(".prisma/client").$Enums.LeadCategory | null;
         source: import(".prisma/client").$Enums.LeadSource;
         viewCount: number | null;
@@ -375,8 +375,8 @@ export declare class LeadsController {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        mode: string;
         startedAt: Date | null;
+        mode: string;
         finishedAt: Date | null;
         trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
@@ -542,8 +542,8 @@ export declare class LeadsController {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        mode: string;
         startedAt: Date | null;
+        mode: string;
         finishedAt: Date | null;
         trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;

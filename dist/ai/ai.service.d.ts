@@ -120,19 +120,20 @@ export declare class AiService {
         urgency: string;
         hospitals: any[];
     }): Promise<any>;
-    generateTripPlan(params: {
-        hospital: any;
-        surgeon: any;
-        diagnosis: string;
+    enrichTripTips(params: {
+        hospitalName: string;
+        city: string;
         treatment: string;
         country: string;
-        departureCity?: string;
-        travelDate?: string;
-        travelers?: number;
         stayNights?: number;
-        accommodation?: string;
-        notes?: string;
-    }): Promise<any>;
+    }): Promise<{
+        travelTips?: string[];
+        insuranceAlert?: {
+            type: string;
+            text: string;
+            recommendation: string;
+        };
+    }>;
     generateRecoveryPlan(params: {
         diagnosis: string;
         treatment: string;

@@ -31,6 +31,6 @@ import { SettingsService } from './settings/settings.service';
   providers: [UsersService, StatsService, DataService, ScrapeService, ScrapeScheduler, EnrichmentService, ReviewLangService, FileImportService, SentinelService, SettingsService],
   // Exported so the app-level Sentinel guards (registered in AppModule) can inject it,
   // and SettingsService so other modules can read effective config values.
-  exports: [SentinelService, SettingsService],
+  exports: [SentinelService, SettingsService, EnrichmentService, ScrapeService],
 })
 export class AdminModule {}

@@ -52,6 +52,7 @@ let UsersService = class UsersService {
                 name: dto.name,
                 country: dto.country,
                 phone: dto.phone,
+                emailVerifiedAt: new Date(),
             },
             select: SAFE_SELECT,
         });

@@ -19,6 +19,7 @@ export declare class BookingsController {
     }>;
     findOne(id: string, req: any): Promise<{
         hospital: {
+            specialty: string | null;
             id: string;
             name: string;
             country: string;
@@ -40,7 +41,6 @@ export declare class BookingsController {
             patientsPerYear: number | null;
             internationalPercent: string | null;
             surgeonId: string | null;
-            specialty: string | null;
             procedures: import("@prisma/client/runtime/library").JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
@@ -49,6 +49,10 @@ export declare class BookingsController {
             latitude: number | null;
             longitude: number | null;
             googleMapsUri: string | null;
+            ownerUserId: string | null;
+            approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
+            nabhAccredited: boolean;
+            priority: boolean;
         };
         statusUpdates: {
             id: string;
@@ -73,10 +77,10 @@ export declare class BookingsController {
         createdAt: Date;
         updatedAt: Date;
         userId: string;
-        reportId: string | null;
-        hospitalId: string;
-        plan: import(".prisma/client").$Enums.Plan;
         status: import(".prisma/client").$Enums.BookingStatus;
+        hospitalId: string;
+        reportId: string | null;
+        plan: import(".prisma/client").$Enums.Plan;
         totalAmount: number | null;
         currency: string;
         paymentRef: string | null;

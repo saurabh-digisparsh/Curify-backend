@@ -34,8 +34,8 @@ export declare class BrightDataService {
             createdAt: Date;
             updatedAt: Date;
             status: string;
-            mode: string;
             startedAt: Date | null;
+            mode: string;
             finishedAt: Date | null;
             trigger: string | null;
             platform: import(".prisma/client").$Enums.CapturePlatform;
@@ -97,8 +97,8 @@ export declare class BrightDataService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        mode: string;
         startedAt: Date | null;
+        mode: string;
         finishedAt: Date | null;
         trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
@@ -116,8 +116,8 @@ export declare class BrightDataService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        mode: string;
         startedAt: Date | null;
+        mode: string;
         finishedAt: Date | null;
         trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;
@@ -348,8 +348,8 @@ export declare class BrightDataService {
         createdAt: Date;
         updatedAt: Date;
         status: string;
-        mode: string;
         startedAt: Date | null;
+        mode: string;
         finishedAt: Date | null;
         trigger: string | null;
         platform: import(".prisma/client").$Enums.CapturePlatform;

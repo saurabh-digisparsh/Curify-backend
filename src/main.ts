@@ -10,7 +10,15 @@ import { AppModule } from "./app.module";
  * DATABASE_URL would surface as confusing runtime errors. We refuse to boot.
  */
 function assertRequiredEnv() {
-  const required = ["JWT_SECRET", "DATABASE_URL"];
+  const required = [
+    "JWT_SECRET",
+    "DATABASE_URL",
+    // Payments: no fallback secrets — a missing key must stop boot, not silently
+    // disable checkout or forge signatures. KEY_ID is public; the others are secret.
+    "RAZORPAY_KEY_ID",
+    "RAZORPAY_KEY_SECRET",
+    "RAZORPAY_WEBHOOK_SECRET",
+  ];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
     throw new Error(
@@ -26,7 +34,10 @@ function assertRequiredEnv() {
 async function bootstrap() {
   assertRequiredEnv();
 
-  const app = await NestFactory.create(AppModule);
+  // rawBody: true keeps the exact bytes on req.rawBody so the Razorpay webhook can
+  // verify the HMAC signature against what Razorpay actually signed (the JSON parser
+  // would otherwise re-serialize and break the signature).
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   // Trust the reverse proxy (nginx / Cloudflare / load balancer) so the rate
   // limiter keys off the real client IP (X-Forwarded-For), not the proxy's.

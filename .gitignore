@@ -7,6 +7,7 @@ node_modules/
 # Environment files
 .env
 .env.local
+.env.prod
 .env.*.local
 
 # IDE
@@ -39,3 +40,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Uploaded hospital verification documents (PHI-adjacent — never commit)
+uploads/

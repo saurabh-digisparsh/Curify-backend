@@ -56,4 +56,27 @@ export class MailService {
       console.warn(`📧 [FALLBACK] OTP for ${email}: ${otp}  (link: ${url})`);
     }
   }
+
+  /** Generic transactional email used by NotificationService (onboarding OTPs,
+   *  credentials, availability links). SMTP-optional: without SMTP_HOST the
+   *  subject + a plain-text hint are logged so dev flows stay testable. */
+  async send(
+    to: string, subject: string, html: string, devHint?: string,
+    attachments?: { filename: string; content: string; contentType?: string }[],
+  ) {
+    if (!this.transporter) {
+      console.warn(`📧 [DEV] "${subject}" → ${to}${devHint ? `  (${devHint})` : ''}`);
+      return;
+    }
+    try {
+      await this.transporter.sendMail({
+        from: process.env.MAIL_FROM || 'Curify <no-reply@curify.health>',
+        to, subject, html, attachments,
+      });
+      console.log(`📧 "${subject}" sent to ${to}`);
+    } catch (err: any) {
+      console.error(`📧 SMTP send failed for ${to}: ${err.message}`);
+      if (devHint) console.warn(`📧 [FALLBACK] ${to}: ${devHint}`);
+    }
+  }
 }

@@ -48,6 +48,10 @@ export class UsersService {
         name: dto.name,
         country: dto.country,
         phone: dto.phone,
+        // Admin-created accounts (AGENT/HOSPITAL/ADMIN) are vouched for by the
+        // admin who set the password, so they skip the email-OTP gate that
+        // login() enforces — otherwise they could never sign in.
+        emailVerifiedAt: new Date(),
       },
       select: SAFE_SELECT,
     });

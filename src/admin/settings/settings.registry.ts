@@ -153,6 +153,45 @@ export const SETTINGS_REGISTRY: SettingDef[] = [
     default: '',
   },
 
+  // ── Video consultations (Jitsi primary; OpenVidu fallback is Phase 2) ────────
+  {
+    key: 'VIDEO_PROVIDER',
+    label: 'Video Provider',
+    description: 'Primary video-consult provider. "jitsi" is the only one wired today.',
+    category: 'integrations',
+    type: 'string',
+    env: 'VIDEO_PROVIDER',
+    default: 'jitsi',
+  },
+  {
+    key: 'JITSI_DOMAIN',
+    label: 'Jitsi Domain',
+    description: 'Host of the self-hosted Jitsi deployment (e.g. meet.curify.example). No scheme.',
+    category: 'integrations',
+    type: 'string',
+    env: 'JITSI_DOMAIN',
+    default: '',
+  },
+  {
+    key: 'JITSI_APP_ID',
+    label: 'Jitsi App ID',
+    description: 'JWT "iss"/tenant configured on the Jitsi server (docker-jitsi JWT_APP_ID).',
+    category: 'integrations',
+    type: 'string',
+    env: 'JITSI_APP_ID',
+    default: '',
+  },
+  {
+    key: 'JITSI_APP_SECRET',
+    label: 'Jitsi App Secret',
+    description: 'HS256 secret the backend signs consult JWTs with (must match Jitsi JWT_APP_SECRET).',
+    category: 'integrations',
+    type: 'string',
+    env: 'JITSI_APP_SECRET',
+    secret: true,
+    default: '',
+  },
+
   // ── Lead Generation ────────────────────────────────────────────────────────
   {
     key: 'YOUTUBE_DAILY_QUOTA',

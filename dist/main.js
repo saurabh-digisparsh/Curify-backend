@@ -6,7 +6,13 @@ const swagger_1 = require("@nestjs/swagger");
 const helmet_1 = require("helmet");
 const app_module_1 = require("./app.module");
 function assertRequiredEnv() {
-    const required = ["JWT_SECRET", "DATABASE_URL"];
+    const required = [
+        "JWT_SECRET",
+        "DATABASE_URL",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET",
+        "RAZORPAY_WEBHOOK_SECRET",
+    ];
     const missing = required.filter((k) => !process.env[k]);
     if (missing.length) {
         throw new Error(`Missing required environment variable(s): ${missing.join(", ")}. ` +
@@ -18,7 +24,7 @@ function assertRequiredEnv() {
 }
 async function bootstrap() {
     assertRequiredEnv();
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, { rawBody: true });
     app.getHttpAdapter().getInstance().set("trust proxy", 1);
     const isProd = process.env.NODE_ENV === "production";
     app.use((0, helmet_1.default)({

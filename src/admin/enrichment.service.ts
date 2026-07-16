@@ -94,6 +94,32 @@ export class EnrichmentService {
     return true;
   }
 
+  /**
+   * Generate ONLY the package "narrative" (included / not-included / pros / cons /
+   * local benchmark) for a hospital from its own reviews — WITHOUT touching the
+   * price, specialty, procedures or surgeon (those are set by the onboarding panel).
+   * Used at hospital go-live so a self-onboarded hospital's comparison card looks
+   * as complete as a directory one, while its manually-entered pricing is preserved.
+   * Returns the suggestion so the panel can show it for editing.
+   */
+  async suggestNarrative(params: {
+    name: string; city: string; country?: string; overallRating?: number | null; jciAccredited?: boolean;
+    reviews?: { text: string; rating?: number | null; nationality?: string | null }[];
+  }): Promise<{ included: string[]; notIncluded: string[]; pros: string[]; cons: string[]; localBenchmarkUsd: number | null }> {
+    const data = await this.ai.generateHospitalEnrichment({
+      name: params.name, city: params.city, country: params.country || 'India',
+      overallRating: params.overallRating ?? null, jciAccredited: params.jciAccredited ?? false,
+      reviews: params.reviews ?? [],
+    });
+    return {
+      included: Array.isArray(data?.included) ? data.included : [],
+      notIncluded: Array.isArray(data?.notIncluded) ? data.notIncluded : [],
+      pros: Array.isArray(data?.pros) ? data.pros : [],
+      cons: Array.isArray(data?.cons) ? data.cons : [],
+      localBenchmarkUsd: data?.localBenchmarkUsd ? Math.round(data.localBenchmarkUsd) : null,
+    };
+  }
+
   /** Bulk-enrich hospitals missing a price (or all, with force). Best-effort, paced. */
   async enrichMissing(opts: { force?: boolean; limit?: number } = {}) {
     const where = opts.force ? {} : { quotedPriceUsd: null };

@@ -9,10 +9,20 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TripPlanService = void 0;
+exports.TripPlanService = exports.FX_TO_USD = void 0;
+exports.quoteToUsd = quoteToUsd;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ai_service_1 = require("../ai/ai.service");
+const trip_services_1 = require("./trip-services");
+const fs_1 = require("fs");
+const path_1 = require("path");
+exports.FX_TO_USD = {
+    USD: 1, EUR: 1.08, GBP: 1.27, INR: 0.012, AED: 0.2723, NGN: 0.00065,
+};
+function quoteToUsd(amount, currency) {
+    return Math.round(amount * (exports.FX_TO_USD[(currency || 'USD').toUpperCase()] ?? 1));
+}
 let TripPlanService = class TripPlanService {
     constructor(prisma, ai) {
         this.prisma = prisma;
@@ -47,6 +57,41 @@ let TripPlanService = class TripPlanService {
     async getInsurance() {
         return this.prisma.insurancePlan.findMany({ orderBy: { pricePerDay: 'asc' } });
     }
+    applyTreatmentCost(plan, amount, currency) {
+        const cur = (currency || 'USD').toUpperCase();
+        const usd = quoteToUsd(amount, cur);
+        const note = cur === 'USD'
+            ? 'Confirmed by your doctor'
+            : `Confirmed by your doctor (${cur} ${amount.toLocaleString('en-US')})`;
+        const rx = /treatment|surgery|procedure|package|hospital|medical/i;
+        const line = { item: 'Treatment (doctor-quoted)', amount: usd, note };
+        let costs = plan.costs;
+        if (!costs) {
+            costs = { treatment: line };
+        }
+        else if (Array.isArray(costs)) {
+            const hit = costs.find((c) => c && rx.test(String(c.item || '')));
+            if (hit) {
+                hit.amount = usd;
+                hit.note = note;
+            }
+            else
+                costs.push(line);
+        }
+        else {
+            const key = Object.keys(costs).find((k) => rx.test(String((costs[k]?.item ?? k))));
+            if (key) {
+                costs[key] = { ...costs[key], amount: usd, note };
+            }
+            else
+                costs.treatment = line;
+        }
+        plan.costs = costs;
+        const all = Array.isArray(costs) ? costs : Object.values(costs);
+        plan.totalEstimate = all.reduce((s, c) => s + (Number(c?.amount) || 0), 0);
+        plan.treatmentQuote = { amount, currency: cur, amountUsd: usd };
+        return plan;
+    }
     async generate(params) {
         const hospital = await this.prisma.hospital.findUnique({
             where: { id: params.hospitalId },
@@ -54,7 +99,6 @@ let TripPlanService = class TripPlanService {
         });
         if (!hospital)
             throw new common_1.NotFoundException('Hospital not found');
-        const template = await this.getTemplate(params.treatment, hospital.city);
         const [flights, insurance] = await Promise.all([
             this.getFlights(params.departureCity || params.country, hospital.city),
             this.getInsurance(),
@@ -79,11 +123,6 @@ let TripPlanService = class TripPlanService {
                 features: p.features,
                 recommended: p.recommended,
             })),
-            partners: {
-                visa: { name: 'Atlys', tagline: 'Visa handled by Atlys' },
-                flights: { name: 'Booking.com', tagline: 'Flights via Booking.com' },
-                transport: { name: 'EaseMyTrip', tagline: 'Local transport by EaseMyTrip' },
-            },
             teleconsultDoctor: {
                 name: 'Dr. Priya Sharma',
                 title: 'Pre-op Coordination Specialist',
@@ -91,56 +130,99 @@ let TripPlanService = class TripPlanService {
                 hospital: hospital.name,
             },
         };
-        if (template) {
-            return {
-                hospitalId: hospital.id,
-                hospitalName: hospital.name,
-                city: hospital.city,
-                country: hospital.country,
-                timeline: template.timeline,
-                costs: template.costs,
-                totalEstimate: template.totalEstimate,
-                travelTips: template.travelTips,
-                insuranceAlert: template.insuranceAlert,
-                source: 'template',
-                ...staticData,
-            };
-        }
-        const tripPlan = await this.ai.generateTripPlan({
-            hospital,
-            surgeon: hospital.surgeon,
-            diagnosis: params.diagnosis,
-            treatment: params.treatment,
-            country: params.country,
-            departureCity: params.departureCity,
-            travelDate: params.travelDate,
-            travelers: params.travelers,
-            stayNights: params.stayNights,
-            accommodation: params.accommodation,
-            notes: params.notes,
-        });
+        const pax = params.travelers && params.travelers > 0 ? params.travelers : 1;
+        const days = params.stayNights && params.stayNights > 0 ? params.stayNights : 14;
+        const flightUnit = flights[0]?.price ?? 0;
+        const nightlyUsd = 45;
+        const hotelEstimate = params.accommodation === 'none' ? 0 : days * nightlyUsd;
+        const insurancePlan = insurance[0];
+        const costs = {
+            treatment: { item: 'Treatment package', amount: hospital.quotedPriceUsd ?? 0, note: hospital.name },
+            flights: { item: `Flights (${pax} traveller${pax > 1 ? 's' : ''})`, amount: flightUnit * pax, note: flights[0]?.airline ?? 'Estimated economy fare' },
+            visa: { item: `India e-Visa (${pax})`, amount: 25 * pax, note: 'Official e-Visa fee' },
+            hotel: { item: `Accommodation (${days} nights)`, amount: hotelEstimate, note: 'Estimate — hospital recovery housing may be included' },
+            insurance: { item: 'Travel & medical insurance', amount: insurancePlan ? insurancePlan.pricePerDay * days : 0, note: insurancePlan?.name ?? 'Comprehensive cover' },
+            misc: { item: 'Local transport & incidentals', amount: 200, note: 'Airport transfers, meals, buffer' },
+        };
+        const totalEstimate = Object.values(costs).reduce((s, c) => s + (c.amount || 0), 0);
+        const timeline = (0, trip_services_1.buildTimeline)({ treatment: params.treatment, stayNights: params.stayNights });
+        let travelTips = [
+            `Carry your hospital appointment letter and doctor quote — immigration may ask the purpose of visit.`,
+            `Keep digital + printed copies of your e-Visa, passport and medical reports.`,
+            `Arrange an eSIM or local SIM on arrival so your coordinator can reach you.`,
+        ];
+        let insuranceAlert = {
+            type: 'info',
+            text: `A ${days}-day recovery in ${hospital.city} should be covered by travel + medical insurance.`,
+            recommendation: insurancePlan?.name ?? 'Comprehensive medical cover',
+        };
         try {
-            await this.prisma.tripPlanTemplate.create({
-                data: {
-                    procedure: params.treatment,
-                    destination: hospital.city,
-                    timeline: tripPlan.timeline ?? [],
-                    costs: tripPlan.costs ?? {},
-                    totalEstimate: tripPlan.totalEstimate ?? '',
-                    travelTips: tripPlan.travelTips ?? [],
-                },
-            });
+            const enriched = await this.ai.enrichTripTips({ hospitalName: hospital.name, city: hospital.city, treatment: params.treatment || params.diagnosis, country: params.country, stayNights: days });
+            if (Array.isArray(enriched?.travelTips) && enriched.travelTips.length)
+                travelTips = enriched.travelTips;
+            if (enriched?.insuranceAlert)
+                insuranceAlert = enriched.insuranceAlert;
         }
         catch { }
-        return {
+        const services = (0, trip_services_1.buildServiceSteps)({
+            hospital,
+            departureCity: params.departureCity || params.country,
+            travelDate: params.travelDate,
+            travelers: pax,
+            stayNights: params.stayNights,
+            flightEstimate: flightUnit ? flightUnit * pax : undefined,
+            hotelEstimate,
+        });
+        const result = {
             hospitalId: hospital.id,
             hospitalName: hospital.name,
             city: hospital.city,
             country: hospital.country,
-            ...tripPlan,
-            source: 'ai',
+            timeline,
+            costs,
+            totalEstimate,
+            travelTips,
+            insuranceAlert,
+            services,
+            atlysVisaUrl: (0, trip_services_1.atlysVisaLink)(),
+            source: 'computed',
             ...staticData,
         };
+        return params.treatmentCost != null ? this.applyTreatmentCost(result, params.treatmentCost, params.treatmentCurrency) : result;
+    }
+    listServices(userId, hospitalId) {
+        return this.prisma.tripServiceStep.findMany({
+            where: { userId, hospitalId },
+            orderBy: { createdAt: 'asc' },
+        });
+    }
+    setServiceStatus(userId, hospitalId, type, status) {
+        return this.upsertStep(userId, hospitalId, type, { status });
+    }
+    async attachProof(userId, hospitalId, type, file, fields) {
+        const proofPath = await this.saveProof(userId, hospitalId, type, file);
+        let status = 'confirmed';
+        let meta = { uploadedAt: new Date().toISOString(), filename: file.originalname };
+        if (type === 'visa') {
+            const result = (0, trip_services_1.validateVisa)(fields);
+            meta = { ...meta, ...result, visaNumber: fields.visaNumber };
+            status = result.valid ? 'confirmed' : 'pending';
+        }
+        return this.upsertStep(userId, hospitalId, type, { proofPath, status, meta });
+    }
+    upsertStep(userId, hospitalId, type, data) {
+        return this.prisma.tripServiceStep.upsert({
+            where: { userId_hospitalId_type: { userId, hospitalId, type } },
+            create: { userId, hospitalId, type, provider: trip_services_1.PROVIDERS[type], status: data.status ?? 'pending', proofPath: data.proofPath, meta: data.meta ?? undefined },
+            update: { ...data, meta: data.meta ?? undefined },
+        });
+    }
+    async saveProof(userId, hospitalId, type, file) {
+        const rel = (0, path_1.join)('trip-proofs', userId, `${hospitalId}-${type}-${Date.now()}.${(file.originalname.split('.').pop() || 'bin').toLowerCase()}`);
+        const abs = (0, path_1.join)(process.cwd(), 'uploads', rel);
+        await fs_1.promises.mkdir((0, path_1.join)(abs, '..'), { recursive: true });
+        await fs_1.promises.writeFile(abs, file.buffer);
+        return rel.replace(/\\/g, '/');
     }
 };
 exports.TripPlanService = TripPlanService;
