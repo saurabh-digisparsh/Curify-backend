@@ -103,6 +103,38 @@ let AuthService = class AuthService {
         }
         return { message: 'If that account needs verification, a code has been sent.' };
     }
+    async forgotPassword(email) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (user) {
+            const resetToken = (0, crypto_1.randomBytes)(32).toString('hex');
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { resetToken, resetTokenExp: new Date(Date.now() + 60 * 60 * 1000) },
+            });
+            await this.mail.sendPasswordReset(user.email, user.name, resetToken);
+        }
+        return { message: 'If an account exists for that email, a reset link has been sent.' };
+    }
+    async resetPassword(token, password) {
+        if (!token || token.length < 32)
+            throw new common_1.BadRequestException('Invalid reset link');
+        const user = await this.prisma.user.findUnique({ where: { resetToken: token } });
+        if (!user)
+            throw new common_1.BadRequestException('This reset link is invalid or was already used.');
+        if (!user.resetTokenExp || user.resetTokenExp < new Date()) {
+            throw new common_1.BadRequestException('This reset link has expired — request a new one.');
+        }
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: await bcrypt.hash(password, 12),
+                resetToken: null,
+                resetTokenExp: null,
+                emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
+            },
+        });
+        return { message: 'Password updated — you can sign in now.' };
+    }
     async login(dto) {
         const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (!user)

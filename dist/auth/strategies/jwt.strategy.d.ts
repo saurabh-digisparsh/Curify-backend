@@ -14,6 +14,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
         country: string | null;
         phone: string | null;
         verifyToken: string | null;
+        resetToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
@@ -21,6 +22,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
         verifyOtp: string | null;
         verifyOtpExp: Date | null;
         verifyOtpTries: number;
+        resetTokenExp: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

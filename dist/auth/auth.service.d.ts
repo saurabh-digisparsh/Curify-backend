@@ -24,6 +24,7 @@ export declare class AuthService {
             country: string | null;
             phone: string | null;
             verifyToken: string | null;
+            resetToken: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
             emailVerifiedAt: Date | null;
@@ -31,6 +32,7 @@ export declare class AuthService {
             verifyOtp: string | null;
             verifyOtpExp: Date | null;
             verifyOtpTries: number;
+            resetTokenExp: Date | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -44,6 +46,12 @@ export declare class AuthService {
     resendVerification(email: string): Promise<{
         message: string;
     }>;
+    forgotPassword(email: string): Promise<{
+        message: string;
+    }>;
+    resetPassword(token: string, password: string): Promise<{
+        message: string;
+    }>;
     login(dto: LoginDto): Promise<{
         user: {
             id: string;
@@ -52,6 +60,7 @@ export declare class AuthService {
             country: string | null;
             phone: string | null;
             verifyToken: string | null;
+            resetToken: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
             emailVerifiedAt: Date | null;
@@ -59,6 +68,7 @@ export declare class AuthService {
             verifyOtp: string | null;
             verifyOtpExp: Date | null;
             verifyOtpTries: number;
+            resetTokenExp: Date | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -75,6 +85,7 @@ export declare class AuthService {
         country: string | null;
         phone: string | null;
         verifyToken: string | null;
+        resetToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
@@ -82,6 +93,7 @@ export declare class AuthService {
         verifyOtp: string | null;
         verifyOtpExp: Date | null;
         verifyOtpTries: number;
+        resetTokenExp: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -95,6 +107,7 @@ export declare class AuthService {
         country: string | null;
         phone: string | null;
         verifyToken: string | null;
+        resetToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
@@ -102,6 +115,7 @@ export declare class AuthService {
         verifyOtp: string | null;
         verifyOtpExp: Date | null;
         verifyOtpTries: number;
+        resetTokenExp: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ProfileDto } from './dto/profile.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
@@ -66,6 +67,21 @@ export class AuthController {
   @Post('resend-verification')
   resend(@Body() body: { email?: string }) {
     return this.authService.resendVerification(String(body?.email || '').toLowerCase());
+  }
+
+  // Tight limit: this endpoint sends mail to an attacker-supplied address.
+  @Throttle({ default: { ttl: 300_000, limit: 3 } })
+  @ApiOperation({ summary: 'Email a password-reset link' })
+  @Post('forgot-password')
+  forgotPassword(@Body() body: { email?: string }) {
+    return this.authService.forgotPassword(String(body?.email || '').toLowerCase());
+  }
+
+  @Throttle({ default: { ttl: 300_000, limit: 5 } })
+  @ApiOperation({ summary: 'Set a new password using a reset token' })
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 
   @ApiBearerAuth()

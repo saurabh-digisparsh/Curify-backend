@@ -20,6 +20,7 @@ const auth_service_1 = require("./auth.service");
 const signup_dto_1 = require("./dto/signup.dto");
 const login_dto_1 = require("./dto/login.dto");
 const profile_dto_1 = require("./dto/profile.dto");
+const reset_password_dto_1 = require("./dto/reset-password.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     constructor(authService) {
@@ -45,6 +46,12 @@ let AuthController = class AuthController {
     }
     resend(body) {
         return this.authService.resendVerification(String(body?.email || '').toLowerCase());
+    }
+    forgotPassword(body) {
+        return this.authService.forgotPassword(String(body?.email || '').toLowerCase());
+    }
+    resetPassword(dto) {
+        return this.authService.resetPassword(dto.token, dto.password);
     }
     profile(req, dto) {
         return this.authService.updateProfile(req.user.id, dto);
@@ -116,6 +123,24 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resend", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { ttl: 300_000, limit: 3 } }),
+    (0, swagger_1.ApiOperation)({ summary: 'Email a password-reset link' }),
+    (0, common_1.Post)('forgot-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { ttl: 300_000, limit: 5 } }),
+    (0, swagger_1.ApiOperation)({ summary: 'Set a new password using a reset token' }),
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Update own profile (name / country / phone)' }),

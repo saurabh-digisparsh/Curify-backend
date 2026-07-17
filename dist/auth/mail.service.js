@@ -57,6 +57,19 @@ let MailService = class MailService {
             console.warn(`📧 [FALLBACK] OTP for ${email}: ${otp}  (link: ${url})`);
         }
     }
+    async sendPasswordReset(email, name, token) {
+        const base = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const url = `${base}/reset-password?token=${token}`;
+        await this.send(email, 'Reset your Curify password', `
+        <div style="font-family:Inter,system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+          <h2 style="color:#0F172A">Reset your password${name ? `, ${name}` : ''}</h2>
+          <p style="color:#475569;line-height:1.6">Click the button below to choose a new password:</p>
+          <p style="text-align:center;margin:24px 0">
+            <a href="${url}" style="display:inline-block;background:#0066CC;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:14px 28px">Reset password</a>
+          </p>
+          <p style="color:#94A3B8;font-size:12px;line-height:1.5">This link expires in 1 hour and can be used once. If you didn't request a password reset, ignore this email — your password stays unchanged.</p>
+        </div>`, `reset link: ${url}`);
+    }
     async send(to, subject, html, devHint, attachments) {
         if (!this.transporter) {
             console.warn(`📧 [DEV] "${subject}" → ${to}${devHint ? `  (${devHint})` : ''}`);

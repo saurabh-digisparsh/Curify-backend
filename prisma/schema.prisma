@@ -27,6 +27,9 @@ model User {
   verifyOtp       String?
   verifyOtpExp    DateTime?
   verifyOtpTries  Int       @default(0)
+  // Password reset: emailed single-use tokenised link, short-lived (1h).
+  resetToken      String?   @unique
+  resetTokenExp   DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
