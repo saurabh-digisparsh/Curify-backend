@@ -17,12 +17,20 @@ let AccreditationService = class AccreditationService {
         const cityL = (city || '').trim().toLowerCase();
         if (nameTok.size === 0)
             return [];
-        return accreditation_mirror_1.ACCREDITATION_MIRROR.filter((m) => {
+        const hits = accreditation_mirror_1.ACCREDITATION_MIRROR.filter((m) => {
             const mTok = tokens(m.name);
             const nameMatch = mTok.some((t) => nameTok.has(t));
             const cityMatch = !cityL || !m.city || m.city.toLowerCase() === cityL || cityL.includes(m.city.toLowerCase()) || m.city.toLowerCase().includes(cityL);
             return nameMatch && cityMatch;
         }).map((m) => ({ body: m.body, identifier: m.identifier, validUntil: m.validUntil ? new Date(m.validUntil) : null, matchedName: m.name }));
+        const best = new Map();
+        const until = (h) => h.validUntil?.getTime() ?? -Infinity;
+        for (const h of hits) {
+            const cur = best.get(h.body);
+            if (!cur || until(h) > until(cur))
+                best.set(h.body, h);
+        }
+        return [...best.values()];
     }
     verify(body, identifier) {
         const id = (identifier || '').trim().toUpperCase();

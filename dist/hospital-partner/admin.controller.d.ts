@@ -4,67 +4,83 @@ import { ReviewDocDto } from './dto/partner.dto';
 export declare class PartnerAdminController {
     private readonly svc;
     constructor(svc: PartnerService);
-    list(status?: OnboardingStatus): import(".prisma/client").Prisma.PrismaPromise<({
-        contact: {
-            name: string;
-            workEmail: string;
-        };
-        _count: {
-            documents: number;
-            doctors: number;
-        };
-    } & {
-        id: string;
-        legalName: string;
-        city: string;
-        address: string | null;
-        registrationNo: string | null;
-        ownership: string | null;
-        website: string | null;
-        totalBeds: number | null;
-        icuBeds: number | null;
-        airportDistanceKm: number | null;
-        specialties: string[];
-        insurers: string[];
-        languages: string[];
-        intlFacilities: string[];
-        quotedPriceUsd: number | null;
-        patientsPerYear: number | null;
-        imageUrl: string | null;
-        procedures: string[];
-        localBenchmarkUsd: number | null;
-        included: string[];
-        notIncluded: string[];
-        pros: import("@prisma/client/runtime/library").JsonValue | null;
-        cons: import("@prisma/client/runtime/library").JsonValue | null;
-        status: import(".prisma/client").$Enums.OnboardingStatus;
-        priority: boolean;
-        notAccredited: boolean;
-        sessionToken: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        ownerUserId: string | null;
-        publishedHospitalId: string | null;
-    })[]>;
+    list(status?: OnboardingStatus): Promise<{
+        applications: ({
+            contact: {
+                name: string;
+                emailVerifiedAt: Date;
+                workEmail: string;
+                whatsapp: string;
+            };
+            accreditations: {
+                status: import(".prisma/client").$Enums.DocStatus;
+                body: import(".prisma/client").$Enums.AccreditationBody;
+            }[];
+            agreement: {
+                signatoryName: string;
+                signedAt: Date;
+            };
+            _count: {
+                doctors: number;
+                documents: number;
+            };
+        } & {
+            id: string;
+            priority: boolean;
+            city: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: import(".prisma/client").$Enums.OnboardingStatus;
+            imageUrl: string | null;
+            quotedPriceUsd: number | null;
+            localBenchmarkUsd: number | null;
+            included: string[];
+            notIncluded: string[];
+            pros: import("@prisma/client/runtime/library").JsonValue | null;
+            cons: import("@prisma/client/runtime/library").JsonValue | null;
+            patientsPerYear: number | null;
+            procedures: string[];
+            packages: import("@prisma/client/runtime/library").JsonValue | null;
+            website: string | null;
+            address: string | null;
+            ownerUserId: string | null;
+            languages: string[];
+            legalName: string;
+            registrationNo: string | null;
+            ownership: string | null;
+            totalBeds: number | null;
+            icuBeds: number | null;
+            airportDistanceKm: number | null;
+            specialties: string[];
+            insurers: string[];
+            intlFacilities: string[];
+            notAccredited: boolean;
+            sessionToken: string | null;
+            publishedHospitalId: string | null;
+        })[];
+        counts: Record<string, number>;
+    }>;
     get(id: string): Promise<any>;
     reviewDoc(docId: string, dto: ReviewDocDto, req: any): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.DocStatus;
+        type: import(".prisma/client").$Enums.OnboardingDocType;
         createdAt: Date;
         updatedAt: Date;
+        status: import(".prisma/client").$Enums.DocStatus;
         applicationId: string;
-        doctorId: string | null;
-        type: import(".prisma/client").$Enums.OnboardingDocType;
-        autoClassifiedType: import(".prisma/client").$Enums.OnboardingDocType | null;
-        fileUrl: string;
-        originalName: string | null;
         note: string | null;
         reviewedBy: string | null;
         reviewedAt: Date | null;
+        doctorId: string | null;
+        autoClassifiedType: import(".prisma/client").$Enums.OnboardingDocType | null;
+        fileUrl: string;
+        originalName: string | null;
     }>;
     setStatus(id: string, body: {
         status: OnboardingStatus;
     }): Promise<any>;
+    resendOtp(id: string): Promise<any>;
+    resendCredentials(id: string): Promise<any>;
     setPriority(id: string, body: {
         priority: boolean;
     }): Promise<any>;

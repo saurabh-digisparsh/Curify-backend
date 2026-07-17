@@ -46,18 +46,15 @@ export declare class HospitalsService {
     findAll(): Promise<{
         hospitals: {
             reviewCount: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
+                hospital: string | null;
                 id: string;
                 name: string;
-                country: string | null;
-                flag: string | null;
-                createdAt: Date;
-                hospitalId: string | null;
-                hospital: string | null;
                 title: string | null;
+                email: string | null;
+                country: string | null;
+                createdAt: Date;
+                flag: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -72,18 +69,24 @@ export declare class HospitalsService {
                 patientRating: number | null;
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
-                email: string | null;
+                hospitalId: string | null;
                 medicalCouncilReg: string | null;
                 degrees: Prisma.JsonValue | null;
             };
+            _count: {
+                reviews: number;
+            };
+            specialty: string | null;
             id: string;
             name: string;
-            city: string;
+            priority: boolean;
             country: string;
+            city: string;
+            createdAt: Date;
+            fairnessScore: number | null;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
-            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -96,8 +99,8 @@ export declare class HospitalsService {
             patientsPerYear: number | null;
             internationalPercent: string | null;
             surgeonId: string | null;
-            specialty: string | null;
             procedures: Prisma.JsonValue | null;
+            packages: Prisma.JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;
@@ -108,18 +111,16 @@ export declare class HospitalsService {
             ownerUserId: string | null;
             approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
             nabhAccredited: boolean;
-            priority: boolean;
-            createdAt: Date;
         }[];
         surgeons: {
+            hospital: string | null;
             id: string;
             name: string;
-            country: string | null;
-            flag: string | null;
-            createdAt: Date;
-            hospitalId: string | null;
-            hospital: string | null;
             title: string | null;
+            email: string | null;
+            country: string | null;
+            createdAt: Date;
+            flag: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -134,21 +135,21 @@ export declare class HospitalsService {
             patientRating: number | null;
             avgSurgeryTime: string | null;
             nextAvailable: string | null;
-            email: string | null;
+            hospitalId: string | null;
             medicalCouncilReg: string | null;
             degrees: Prisma.JsonValue | null;
         }[];
     }>;
     findOne(id: string): Promise<{
         surgeon: {
+            hospital: string | null;
             id: string;
             name: string;
-            country: string | null;
-            flag: string | null;
-            createdAt: Date;
-            hospitalId: string | null;
-            hospital: string | null;
             title: string | null;
+            email: string | null;
+            country: string | null;
+            createdAt: Date;
+            flag: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -163,7 +164,7 @@ export declare class HospitalsService {
             patientRating: number | null;
             avgSurgeryTime: string | null;
             nextAvailable: string | null;
-            email: string | null;
+            hospitalId: string | null;
             medicalCouncilReg: string | null;
             degrees: Prisma.JsonValue | null;
         };
@@ -184,35 +185,38 @@ export declare class HospitalsService {
         }[];
         reviews: {
             id: string;
-            surgeonId: string | null;
-            createdAt: Date;
             link: string | null;
-            hospitalId: string;
+            text: string;
+            createdAt: Date;
+            procedure: string | null;
             rating: number;
+            flags: Prisma.JsonValue | null;
+            surgeonId: string | null;
+            hospitalId: string;
             age: number | null;
             totalReviews: number | null;
             reviewerName: string;
             nationality: string | null;
-            procedure: string | null;
             reviewDate: Date | null;
-            text: string;
             textEn: string | null;
             region: string | null;
             verified: boolean;
             lang: string | null;
             tokens: Prisma.JsonValue | null;
-            flags: Prisma.JsonValue | null;
             contentHash: string | null;
         }[];
     } & {
+        specialty: string | null;
         id: string;
         name: string;
-        city: string;
+        priority: boolean;
         country: string;
+        city: string;
+        createdAt: Date;
+        fairnessScore: number | null;
         flag: string | null;
         imageUrl: string | null;
         jciAccredited: boolean;
-        fairnessScore: number | null;
         overallRating: number | null;
         quotedPriceUsd: number | null;
         localPriceUsd: number | null;
@@ -225,8 +229,8 @@ export declare class HospitalsService {
         patientsPerYear: number | null;
         internationalPercent: string | null;
         surgeonId: string | null;
-        specialty: string | null;
         procedures: Prisma.JsonValue | null;
+        packages: Prisma.JsonValue | null;
         intlOfficePhone: string | null;
         intlOfficeEmail: string | null;
         website: string | null;
@@ -237,29 +241,27 @@ export declare class HospitalsService {
         ownerUserId: string | null;
         approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
         nabhAccredited: boolean;
-        priority: boolean;
-        createdAt: Date;
     }>;
     getReviews(hospitalId: string, page?: number, pageSize?: number): Promise<{
         id: string;
-        surgeonId: string | null;
-        createdAt: Date;
         link: string | null;
-        hospitalId: string;
+        text: string;
+        createdAt: Date;
+        procedure: string | null;
         rating: number;
+        flags: Prisma.JsonValue | null;
+        surgeonId: string | null;
+        hospitalId: string;
         age: number | null;
         totalReviews: number | null;
         reviewerName: string;
         nationality: string | null;
-        procedure: string | null;
         reviewDate: Date | null;
-        text: string;
         textEn: string | null;
         region: string | null;
         verified: boolean;
         lang: string | null;
         tokens: Prisma.JsonValue | null;
-        flags: Prisma.JsonValue | null;
         contentHash: string | null;
     }[]>;
     matchForPatient(params: {
@@ -273,18 +275,15 @@ export declare class HospitalsService {
             reviewCount: number;
             inRegion: boolean;
             aiMatchScore: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
+                hospital: string | null;
                 id: string;
                 name: string;
-                country: string | null;
-                flag: string | null;
-                createdAt: Date;
-                hospitalId: string | null;
-                hospital: string | null;
                 title: string | null;
+                email: string | null;
+                country: string | null;
+                createdAt: Date;
+                flag: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -299,18 +298,24 @@ export declare class HospitalsService {
                 patientRating: number | null;
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
-                email: string | null;
+                hospitalId: string | null;
                 medicalCouncilReg: string | null;
                 degrees: Prisma.JsonValue | null;
             };
+            _count: {
+                reviews: number;
+            };
+            specialty: string | null;
             id: string;
             name: string;
-            city: string;
+            priority: boolean;
             country: string;
+            city: string;
+            createdAt: Date;
+            fairnessScore: number | null;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
-            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -323,8 +328,8 @@ export declare class HospitalsService {
             patientsPerYear: number | null;
             internationalPercent: string | null;
             surgeonId: string | null;
-            specialty: string | null;
             procedures: Prisma.JsonValue | null;
+            packages: Prisma.JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;
@@ -335,18 +340,16 @@ export declare class HospitalsService {
             ownerUserId: string | null;
             approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
             nabhAccredited: boolean;
-            priority: boolean;
-            createdAt: Date;
         }[];
         surgeons: {
+            hospital: string | null;
             id: string;
             name: string;
-            country: string | null;
-            flag: string | null;
-            createdAt: Date;
-            hospitalId: string | null;
-            hospital: string | null;
             title: string | null;
+            email: string | null;
+            country: string | null;
+            createdAt: Date;
+            flag: string | null;
             photoUrl: string | null;
             specialization: string | null;
             yearsExperience: number | null;
@@ -361,7 +364,7 @@ export declare class HospitalsService {
             patientRating: number | null;
             avgSurgeryTime: string | null;
             nextAvailable: string | null;
-            email: string | null;
+            hospitalId: string | null;
             medicalCouncilReg: string | null;
             degrees: Prisma.JsonValue | null;
         }[];
@@ -379,18 +382,15 @@ export declare class HospitalsService {
     }): Promise<{
         hospitals: {
             reviewCount: number;
-            _count: {
-                reviews: number;
-            };
             surgeon: {
+                hospital: string | null;
                 id: string;
                 name: string;
-                country: string | null;
-                flag: string | null;
-                createdAt: Date;
-                hospitalId: string | null;
-                hospital: string | null;
                 title: string | null;
+                email: string | null;
+                country: string | null;
+                createdAt: Date;
+                flag: string | null;
                 photoUrl: string | null;
                 specialization: string | null;
                 yearsExperience: number | null;
@@ -405,18 +405,24 @@ export declare class HospitalsService {
                 patientRating: number | null;
                 avgSurgeryTime: string | null;
                 nextAvailable: string | null;
-                email: string | null;
+                hospitalId: string | null;
                 medicalCouncilReg: string | null;
                 degrees: Prisma.JsonValue | null;
             };
+            _count: {
+                reviews: number;
+            };
+            specialty: string | null;
             id: string;
             name: string;
-            city: string;
+            priority: boolean;
             country: string;
+            city: string;
+            createdAt: Date;
+            fairnessScore: number | null;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
-            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -429,8 +435,8 @@ export declare class HospitalsService {
             patientsPerYear: number | null;
             internationalPercent: string | null;
             surgeonId: string | null;
-            specialty: string | null;
             procedures: Prisma.JsonValue | null;
+            packages: Prisma.JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;
@@ -441,8 +447,6 @@ export declare class HospitalsService {
             ownerUserId: string | null;
             approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
             nabhAccredited: boolean;
-            priority: boolean;
-            createdAt: Date;
         }[];
         total: number;
         page: number;

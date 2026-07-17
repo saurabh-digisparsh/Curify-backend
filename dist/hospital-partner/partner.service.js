@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var PartnerService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PartnerService = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,8 +23,10 @@ const accreditation_service_1 = require("./accreditation.service");
 const video_service_1 = require("./video.service");
 const enrichment_service_1 = require("../admin/enrichment.service");
 const scrape_service_1 = require("../admin/scrape.service");
+const bulk_import_service_1 = require("./bulk-import.service");
 const docs_storage_1 = require("./docs.storage");
 const COMMISSION = { version: '2026-v1', percentage: 15, payoutRail: 'RazorpayX' };
+const ONBOARDING_REVIEW_TARGET = 10;
 const APP_INCLUDE = {
     contact: { select: { name: true, designation: true, workEmail: true, whatsapp: true, emailVerifiedAt: true, whatsappVerifiedAt: true } },
     accreditations: true,
@@ -40,14 +43,16 @@ function slugId(name) {
 function isAccredited(app) {
     return (app.accreditations || []).some((a) => a.status === client_1.DocStatus.VERIFIED);
 }
-let PartnerService = class PartnerService {
-    constructor(prisma, notify, accred, video, enrich, scrape) {
+let PartnerService = PartnerService_1 = class PartnerService {
+    constructor(prisma, notify, accred, video, enrich, scrape, bulk) {
         this.prisma = prisma;
         this.notify = notify;
         this.accred = accred;
         this.video = video;
         this.enrich = enrich;
         this.scrape = scrape;
+        this.bulk = bulk;
+        this.logger = new common_1.Logger(PartnerService_1.name);
     }
     async apply(dto) {
         if (!dto.specialties?.length || !dto.insurers?.length) {
@@ -143,6 +148,7 @@ let PartnerService = class PartnerService {
         const app = await this.bySession(id, sessionToken);
         this.assertContactVerified(app);
         const hit = this.accred.verify(dto.body, dto.identifier);
+        await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, body: dto.body } });
         await this.prisma.accreditationRecord.create({
             data: {
                 applicationId: id, body: dto.body, identifier: dto.identifier,
@@ -160,6 +166,7 @@ let PartnerService = class PartnerService {
         this.assertContactVerified(app);
         const hits = this.accred.lookup(app.legalName, app.city);
         await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, source: client_1.AccreditationSource.REGISTRY } });
+        await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, body: { in: hits.map((h) => h.body) } } });
         for (const h of hits) {
             await this.prisma.accreditationRecord.create({
                 data: { applicationId: id, body: h.body, identifier: h.identifier, source: client_1.AccreditationSource.REGISTRY, status: client_1.DocStatus.VERIFIED, verifiedAt: new Date(), validUntil: h.validUntil },
@@ -223,6 +230,7 @@ let PartnerService = class PartnerService {
         const clash = await this.prisma.user.findUnique({ where: { email } });
         if (clash)
             throw new common_1.BadRequestException('An account already exists for this email.');
+        await this.enrichApplication(app);
         const oneTimePassword = tok(6);
         const user = await this.prisma.user.create({
             data: { email, name: app.contact.name, role: 'HOSPITAL', country: 'India', password: await bcrypt.hash(oneTimePassword, 12), emailVerifiedAt: new Date() },
@@ -230,6 +238,30 @@ let PartnerService = class PartnerService {
         await this.prisma.hospitalApplication.update({ where: { id }, data: { ownerUserId: user.id, sessionToken: null, status: client_1.OnboardingStatus.PROVISIONED } });
         await this.notify.sendCredentials(email, app.contact.whatsapp, email, oneTimePassword);
         return { provisioned: true, loginId: email };
+    }
+    async enrichApplication(app) {
+        const blank = (v) => !v || (Array.isArray(v) && v.length === 0);
+        const needs = blank(app.included) || blank(app.pros) || app.quotedPriceUsd == null || app.localBenchmarkUsd == null;
+        if (!needs)
+            return;
+        try {
+            const jci = !!app.accreditations?.some((a) => a.body === client_1.AccreditationBody.JCI && a.status === client_1.DocStatus.VERIFIED);
+            const n = await this.enrich.suggestNarrative({ name: app.legalName, city: app.city, jciAccredited: jci });
+            await this.prisma.hospitalApplication.update({
+                where: { id: app.id },
+                data: {
+                    included: blank(app.included) ? n.included : undefined,
+                    notIncluded: blank(app.notIncluded) ? n.notIncluded : undefined,
+                    pros: blank(app.pros) ? n.pros : undefined,
+                    cons: blank(app.cons) ? n.cons : undefined,
+                    localBenchmarkUsd: app.localBenchmarkUsd ?? n.localBenchmarkUsd ?? undefined,
+                    quotedPriceUsd: app.quotedPriceUsd ?? n.quotedPriceUsd ?? undefined,
+                },
+            });
+        }
+        catch (e) {
+            this.logger.warn(`provision enrich failed for "${app.legalName}": ${e.message}`);
+        }
     }
     async mine(userId) {
         const app = await this.prisma.hospitalApplication.findUnique({ where: { ownerUserId: userId }, include: APP_INCLUDE });
@@ -266,6 +298,38 @@ let PartnerService = class PartnerService {
         });
         return this.dashboard(userId);
     }
+    async importDoctors(userId, file) {
+        const app = await this.mine(userId);
+        const { rows, errors } = this.bulk.parse('doctors', file);
+        if (errors.length)
+            return { imported: 0, errors, data: await this.dashboard(userId) };
+        await this.prisma.onboardingDoctor.createMany({
+            data: rows.map((d) => ({
+                applicationId: app.id, availabilityToken: tok(24),
+                status: isAccredited(app) ? client_1.OnboardingDoctorStatus.APPROVED : client_1.OnboardingDoctorStatus.IN_REVIEW,
+                name: d.name, qualifications: d.qualifications, specialty: d.specialty, subspecialty: d.subspecialty,
+                yearsExperience: d.yearsExperience, registrationNo: d.registrationNo, languages: d.languages ?? [],
+                bio: d.bio, proceduresPerformed: d.proceduresPerformed, email: d.email,
+                teleconsultEnabled: d.teleconsultEnabled ?? false, timezone: 'Asia/Kolkata',
+            })),
+        });
+        return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+    }
+    async importPackages(userId, file) {
+        const app = await this.mine(userId);
+        const { rows, errors } = this.bulk.parse('packages', file);
+        if (errors.length)
+            return { imported: 0, errors, data: await this.dashboard(userId) };
+        const packages = rows.map((p) => ({ name: p.name, priceUsd: p.priceUsd, included: p.included ?? [], notes: p.notes ?? null }));
+        const procedures = packages.map((p) => p.name);
+        const from = Math.min(...packages.map((p) => p.priceUsd));
+        const data = { packages: packages, procedures, quotedPriceUsd: app.quotedPriceUsd ?? from };
+        await this.prisma.hospitalApplication.update({ where: { id: app.id }, data });
+        if (app.publishedHospitalId) {
+            await this.prisma.hospital.update({ where: { id: app.publishedHospitalId }, data: { ...data, procedures: procedures } });
+        }
+        return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+    }
     async doctorOfMine(userId, doctorId) {
         const app = await this.mine(userId);
         const doc = await this.prisma.onboardingDoctor.findUnique({ where: { id: doctorId } });
@@ -291,6 +355,9 @@ let PartnerService = class PartnerService {
         return this.dashboard(userId);
     }
     async sendAvailabilityLink(userId, doctorId) {
+        if (!(await this.video.enabled())) {
+            throw new common_1.BadRequestException('Video consultations are currently unavailable.');
+        }
         const doc = await this.doctorOfMine(userId, doctorId);
         const token = doc.availabilityToken || tok(24);
         if (!doc.availabilityToken)
@@ -395,6 +462,7 @@ let PartnerService = class PartnerService {
             notIncluded: app.notIncluded?.length ? app.notIncluded : undefined,
             pros: app.pros ?? undefined,
             cons: app.cons ?? undefined,
+            packages: app.packages ?? undefined,
         };
         await this.prisma.hospital.upsert({
             where: { id: hospitalId },
@@ -433,11 +501,11 @@ let PartnerService = class PartnerService {
     }
     async finalizeHospital(userId, hospitalId, app) {
         try {
-            const mapped = await this.mapExistingReviews(hospitalId, app.legalName, app.city);
+            const mapped = await this.mapExistingReviews(hospitalId, app.legalName, app.city, app.address);
             await this.refreshRating(hospitalId);
             const count = await this.prisma.review.count({ where: { hospitalId } });
             if (count === 0) {
-                this.scrape.scrapeOneHospital(hospitalId, `onboarding:${userId}`).catch(() => undefined);
+                this.scrape.scrapeOneHospital(hospitalId, `onboarding:${userId}`, ONBOARDING_REVIEW_TARGET).catch(() => undefined);
             }
             const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId } });
             const includedEmpty = !h?.included || (Array.isArray(h.included) && h.included.length === 0);
@@ -459,23 +527,29 @@ let PartnerService = class PartnerService {
         }
         catch { }
     }
-    async mapExistingReviews(newHospitalId, name, city) {
+    async mapExistingReviews(newHospitalId, name, city, address) {
         const norm = (s) => (s || '').toLowerCase()
             .replace(/\b(pvt|ltd|private|limited|hospitals?|healthcare|medical|centre|center|institute|clinic|the|of|research)\b/g, ' ')
             .replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
         const target = norm(name);
         if (!target)
             return 0;
+        const nameTok = new Set(target.split(' ').filter(Boolean));
+        const claimed = new Set([...nameTok, ...norm(`${city ?? ''} ${address ?? ''}`).split(' ').filter(Boolean)]);
         const cityN = (city || '').toLowerCase().trim();
         const candidates = await this.prisma.hospital.findMany({ where: { id: { not: newHospitalId } }, select: { id: true, name: true, city: true } });
-        const match = candidates.find((c) => {
-            const sameName = norm(c.name) === target || norm(c.name).includes(target) || target.includes(norm(c.name));
+        const matches = candidates.filter((c) => {
+            const cTok = norm(c.name).split(' ').filter(Boolean);
+            if (!cTok.length)
+                return false;
+            const sharesName = cTok.some((t) => nameTok.has(t));
+            const noStrayBranch = cTok.every((t) => claimed.has(t));
             const sameCity = !cityN || (c.city || '').toLowerCase().includes(cityN) || cityN.includes((c.city || '').toLowerCase());
-            return sameName && sameCity;
+            return sharesName && noStrayBranch && sameCity;
         });
-        if (!match)
+        if (!matches.length)
             return 0;
-        const moved = await this.prisma.review.updateMany({ where: { hospitalId: match.id }, data: { hospitalId: newHospitalId } });
+        const moved = await this.prisma.review.updateMany({ where: { hospitalId: { in: matches.map((m) => m.id) } }, data: { hospitalId: newHospitalId } });
         return moved.count;
     }
     async refreshRating(hospitalId) {
@@ -507,7 +581,7 @@ let PartnerService = class PartnerService {
         });
         if (!doc)
             throw new common_1.NotFoundException('Invalid or expired link');
-        return doc;
+        return { ...doc, videoEnabled: await this.video.enabled() };
     }
     async setAvailability(token, dto) {
         const doc = await this.prisma.onboardingDoctor.findUnique({ where: { availabilityToken: token }, select: { id: true } });
@@ -523,12 +597,26 @@ let PartnerService = class PartnerService {
         ]);
         return this.availabilityByToken(token);
     }
-    listApplications(status) {
-        return this.prisma.hospitalApplication.findMany({
-            where: status ? { status } : {},
-            include: { contact: { select: { workEmail: true, name: true } }, _count: { select: { doctors: true, documents: true } } },
-            orderBy: { updatedAt: 'desc' },
-        });
+    async listApplications(status) {
+        const [applications, grouped] = await Promise.all([
+            this.prisma.hospitalApplication.findMany({
+                where: status ? { status } : {},
+                include: {
+                    contact: { select: { name: true, workEmail: true, whatsapp: true, emailVerifiedAt: true } },
+                    agreement: { select: { signedAt: true, signatoryName: true } },
+                    accreditations: { select: { body: true, status: true } },
+                    _count: { select: { doctors: true, documents: true } },
+                },
+                orderBy: { updatedAt: 'desc' },
+            }),
+            this.prisma.hospitalApplication.groupBy({ by: ['status'], _count: true }),
+        ]);
+        const counts = { ALL: 0 };
+        for (const g of grouped) {
+            counts[g.status] = g._count;
+            counts.ALL += g._count;
+        }
+        return { applications, counts };
     }
     async getForAdmin(id) {
         const app = await this.prisma.hospitalApplication.findUnique({ where: { id }, include: APP_INCLUDE });
@@ -542,6 +630,50 @@ let PartnerService = class PartnerService {
         if (!doc)
             throw new common_1.NotFoundException('Document not found');
         return this.prisma.onboardingDocument.update({ where: { id: docId }, data: { status: dto.status, note: dto.note, reviewedBy: adminId, reviewedAt: new Date() } });
+    }
+    async adminResendOtp(id) {
+        const app = await this.prisma.hospitalApplication.findUnique({ where: { id }, include: { contact: true } });
+        if (!app)
+            throw new common_1.NotFoundException('Application not found');
+        if (!app.contact)
+            throw new common_1.BadRequestException('No authorised contact captured yet — the hospital must finish the Details step.');
+        if (app.contact.emailVerifiedAt)
+            throw new common_1.BadRequestException('This contact is already verified.');
+        const emailOtp = otp();
+        await this.prisma.authorisedContact.update({
+            where: { applicationId: id },
+            data: { emailOtp, emailOtpExp: new Date(Date.now() + 10 * 60 * 1000), emailOtpTries: 0 },
+        });
+        await this.notify.sendEmailOtp(app.contact.workEmail, emailOtp);
+        return this.getForAdmin(id);
+    }
+    async adminResendCredentials(id) {
+        const app = await this.prisma.hospitalApplication.findUnique({ where: { id }, include: { contact: true, agreement: true } });
+        if (!app)
+            throw new common_1.NotFoundException('Application not found');
+        if (!app.contact)
+            throw new common_1.BadRequestException('No authorised contact captured yet.');
+        if (!app.agreement)
+            throw new common_1.BadRequestException('The hospital must e-sign the commission agreement first.');
+        const email = app.contact.workEmail;
+        const oneTimePassword = tok(6);
+        const password = await bcrypt.hash(oneTimePassword, 12);
+        if (app.ownerUserId) {
+            await this.prisma.user.update({ where: { id: app.ownerUserId }, data: { password } });
+        }
+        else {
+            const clash = await this.prisma.user.findUnique({ where: { email } });
+            if (clash)
+                throw new common_1.BadRequestException('An account already exists for this email.');
+            const user = await this.prisma.user.create({
+                data: { email, name: app.contact.name, role: 'HOSPITAL', country: 'India', password, emailVerifiedAt: new Date() },
+            });
+            await this.prisma.hospitalApplication.update({
+                where: { id }, data: { ownerUserId: user.id, sessionToken: null, status: client_1.OnboardingStatus.PROVISIONED },
+            });
+        }
+        await this.notify.sendCredentials(email, app.contact.whatsapp, email, oneTimePassword);
+        return this.getForAdmin(id);
     }
     async setApplicationStatus(id, status) {
         const app = await this.prisma.hospitalApplication.findUnique({ where: { id } });
@@ -570,13 +702,14 @@ let PartnerService = class PartnerService {
     }
 };
 exports.PartnerService = PartnerService;
-exports.PartnerService = PartnerService = __decorate([
+exports.PartnerService = PartnerService = PartnerService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         notification_service_1.NotificationService,
         accreditation_service_1.AccreditationService,
         video_service_1.VideoService,
         enrichment_service_1.EnrichmentService,
-        scrape_service_1.ScrapeService])
+        scrape_service_1.ScrapeService,
+        bulk_import_service_1.BulkImportService])
 ], PartnerService);
 //# sourceMappingURL=partner.service.js.map

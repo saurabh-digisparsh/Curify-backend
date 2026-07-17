@@ -105,7 +105,7 @@ export class EnrichmentService {
   async suggestNarrative(params: {
     name: string; city: string; country?: string; overallRating?: number | null; jciAccredited?: boolean;
     reviews?: { text: string; rating?: number | null; nationality?: string | null }[];
-  }): Promise<{ included: string[]; notIncluded: string[]; pros: string[]; cons: string[]; localBenchmarkUsd: number | null }> {
+  }): Promise<{ included: string[]; notIncluded: string[]; pros: string[]; cons: string[]; localBenchmarkUsd: number | null; quotedPriceUsd: number | null }> {
     const data = await this.ai.generateHospitalEnrichment({
       name: params.name, city: params.city, country: params.country || 'India',
       overallRating: params.overallRating ?? null, jciAccredited: params.jciAccredited ?? false,
@@ -117,6 +117,10 @@ export class EnrichmentService {
       pros: Array.isArray(data?.pros) ? data.pros : [],
       cons: Array.isArray(data?.cons) ? data.cons : [],
       localBenchmarkUsd: data?.localBenchmarkUsd ? Math.round(data.localBenchmarkUsd) : null,
+      // Returned for callers that have no price yet (onboarding seeds the card
+      // before the hospital reaches the Pricing screen). Existing callers ignore
+      // it, so a hospital's own pricing is still never overwritten.
+      quotedPriceUsd: data?.quotedPriceUsd ? Math.round(data.quotedPriceUsd) : null,
     };
   }
 

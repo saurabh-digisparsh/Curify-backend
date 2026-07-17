@@ -1,5 +1,5 @@
 import {
-  Injectable, NotFoundException, BadRequestException, ForbiddenException,
+  Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { unlink } from 'fs/promises';
@@ -12,6 +12,7 @@ import { AccreditationService } from './accreditation.service';
 import { VideoService } from './video.service';
 import { EnrichmentService } from '../admin/enrichment.service';
 import { ScrapeService } from '../admin/scrape.service';
+import { BulkImportService } from './bulk-import.service';
 import { HOSPITAL_DOCS_DIR } from './docs.storage';
 import {
   ApplyDto, ContactDto, VerifyOtpDto, AccreditationDto, UploadDocDto, AgreementDto,
@@ -19,6 +20,8 @@ import {
 } from './dto/partner.dto';
 
 const COMMISSION = { version: '2026-v1', percentage: 15, payoutRail: 'RazorpayX' }; // BR-3 fixed terms
+// Reviews the foreign pipeline collects for a newly-onboarded hospital that has none.
+const ONBOARDING_REVIEW_TARGET = 10;
 
 // What the applicant / dashboard sees (never OTP secrets or session token).
 const APP_INCLUDE = {
@@ -45,6 +48,8 @@ function isAccredited(app: { accreditations?: { status: DocStatus }[] }): boolea
 
 @Injectable()
 export class PartnerService {
+  private readonly logger = new Logger(PartnerService.name);
+
   constructor(
     private prisma: PrismaService,
     private notify: NotificationService,
@@ -52,6 +57,7 @@ export class PartnerService {
     private video: VideoService,
     private enrich: EnrichmentService,
     private scrape: ScrapeService,
+    private bulk: BulkImportService,
   ) {}
 
   // ─── Public application flow (no login; scoped by sessionToken) ─────────────
@@ -159,6 +165,9 @@ export class PartnerService {
     const app = await this.bySession(id, sessionToken);
     this.assertContactVerified(app);
     const hit = this.accred.verify(dto.body, dto.identifier);
+    // At most one record per body — re-adding a body replaces its previous record
+    // rather than stacking a second NABH/JCI card onto the application.
+    await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, body: dto.body } });
     await this.prisma.accreditationRecord.create({
       data: {
         applicationId: id, body: dto.body, identifier: dto.identifier,
@@ -180,9 +189,13 @@ export class PartnerService {
   async lookupAccreditation(id: string, sessionToken: string) {
     const app = await this.bySession(id, sessionToken);
     this.assertContactVerified(app);
+    // lookup() returns at most one hit per body (one NABH + one JCI).
     const hits = this.accred.lookup(app.legalName, app.city);
     // Idempotent re-scan: drop prior registry hits, re-create from the current lookup.
     await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, source: AccreditationSource.REGISTRY } });
+    // A verified registry hit supersedes any manually-added record for the same
+    // body, so the applicant never ends up holding two cards for one body.
+    await this.prisma.accreditationRecord.deleteMany({ where: { applicationId: id, body: { in: hits.map((h) => h.body) } } });
     for (const h of hits) {
       await this.prisma.accreditationRecord.create({
         data: { applicationId: id, body: h.body, identifier: h.identifier, source: AccreditationSource.REGISTRY, status: DocStatus.VERIFIED, verifiedAt: new Date(), validUntil: h.validUntil },
@@ -254,6 +267,9 @@ export class PartnerService {
     const email = app.contact!.workEmail;
     const clash = await this.prisma.user.findUnique({ where: { email } });
     if (clash) throw new BadRequestException('An account already exists for this email.');
+    // Seed the comparison card with AI BEFORE issuing credentials, so the very
+    // first sign-in shows a complete profile instead of an empty shell.
+    await this.enrichApplication(app);
     const oneTimePassword = tok(6); // 12-hex-char temp password
     const user = await this.prisma.user.create({
       data: { email, name: app.contact!.name, role: 'HOSPITAL', country: 'India', password: await bcrypt.hash(oneTimePassword, 12), emailVerifiedAt: new Date() },
@@ -261,6 +277,42 @@ export class PartnerService {
     await this.prisma.hospitalApplication.update({ where: { id }, data: { ownerUserId: user.id, sessionToken: null, status: OnboardingStatus.PROVISIONED } });
     await this.notify.sendCredentials(email, app.contact!.whatsapp, email, oneTimePassword);
     return { provisioned: true, loginId: email }; // password sent out-of-band only
+  }
+
+  /**
+   * AI-seed the applicant's comparison-card fields (price, local benchmark,
+   * what's-included, pros/cons) so the card is complete the moment they sign in.
+   * Run at provisioning, before credentials are issued.
+   *
+   * Only fills what the applicant left BLANK — their own numbers always win, and
+   * everything here stays editable on the Pricing screen. Best-effort by design:
+   * a hospital must still get its credentials when the AI is down, so a failure
+   * is swallowed (go-live re-seeds anything still blank).
+   */
+  private async enrichApplication(app: any): Promise<void> {
+    const blank = (v: any) => !v || (Array.isArray(v) && v.length === 0);
+    const needs = blank(app.included) || blank(app.pros) || app.quotedPriceUsd == null || app.localBenchmarkUsd == null;
+    if (!needs) return;
+    try {
+      const jci = !!app.accreditations?.some((a: any) => a.body === AccreditationBody.JCI && a.status === DocStatus.VERIFIED);
+      // No reviews to cite yet — they're mapped onto the hospital at go-live, and
+      // the prompt handles the review-less case.
+      const n = await this.enrich.suggestNarrative({ name: app.legalName, city: app.city, jciAccredited: jci });
+      await this.prisma.hospitalApplication.update({
+        where: { id: app.id },
+        data: {
+          included: blank(app.included) ? n.included : undefined,
+          notIncluded: blank(app.notIncluded) ? n.notIncluded : undefined,
+          pros: blank(app.pros) ? n.pros : undefined,
+          cons: blank(app.cons) ? n.cons : undefined,
+          localBenchmarkUsd: app.localBenchmarkUsd ?? n.localBenchmarkUsd ?? undefined,
+          quotedPriceUsd: app.quotedPriceUsd ?? n.quotedPriceUsd ?? undefined,
+        },
+      });
+    } catch (e: any) {
+      // Never block a hospital's credentials on enrichment.
+      this.logger.warn(`provision enrich failed for "${app.legalName}": ${e.message}`);
+    }
   }
 
   // ─── Dashboard (authenticated HOSPITAL owner) ──────────────────────────────
@@ -306,6 +358,53 @@ export class PartnerService {
     return this.dashboard(userId);
   }
 
+  /**
+   * Bulk-import doctors from a CSV. All-or-nothing: any bad row rejects the whole
+   * file so a re-upload can't double-insert the rows that already landed. Rows go
+   * through the SAME approval rule as addDoctor — a CSV must not be a way to skip
+   * the review that the form applies.
+   */
+  async importDoctors(userId: string, file: Express.Multer.File) {
+    const app = await this.mine(userId);
+    const { rows, errors } = this.bulk.parse<DoctorDto>('doctors', file);
+    if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId) };
+    await this.prisma.onboardingDoctor.createMany({
+      data: rows.map((d) => ({
+        applicationId: app.id, availabilityToken: tok(24),
+        status: isAccredited(app) ? OnboardingDoctorStatus.APPROVED : OnboardingDoctorStatus.IN_REVIEW,
+        name: d.name, qualifications: d.qualifications, specialty: d.specialty, subspecialty: d.subspecialty,
+        yearsExperience: d.yearsExperience, registrationNo: d.registrationNo, languages: d.languages ?? [],
+        bio: d.bio, proceduresPerformed: d.proceduresPerformed, email: d.email,
+        teleconsultEnabled: d.teleconsultEnabled ?? false, timezone: 'Asia/Kolkata',
+      })),
+    });
+    return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+  }
+
+  /**
+   * Bulk-import treatment packages (name + per-package price) from a CSV. Replaces
+   * the whole package list — a spreadsheet is the hospital's full price list, and
+   * appending would silently keep packages they deleted from their own file.
+   * `procedures` is kept in sync as the flat name list every existing reader
+   * (patient matching, comparison card) already uses.
+   */
+  async importPackages(userId: string, file: Express.Multer.File) {
+    const app = await this.mine(userId);
+    const { rows, errors } = this.bulk.parse<{ name: string; priceUsd: number; included?: string[]; notes?: string }>('packages', file);
+    if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId) };
+    const packages = rows.map((p) => ({ name: p.name, priceUsd: p.priceUsd, included: p.included ?? [], notes: p.notes ?? null }));
+    const procedures = packages.map((p) => p.name);
+    // Headline "from" price on the comparison card = the cheapest package, unless
+    // the hospital already set one by hand.
+    const from = Math.min(...packages.map((p) => p.priceUsd));
+    const data = { packages: packages as any, procedures, quotedPriceUsd: app.quotedPriceUsd ?? from };
+    await this.prisma.hospitalApplication.update({ where: { id: app.id }, data });
+    if (app.publishedHospitalId) {
+      await this.prisma.hospital.update({ where: { id: app.publishedHospitalId }, data: { ...data, procedures: procedures as any } });
+    }
+    return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+  }
+
   private async doctorOfMine(userId: string, doctorId: string) {
     const app = await this.mine(userId);
     const doc = await this.prisma.onboardingDoctor.findUnique({ where: { id: doctorId } });
@@ -335,6 +434,10 @@ export class PartnerService {
 
   /** FR-26/30: (re)send a doctor's private availability link. */
   async sendAvailabilityLink(userId: string, doctorId: string) {
+    // Video off → don't invite a doctor to set slots for a feature that's skipped.
+    if (!(await this.video.enabled())) {
+      throw new BadRequestException('Video consultations are currently unavailable.');
+    }
     const doc = await this.doctorOfMine(userId, doctorId);
     const token = doc.availabilityToken || tok(24);
     if (!doc.availabilityToken) await this.prisma.onboardingDoctor.update({ where: { id: doc.id }, data: { availabilityToken: token } });
@@ -461,6 +564,9 @@ export class PartnerService {
       notIncluded: app.notIncluded?.length ? app.notIncluded : undefined,
       pros: app.pros ?? undefined,
       cons: app.cons ?? undefined,
+      // Per-package prices from the panel's bulk import; undefined when the
+      // hospital never uploaded a price list (card falls back to quotedPriceUsd).
+      packages: app.packages ?? undefined,
     };
     await this.prisma.hospital.upsert({
       where: { id: hospitalId },
@@ -508,12 +614,13 @@ export class PartnerService {
    */
   private async finalizeHospital(userId: string, hospitalId: string, app: any) {
     try {
-      const mapped = await this.mapExistingReviews(hospitalId, app.legalName, app.city);
+      const mapped = await this.mapExistingReviews(hospitalId, app.legalName, app.city, app.address);
       await this.refreshRating(hospitalId);
       const count = await this.prisma.review.count({ where: { hospitalId } });
       if (count === 0) {
-        // Part 3: no reviews anywhere → fetch them (best-effort; depends on scraper).
-        this.scrape.scrapeOneHospital(hospitalId, `onboarding:${userId}`).catch(() => undefined);
+        // Part 3: no reviews anywhere → fetch 10 via the foreign pipeline
+        // (best-effort; depends on scraper). The import sets overallRating itself.
+        this.scrape.scrapeOneHospital(hospitalId, `onboarding:${userId}`, ONBOARDING_REVIEW_TARGET).catch(() => undefined);
       }
       // Parts 4/5: fill the narrative with AI only if the hospital left it blank.
       const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId } });
@@ -538,24 +645,41 @@ export class PartnerService {
   }
 
   /**
-   * Part 1: if a directory hospital with the same (normalized) name + city already
-   * exists as a separate row, move its reviews onto the newly-onboarded hospital.
+   * Part 1: move the reviews of the applicant's EXISTING directory rows onto the
+   * newly-onboarded hospital, so a hospital already listed publicly keeps its
+   * review history (and its patient-journey reviews) after onboarding.
+   *
+   * The hard part is branch disambiguation. Big groups run many hospitals under
+   * one near-identical name in one city — "Max Super Speciality Hospital" has
+   * Saket / Dwarka / Patparganj / Shalimar Bagh rows in Delhi, and "BLK-Max" is a
+   * different group entirely. Name+city alone matches all of them, which would
+   * attribute other hospitals' patient reviews to this one. So a row only counts
+   * as THIS hospital when every token that distinguishes it ("dwarka", "blk", …)
+   * is one the applicant actually claimed in their own name or street address.
+   * Unrecognised token → sibling branch → left alone.
    */
-  private async mapExistingReviews(newHospitalId: string, name: string, city: string): Promise<number> {
+  private async mapExistingReviews(newHospitalId: string, name: string, city: string, address?: string | null): Promise<number> {
     const norm = (s: string) => (s || '').toLowerCase()
       .replace(/\b(pvt|ltd|private|limited|hospitals?|healthcare|medical|centre|center|institute|clinic|the|of|research)\b/g, ' ')
       .replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
     const target = norm(name);
     if (!target) return 0;
+    const nameTok = new Set(target.split(' ').filter(Boolean));
+    // Everything the applicant told us about themselves — their name plus the
+    // street address, which is what actually names the branch ("… Saket …").
+    const claimed = new Set([...nameTok, ...norm(`${city ?? ''} ${address ?? ''}`).split(' ').filter(Boolean)]);
     const cityN = (city || '').toLowerCase().trim();
     const candidates = await this.prisma.hospital.findMany({ where: { id: { not: newHospitalId } }, select: { id: true, name: true, city: true } });
-    const match = candidates.find((c) => {
-      const sameName = norm(c.name) === target || norm(c.name).includes(target) || target.includes(norm(c.name));
+    const matches = candidates.filter((c) => {
+      const cTok = norm(c.name).split(' ').filter(Boolean);
+      if (!cTok.length) return false;
+      const sharesName = cTok.some((t) => nameTok.has(t));
+      const noStrayBranch = cTok.every((t) => claimed.has(t));
       const sameCity = !cityN || (c.city || '').toLowerCase().includes(cityN) || cityN.includes((c.city || '').toLowerCase());
-      return sameName && sameCity;
+      return sharesName && noStrayBranch && sameCity;
     });
-    if (!match) return 0;
-    const moved = await this.prisma.review.updateMany({ where: { hospitalId: match.id }, data: { hospitalId: newHospitalId } });
+    if (!matches.length) return 0;
+    const moved = await this.prisma.review.updateMany({ where: { hospitalId: { in: matches.map((m) => m.id) } }, data: { hospitalId: newHospitalId } });
     return moved.count;
   }
 
@@ -594,7 +718,9 @@ export class PartnerService {
       },
     });
     if (!doc) throw new NotFoundException('Invalid or expired link');
-    return doc;
+    // Video off → the page hides joining/consults rather than offering a call
+    // that would 503 at join time.
+    return { ...doc, videoEnabled: await this.video.enabled() };
   }
 
   async setAvailability(token: string, dto: SetAvailabilityDto) {
@@ -611,12 +737,32 @@ export class PartnerService {
 
   // ─── Admin exception review ────────────────────────────────────────────────
 
-  listApplications(status?: OnboardingStatus) {
-    return this.prisma.hospitalApplication.findMany({
-      where: status ? { status } : {},
-      include: { contact: { select: { workEmail: true, name: true } }, _count: { select: { doctors: true, documents: true } } },
-      orderBy: { updatedAt: 'desc' },
-    });
+  /**
+   * Every onboarding application (optionally filtered to one stage) PLUS a count
+   * per stage, so the admin can track the whole funnel rather than guessing which
+   * status tab has anything in it. Includes just enough per row for the console to
+   * show what each hospital is blocked on.
+   */
+  async listApplications(status?: OnboardingStatus) {
+    const [applications, grouped] = await Promise.all([
+      this.prisma.hospitalApplication.findMany({
+        where: status ? { status } : {},
+        include: {
+          contact: { select: { name: true, workEmail: true, whatsapp: true, emailVerifiedAt: true } },
+          agreement: { select: { signedAt: true, signatoryName: true } },
+          accreditations: { select: { body: true, status: true } },
+          _count: { select: { doctors: true, documents: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.hospitalApplication.groupBy({ by: ['status'], _count: true }),
+    ]);
+    const counts: Record<string, number> = { ALL: 0 };
+    for (const g of grouped) {
+      counts[g.status] = (g as any)._count;
+      counts.ALL += (g as any)._count;
+    }
+    return { applications, counts };
   }
 
   async getForAdmin(id: string) {
@@ -630,6 +776,55 @@ export class PartnerService {
     const doc = await this.prisma.onboardingDocument.findUnique({ where: { id: docId } });
     if (!doc) throw new NotFoundException('Document not found');
     return this.prisma.onboardingDocument.update({ where: { id: docId }, data: { status: dto.status as DocStatus, note: dto.note, reviewedBy: adminId, reviewedAt: new Date() } });
+  }
+
+  /**
+   * Admin help #1 — the hospital never verified its email (the most common place
+   * to get stuck). Mints a fresh OTP, clears the attempt counter and re-sends it.
+   */
+  async adminResendOtp(id: string) {
+    const app = await this.prisma.hospitalApplication.findUnique({ where: { id }, include: { contact: true } });
+    if (!app) throw new NotFoundException('Application not found');
+    if (!app.contact) throw new BadRequestException('No authorised contact captured yet — the hospital must finish the Details step.');
+    if (app.contact.emailVerifiedAt) throw new BadRequestException('This contact is already verified.');
+    const emailOtp = otp();
+    await this.prisma.authorisedContact.update({
+      where: { applicationId: id },
+      data: { emailOtp, emailOtpExp: new Date(Date.now() + 10 * 60 * 1000), emailOtpTries: 0 },
+    });
+    await this.notify.sendEmailOtp(app.contact.workEmail, emailOtp);
+    return this.getForAdmin(id);
+  }
+
+  /**
+   * Admin help #2 — the hospital signed but never got in (lost/expired credential
+   * mail). Re-issues a fresh one-time password to the existing account, or creates
+   * the account now if provisioning never ran. The password is only ever delivered
+   * out-of-band, never returned here.
+   */
+  async adminResendCredentials(id: string) {
+    const app = await this.prisma.hospitalApplication.findUnique({ where: { id }, include: { contact: true, agreement: true } });
+    if (!app) throw new NotFoundException('Application not found');
+    if (!app.contact) throw new BadRequestException('No authorised contact captured yet.');
+    if (!app.agreement) throw new BadRequestException('The hospital must e-sign the commission agreement first.');
+    const email = app.contact.workEmail;
+    const oneTimePassword = tok(6);
+    const password = await bcrypt.hash(oneTimePassword, 12);
+
+    if (app.ownerUserId) {
+      await this.prisma.user.update({ where: { id: app.ownerUserId }, data: { password } });
+    } else {
+      const clash = await this.prisma.user.findUnique({ where: { email } });
+      if (clash) throw new BadRequestException('An account already exists for this email.');
+      const user = await this.prisma.user.create({
+        data: { email, name: app.contact.name, role: 'HOSPITAL', country: 'India', password, emailVerifiedAt: new Date() },
+      });
+      await this.prisma.hospitalApplication.update({
+        where: { id }, data: { ownerUserId: user.id, sessionToken: null, status: OnboardingStatus.PROVISIONED },
+      });
+    }
+    await this.notify.sendCredentials(email, app.contact.whatsapp, email, oneTimePassword);
+    return this.getForAdmin(id);
   }
 
   async setApplicationStatus(id: string, status: OnboardingStatus) {

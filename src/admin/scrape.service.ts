@@ -121,8 +121,9 @@ export class ScrapeService {
    * go-live to fetch reviews for a freshly-published hospital that has none yet.
    * Fire-and-forget: returns the created job; the review pipeline runs in the
    * background and maps reviews onto this hospital's id.
+   * minReviews caps how many foreign reviews the pipeline collects before stopping.
    */
-  async scrapeOneHospital(hospitalId: string, triggeredBy: string) {
+  async scrapeOneHospital(hospitalId: string, triggeredBy: string, minReviews?: number) {
     const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId }, select: { id: true, name: true, city: true } });
     if (!h) throw new NotFoundException('Hospital not found');
     const job = await this.prisma.scrapeJob.create({
@@ -133,13 +134,13 @@ export class ScrapeService {
       },
     });
     this.logger.log(`onboarding scrape: fetching reviews for '${h.name}' (${h.city})`);
-    void this.runHospitalRotation(job.id, h);
+    void this.runHospitalRotation(job.id, h, minReviews);
     return job;
   }
 
   /** Run the FOREIGN-PIPELINE for ONE hospital, recording review count before/after + per-review log. */
-  private async runHospitalRotation(jobId: string, hospital: { id: string; name: string; city: string }) {
-    const dto = { target: 'foreign-pipeline', hospitalName: hospital.name, location: hospital.city } as TriggerScrapeDto;
+  private async runHospitalRotation(jobId: string, hospital: { id: string; name: string; city: string }, minReviews?: number) {
+    const dto = { target: 'foreign-pipeline', hospitalName: hospital.name, location: hospital.city, minReviews } as TriggerScrapeDto;
     const reviewCountBefore = await this.prisma.review.count({ where: { hospitalId: hospital.id } });
     try {
       const { rows } = await this.spawnScraper('foreign-pipeline', dto);

@@ -96,7 +96,7 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
         void this.runHospitalRotation(job.id, h);
         return job;
     }
-    async scrapeOneHospital(hospitalId, triggeredBy) {
+    async scrapeOneHospital(hospitalId, triggeredBy, minReviews) {
         const h = await this.prisma.hospital.findUnique({ where: { id: hospitalId }, select: { id: true, name: true, city: true } });
         if (!h)
             throw new common_1.NotFoundException('Hospital not found');
@@ -108,11 +108,11 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
             },
         });
         this.logger.log(`onboarding scrape: fetching reviews for '${h.name}' (${h.city})`);
-        void this.runHospitalRotation(job.id, h);
+        void this.runHospitalRotation(job.id, h, minReviews);
         return job;
     }
-    async runHospitalRotation(jobId, hospital) {
-        const dto = { target: 'foreign-pipeline', hospitalName: hospital.name, location: hospital.city };
+    async runHospitalRotation(jobId, hospital, minReviews) {
+        const dto = { target: 'foreign-pipeline', hospitalName: hospital.name, location: hospital.city, minReviews };
         const reviewCountBefore = await this.prisma.review.count({ where: { hospitalId: hospital.id } });
         try {
             const { rows } = await this.spawnScraper('foreign-pipeline', dto);

@@ -34,6 +34,14 @@ export class PartnerAdminController {
   @Post(':id/status')
   setStatus(@Param('id') id: string, @Body() body: { status: OnboardingStatus }) { return this.svc.setApplicationStatus(id, body.status); }
 
+  @ApiOperation({ summary: 'Help a stuck hospital: re-send its email verification code' })
+  @Post(':id/resend-otp')
+  resendOtp(@Param('id') id: string) { return this.svc.adminResendOtp(id); }
+
+  @ApiOperation({ summary: 'Help a stuck hospital: (re)issue dashboard credentials' })
+  @Post(':id/resend-credentials')
+  resendCredentials(@Param('id') id: string) { return this.svc.adminResendCredentials(id); }
+
   @ApiOperation({ summary: 'Set the admin-controlled "Priority partner" ranking flag' })
   @Post(':id/priority')
   setPriority(@Param('id') id: string, @Body() body: { priority: boolean }) { return this.svc.setPriority(id, !!body.priority); }

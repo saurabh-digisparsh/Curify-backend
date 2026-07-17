@@ -216,6 +216,11 @@ model Hospital {
   // Dynamic data fields
   specialty            String?
   procedures           Json?
+  // Treatment packages WITH a per-package price: [{ name, priceUsd, included[] }].
+  // Published from the application at go-live. `procedures` stays the flat name
+  // list every existing reader (matching, comparison card) already uses — this is
+  // additive, so a null here just means "no per-package prices, use quotedPriceUsd".
+  packages             Json?
   intlOfficePhone      String?
   intlOfficeEmail      String?
   website              String?
@@ -308,6 +313,11 @@ model HospitalApplication {
   patientsPerYear     Int?
   imageUrl            String?
   procedures          String[]
+  // Treatment packages WITH a per-package price: [{ name, priceUsd, included[] }].
+  // `procedures` stays the flat name list (patient matching + the comparison card
+  // read it); it is kept in sync from here. quotedPriceUsd remains the headline
+  // "from" price. Bulk-imported from CSV in the panel (see bulk-import.service).
+  packages            Json?
   // Package narrative (shown on the patient comparison card) — the panel edits
   // these; AI seeds pros/cons/included when the hospital asks. Published to Hospital.
   localBenchmarkUsd   Int?

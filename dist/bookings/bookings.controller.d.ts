@@ -43,6 +43,7 @@ export declare class BookingsController {
             internationalPercent: string | null;
             surgeonId: string | null;
             procedures: import("@prisma/client/runtime/library").JsonValue | null;
+            packages: import("@prisma/client/runtime/library").JsonValue | null;
             intlOfficePhone: string | null;
             intlOfficeEmail: string | null;
             website: string | null;

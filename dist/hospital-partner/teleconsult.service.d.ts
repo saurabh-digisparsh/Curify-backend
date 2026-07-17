@@ -19,308 +19,308 @@ export declare class TeleconsultService {
     availableSlots(doctorId: string): Promise<string[]>;
     book(userId: string, dto: BookTeleconsultDto): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        journeyId: string;
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-            application: {
-                legalName: string;
-            };
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
     }>;
     cancel(userId: string, id: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        journeyId: string;
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-            application: {
-                legalName: string;
-            };
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
     }[]>;
     acceptQuote(userId: string, id: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        journeyId: string;
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-            application: {
-                legalName: string;
-            };
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
     }[]>;
     mine(userId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        journeyId: string;
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-            application: {
-                legalName: string;
-            };
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
     }[]>;
     patientVideoToken(userId: string, id: string): Promise<import("./video.service").VideoToken>;
     patientAddDoc(userId: string, id: string, file: Express.Multer.File, kind?: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        journeyId: string;
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-            application: {
-                legalName: string;
-            };
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
     }[]>;
     doctorVideoToken(availabilityToken: string, id: string): Promise<import("./video.service").VideoToken>;
     private doctorTcOrThrow;
     doctorConsults(token: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        patient: {
+            name: string;
+            email: string;
+        };
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
-        patient: {
-            name: string;
-            email: string;
-        };
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
     }[]>;
     setQuote(token: string, id: string, dto: QuoteDto): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        patient: {
+            name: string;
+            email: string;
+        };
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
-        patient: {
-            name: string;
-            email: string;
-        };
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
     }[]>;
     doctorComplete(token: string, id: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        patient: {
+            name: string;
+            email: string;
+        };
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
-        patient: {
-            name: string;
-            email: string;
-        };
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
     }[]>;
     doctorEndCall(token: string, id: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        patient: {
+            name: string;
+            email: string;
+        };
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
-        patient: {
-            name: string;
-            email: string;
-        };
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
     }[]>;
     doctorAddDoc(token: string, id: string, file: Express.Multer.File, kind?: string): Promise<{
         id: string;
-        scheduledAt: Date;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        patient: {
+            name: string;
+            email: string;
+        };
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
         endedAt: Date;
         quoteAmount: number;
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
-        patient: {
-            name: string;
-            email: string;
-        };
-        doctor: {
-            id: string;
-            name: string;
-            specialty: string;
-        };
-        documents: {
-            id: string;
-            createdAt: Date;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            kind: string;
-            originalName: string;
-        }[];
     }[]>;
     hospitalConsults(userId: string): Promise<{
         consults: {
             id: string;
-            scheduledAt: Date;
             status: import(".prisma/client").$Enums.TeleconsultStatus;
             startedAt: Date;
+            documents: {
+                id: string;
+                sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+                createdAt: Date;
+                kind: string;
+                originalName: string;
+            }[];
+            patient: {
+                name: string;
+            };
+            scheduledAt: Date;
+            doctor: {
+                specialty: string;
+                id: string;
+                name: string;
+            };
             endedAt: Date;
             quoteAmount: number;
             quoteCurrency: string;
             quoteNote: string;
             quotedAt: Date;
-            patient: {
-                name: string;
-            };
-            doctor: {
-                id: string;
-                name: string;
-                specialty: string;
-            };
-            documents: {
-                id: string;
-                createdAt: Date;
-                sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-                kind: string;
-                originalName: string;
-            }[];
         }[];
         stats: {
             total: number;

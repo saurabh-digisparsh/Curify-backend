@@ -1,47 +1,17 @@
 {
     "place": {
-        "name": "Kokilaben Dhirubhai Ambani Hospital and Medical Research Institute",
-        "rating": 3.8,
-        "address": "Rao Saheb Achutrao Patwardhan Marg, Four Bungalows, Andheri West, Mumbai, Maharashtra 400053 "
+        "name": "Medicover Hospitals",
+        "rating": 4.9,
+        "address": "Chistiya Police Chowki, near, N-6, Cidco, Chhatrapati Sambhajinagar, Maharashtra 431003 "
     },
     "foreign": [
         {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2xWcVlqQm5jMFV0Y0VGdFlWb3lkMlY2VGsxcWFsRRAB",
-            "name": "Alphonso Dsouza",
-            "rating": 5,
-            "date": "2 months ago",
-            "text": "As always enthusiastic staff.  Pleasant Doctor, good lab technicians... feel at ease.  Honestly it reminds me of my days in Dubai where medical services were similar.  Care for life was primary.  Extremely happy to be at Kokilaben.",
-            "profile": "https://www.google.com/maps/contrib/108165399545151255323/reviews?hl=en",
-            "country": "UAE",
-            "region": "middle_east",
-            "flags": [],
-            "tokens": [
-                "UAE"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT25CUk1EVjNUbFEwUjBwWmR6UjBWRFkyVG1aRVFWRRAB",
-            "name": "pooran jangir",
-            "rating": 5,
-            "date": "10 months ago",
-            "text": "Very cordial, prompt service, learned and experienced medical teams, quick responsive paramedical teams, renouned and expert doctors, service with a smile, wel-equipped multifacilited diagnostic centres, cooperative staff all attached to ground and without any expectations serving to the people of Bharat and overseas.\nWe are proud of such an organization.\nWishing all the Best \u2698\ufe0f \u2698\ufe0f\u2698\ufe0f\u2698\ufe0f\u2698\ufe0f\u2698\ufe0f\u2698\ufe0f\u2698\ufe0f\n---- Pooran Jangir and family",
-            "profile": "https://www.google.com/maps/contrib/109882675249716926024/reviews?hl=en",
-            "country": "overseas",
-            "region": "phrase_signal",
-            "flags": [],
-            "tokens": [
-                "overseas"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "ChdDSUhNMG9nS0VJQ0FnSUNfN2RlWHV3RRAB",
-            "name": "Nader Nadernejad",
-            "rating": 4,
-            "date": "a year ago",
-            "text": "As an international patient I do find this place alright and quite convenient, but there is certainly room for improvement. Firstly, doctors are good and knowledgeable. The hospital overall is well-kept and comfortable enough.\n\nSome points for improvement: the elevators are a bit too slow and get extremely crowded which is a health issue obviously. The food served is slightly lower quality than what I would expect from an Ambani private hospital. Overall just basic cafeteria food, tastes like it was rushed a little rather than prepared specially. The biggest quip I have though is the wait time. To do the health program it took about eight hours, with 45 minutes to 90 minutes of wait time between sessions. This is a longer wait time than I would expect seeing as I prepaid and booked in advance. Lots of people cutting in line and overwhelming secretaries with forms, the whole hospital feels a little short-staffed.\n\nOverall a pleasant experience but plan to be here for the entire day if you come. It\u2019s a comfortable enough experience but certainly doesn\u2019t feel premium by any margin.",
-            "profile": "https://www.google.com/maps/contrib/111317087360734532185/reviews?hl=en",
+            "id": "ChZDSUhNMG9nS0VJQ0FnSURSdy1YQ1lBEAE",
+            "name": "Narayanan Sivaji",
+            "rating": 3,
+            "date": "3 years ago",
+            "text": "Hospital has professional front desk staff. English should be a must to attract international patients. Had my dialysis twice in your hospital. On the whole your hospital was clean and  hygienic. Your auxiliary staff were humble and \u2026 More",
+            "profile": "https://www.google.com/maps/contrib/110950753721991436613/reviews?hl=en",
             "country": "international patient",
             "region": "phrase_signal",
             "flags": [],
@@ -51,109 +21,27 @@
             "lang": "en"
         },
         {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT21oQ1dYWXdWVFJTWm0xalYwOW1TRWRWZFdsMmExRRAB",
-            "name": "Priya Sheth",
+            "id": "ChdDSUhNMG9nS0VJQ0FnSUMyeHVtRjl3RRAB",
+            "name": "Kiran Jadhav",
             "rating": 5,
-            "date": "9 months ago",
-            "text": "We traveled from Gujarat for a Dr Visit at Kokilaben Hospital and had a wonderful experience with Kamakshi from the Patient Services team. She was very polite and supportive, coordinating everything smoothly\u2014from booking the doctor\u2019s appointment to guiding my family and assisting the patient. Her help made our hospital visit much easier.",
-            "profile": "https://www.google.com/maps/contrib/104096101930050076211/reviews?hl=en",
-            "country": "travelled from",
-            "region": "phrase_signal",
-            "flags": [
-                "TRAVELED_FROM"
-            ],
-            "tokens": [
-                "travelled from"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT2tkbE9FRkRhbXBqTkZaS1FVTmhUak5GVlVZMU5FRRAB",
-            "name": "Anil",
-            "rating": 1,
-            "date": "a year ago",
-            "text": "Excellent online consultation from Singapore with the doctor who was very patient and gave good recommendations for next step (right type of surgery). But this good experience is ruined by the hospital management as I have been begging (yes \u2026 More",
-            "profile": "https://www.google.com/maps/contrib/108701148237951457328/reviews?hl=en",
-            "country": "Singapore",
-            "region": "southeast_asia",
+            "date": "4 years ago",
+            "text": "Medicover Hospital is a Blessing to the residents of Aurangabad. It\u2019s the only hospital to boast Tata Hospital trained Onco-Surgeons. My father is operated by Dr Nitin Tathe, the Best Surgeon I have experienced so far, knowing and adopting American/European surgical Onco-protocols, he performed almost bloodless oral Surgery though performed hemi Mandibulectomy was so swift from outside no deficit is seen at all. Nursing care is also \u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f\u2b50\ufe0f. I highly recommend Medicover Hospital!",
+            "profile": "https://www.google.com/maps/contrib/110400626704864927754/reviews?hl=en",
+            "country": "USA",
+            "region": "north_america",
             "flags": [],
             "tokens": [
-                "Singapore"
+                "USA"
             ],
             "lang": "en"
         }
     ],
     "doctors": {
-        "Visit": [
-            3
+        "Nitin Tathe": [
+            1
         ]
     },
     "external": {
-        "Visit": [
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2twRU1YUjJjblF0UlRkTU4waFdha0ZsYURCUlozYxAB",
-                "name": "Himanshu Jat",
-                "rating": 5,
-                "date": "2 months ago",
-                "text": "We had a very positive experience at Kokilaben Dhirubhai Ambani Hospital when I brought my mother for her knee replacement surgery. The entire treatment process was smooth, professional, and reassuring from start to finish.\n\nA special thanks to Dr. Subhash Dhivare, who is an excellent doctor. His expertise, calm approach, and clear guidance gave us great confidence throughout the surgery and recovery process. We are truly grateful for the successful treatment.\n\nI would also like to appreciate Sisters Priyadarshani and Diksha, who were extremely caring, attentive, and always ready to help whenever needed. Their kindness and support made a big difference during our stay.\n\nA heartfelt thanks to Maushi Payal as well, who was very helpful and ensured my mother\u2019s comfort with proper cleaning, bathing, and overall care. She handled everything with warmth and dedication, making the stay much smoother for both my mother and our family.\n\nOverall, we are very satisfied with the treatment and care provided. Thank you to the entire team for making a challenging time feel much lighter. \ud83c\udf37",
-                "profile": "https://www.google.com/maps/contrib/102596125789272757824/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2xKRFpYRmtNbmQzZHpSM1JucFRlVjh3U205dmNsRRAB",
-                "name": "Vaibhav Jain",
-                "rating": 5,
-                "date": "3 months ago",
-                "text": "I would like to express my deepest gratitude to the entire team at Kokilaben Hospital, Koparkhairane, for the exceptional care provided to my father, Ashok Kumar Jain, during his 10-day cardiac treatment.\n\nFrom the very first day, the experience was nothing short of outstanding. The doctors were highly knowledgeable, calm, and reassuring\u2014taking the time to explain every detail and ensuring we felt confident and informed throughout the journey. Their expertise and timely decisions truly made a difference.\n\nA special mention to the nursing staff, who were incredibly attentive, compassionate, and always available with a smile. They treated my father not just as a patient, but like family\u2014ensuring his comfort at every step.\n\nI would also like to appreciate the support staff, housekeeping team, ward boys, and all ground-level staff. Their dedication, politeness, and prompt assistance created a very positive and stress-free environment for us during a difficult time.\n\nThe coordination across all departments was seamless, and the overall hygiene and management of the hospital were top-notch.\n\nThank you once again to each and every member of the hospital for your commitment, kindness, and professionalism. We will always be grateful for the care and support extended to our family.\n\nHighly recommended for anyone seeking quality cardiac care with a human touch.",
-                "profile": "https://www.google.com/maps/contrib/103945357403442045934/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT25oMlUwNTBjbUZMYlhsV09FNU9NVGh1VTBSblEzYxAB",
-                "name": "Sunad Sawant",
-                "rating": 5,
-                "date": "4 months ago",
-                "text": "I would give a solid 5 to this hospital for their seamless admission, treatment and discharge process. It never felt like we're in a hospital. My father was have positive TMT test hence, the doctor consulted for an angiography. All the doctors were very calm professional and transparent in providing all the information to us. Angiography took around 30 minutes and the patient was kept in observation for a day. Bedsheets were changed twice a day, housekeeping was conducted routinely. All nurses were also having a very good nature. Overall, we're very satisfied with the entire services. Only admission desk needs a little bit of improvement, rest it was an amazing experience!",
-                "profile": "https://www.google.com/maps/contrib/109496238341944694887/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT21WRE5UZHhRMU5pUzFOaWFrdFZXa0ZEYUZrdGFtYxAB",
-                "name": "KIRAN HANDE",
-                "rating": 5,
-                "date": "5 months ago",
-                "text": "My experience at the hospital was excellent. The medical team demonstrated professionalism and care, and the facilities were well-maintained. I sincerely appreciate the quality of service provided.",
-                "profile": "https://www.google.com/maps/contrib/115383758714224149548/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT25Oa2NrSlhSSGR6WWtwV1QzaERXVVF0WjFwNE9XYxAB",
-                "name": "amit jagtap",
-                "rating": 4,
-                "date": "3 weeks ago",
-                "text": "Good nursing staff, very much attentive. My son birthday was celebrated in the room. It was an overwhelming expierence. Only need to improve on catering service food serving patients very late to come in room.\nRest all was good.\nThanks\nAmit Jagtap",
-                "profile": "https://www.google.com/maps/contrib/116332822125524312125/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT2pacWFrRjRVR1ZuWjJOblpqWkNSVFZuU0ZaUU5tYxAB",
-                "name": "Jayesh Kedare",
-                "rating": 5,
-                "date": "2 months ago",
-                "text": "I would like to express my sincere appreciation for the excellent care and service provided at the Day Care Chemotherapy Unit of Kokilaben Dhirubhai Ambani Hospital.\nThe entire staff was extremely professional, caring, and supportive throughout the treatment process. The doctors, nurses, and support team ensured that every procedure was handled smoothly and with utmost compassion. Their prompt assistance, positive attitude, and attention to patient comfort made a difficult time much easier to manage.\nThe unit was well-maintained, hygienic, and efficiently managed, reflecting a high standard of healthcare service. Special thanks to the nursing staff for their patience, kindness, and continuous encouragement.\nTruly grateful for the dedication and commitment shown by the entire team. Keep up the excellent work.",
-                "profile": "https://www.google.com/maps/contrib/115060056101434404317/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT21ZNVpsRm1jV3hoY0ZGbU0zRjRVMWRFUzFFdFFrRRAB",
-                "name": "Rasika Wagh",
-                "rating": 5,
-                "date": "a month ago",
-                "text": "We would like to express our heartfelt gratitude to the entire team at Kokilaben Dhirubhai Ambani Hospital, Kopar Khairane, for the exceptional care provided to my mother during her CABG (Coronary Artery Bypass Grafting) surgery last month.\n\nFrom the doctors and nurses to the ward attendants and support staff, every individual was compassionate, professional, and dedicated to ensuring the best possible care. Their constant support and attention gave our family immense confidence throughout this challenging period.\n\nA special thanks to Dr. Amit Singh, my mother's cardiologist, under whose care she had been receiving treatment for the past two years. My mother has been living with hypertension, diabetes, and thyroid-related health issues for over 20 years, and naturally we were concerned about her recovery after such a major surgery. However, Dr. Singh's excellent medical management before and after the procedure played a crucial role in her smooth recovery. It has now been one month since the surgery, and all her vital parameters are stable and normal. In fact, some of her medication dosages have already been reduced, which speaks volumes about her progress.\n\nWe would also like to extend our sincere appreciation to Dr. Manish Hinduja and his entire cardiac surgery team, special mention to Dr. Attaulah and Dr. Manish Kela (Anaesthetic) for successfully performing the operation and for their continuous guidance, reassurance, and support throughout the process.\n\nAnother aspect that truly impressed us was the hospital's transparency in billing. Before admission, we were given an estimated budget of \u20b95,37,000 for the surgery. To our pleasant surprise, the final bill amounted to only \u20b94,96,000. In an era where many hospitals often exceed estimates, this level of honesty and transparency was remarkable and highly appreciated.\n\nChoosing Kokilaben Dhirubhai Ambani Hospital for my mother's surgery was one of the best decisions we made. We are deeply grateful for the outstanding medical care, professionalism, and compassion shown by the entire team. We wholeheartedly recommend this hospital to anyone seeking world-class cardiac care.\nThank you once again to everyone involved in my mother's treatment and recovery.",
-                "profile": "https://www.google.com/maps/contrib/106592605364206645943/reviews?hl=en"
-            },
-            {
-                "id": "Ci9DQUlRQUNvZENodHljRjlvT205b1RISXdlR1JxUTFwNFJGWlpOR3Q1UXpCdlVWRRAB",
-                "name": "Disha Shetty",
-                "rating": 4,
-                "date": "5 months ago",
-                "text": "We had a great experience at the hospital. Dr Amit Singh was our primary doctor overseeing my father's angioplasty. It was a smooth experience and he was very empathetic with my father.\n\nDr Sumit Mehta also treated my father for a prostate issue and we had an excellent experience. A special shout out to his assistant Dr Chetan whose detailed explanation and kindness left a mark on my mother who was the primary caregiver and a senior citizen herself.\n\nThe nurses, including Ms Ansha, gave good care, and the entire medical team was very attentive.\n\nOur only complaint was during discharge process where the TPA team could have been better. We had to spend an additional day in the hospital due to the delay souring the otherwise smooth experience.",
-                "profile": "https://www.google.com/maps/contrib/112491702492328020870/reviews?hl=en"
-            }
-        ]
+        "Nitin Tathe": []
     }
 }

@@ -23,6 +23,7 @@ export declare class EnrichmentService {
         pros: string[];
         cons: string[];
         localBenchmarkUsd: number | null;
+        quotedPriceUsd: number | null;
     }>;
     enrichMissing(opts?: {
         force?: boolean;

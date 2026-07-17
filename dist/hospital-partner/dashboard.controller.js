@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DashboardController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const fs_1 = require("fs");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
@@ -21,11 +22,13 @@ const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const partner_service_1 = require("./partner.service");
 const teleconsult_service_1 = require("./teleconsult.service");
+const bulk_import_service_1 = require("./bulk-import.service");
 const partner_dto_1 = require("./dto/partner.dto");
 let DashboardController = class DashboardController {
-    constructor(svc, tele) {
+    constructor(svc, tele, bulk) {
         this.svc = svc;
         this.tele = tele;
+        this.bulk = bulk;
     }
     dashboard(req) { return this.svc.dashboard(req.user.id); }
     setPassword(dto, req) { return this.svc.setPassword(req.user.id, dto.password); }
@@ -35,6 +38,20 @@ let DashboardController = class DashboardController {
     removeDoctor(id, req) { return this.svc.removeDoctor(req.user.id, id); }
     link(id, req) { return this.svc.sendAvailabilityLink(req.user.id, id); }
     pricing(dto, req) { return this.svc.setPricing(req.user.id, dto); }
+    template(kind, res) {
+        const csv = this.bulk.template(kind);
+        res.set({
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': `attachment; filename="curify-${kind}-template.csv"`,
+        });
+        return csv;
+    }
+    importDoctors(file, req) {
+        return this.svc.importDoctors(req.user.id, file);
+    }
+    importPackages(file, req) {
+        return this.svc.importPackages(req.user.id, file);
+    }
     services(dto, req) { return this.svc.setServices(req.user.id, dto); }
     generateNarrative(req) { return this.svc.generateNarrative(req.user.id); }
     reviews(req, rating, region, verified) {
@@ -132,6 +149,37 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "pricing", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Download the CSV template for a bulk import' }),
+    (0, common_1.Get)('import/:kind/template'),
+    __param(0, (0, common_1.Param)('kind')),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "template", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Bulk-import doctors from a CSV' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.Post)('import/doctors'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: bulk_import_service_1.CSV_MAX_BYTES }, fileFilter: bulk_import_service_1.csvFileFilter })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "importDoctors", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Bulk-import treatment packages + prices from a CSV' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.Post)('import/packages'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: bulk_import_service_1.CSV_MAX_BYTES }, fileFilter: bulk_import_service_1.csvFileFilter })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "importPackages", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Set patient services (languages, insurers, facilities)' }),
     (0, common_1.Put)('services'),
     __param(0, (0, common_1.Body)()),
@@ -202,6 +250,8 @@ exports.DashboardController = DashboardController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)('HOSPITAL'),
     (0, common_1.Controller)('partner/dashboard'),
-    __metadata("design:paramtypes", [partner_service_1.PartnerService, teleconsult_service_1.TeleconsultService])
+    __metadata("design:paramtypes", [partner_service_1.PartnerService,
+        teleconsult_service_1.TeleconsultService,
+        bulk_import_service_1.BulkImportService])
 ], DashboardController);
 //# sourceMappingURL=dashboard.controller.js.map

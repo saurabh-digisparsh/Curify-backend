@@ -29,6 +29,8 @@ let PartnerAdminController = class PartnerAdminController {
     get(id) { return this.svc.getForAdmin(id); }
     reviewDoc(docId, dto, req) { return this.svc.reviewDoc(docId, dto, req.user.id); }
     setStatus(id, body) { return this.svc.setApplicationStatus(id, body.status); }
+    resendOtp(id) { return this.svc.adminResendOtp(id); }
+    resendCredentials(id) { return this.svc.adminResendCredentials(id); }
     setPriority(id, body) { return this.svc.setPriority(id, !!body.priority); }
 };
 exports.PartnerAdminController = PartnerAdminController;
@@ -68,6 +70,22 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], PartnerAdminController.prototype, "setStatus", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Help a stuck hospital: re-send its email verification code' }),
+    (0, common_1.Post)(':id/resend-otp'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PartnerAdminController.prototype, "resendOtp", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Help a stuck hospital: (re)issue dashboard credentials' }),
+    (0, common_1.Post)(':id/resend-credentials'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], PartnerAdminController.prototype, "resendCredentials", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Set the admin-controlled "Priority partner" ranking flag' }),
     (0, common_1.Post)(':id/priority'),

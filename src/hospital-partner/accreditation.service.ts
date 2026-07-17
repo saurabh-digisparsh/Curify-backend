@@ -21,15 +21,15 @@ const tokens = (s: string) => (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' 
 @Injectable()
 export class AccreditationService {
   /**
-   * Look the hospital up in the registry mirror by name + city. Returns every
-   * matching accreditation (a hospital can hold both NABH and JCI). Empty = not
-   * found → the applicant goes through the document-check flow.
+   * Look the hospital up in the registry mirror by name + city. Returns at most
+   * one accreditation per body — one NABH + one JCI (a hospital can hold both).
+   * Empty = not found → the applicant goes through the document-check flow.
    */
   lookup(name: string, city?: string): AccreditationHit[] {
     const nameTok = new Set(tokens(name));
     const cityL = (city || '').trim().toLowerCase();
     if (nameTok.size === 0) return [];
-    return ACCREDITATION_MIRROR.filter((m) => {
+    const hits = ACCREDITATION_MIRROR.filter((m) => {
       const mTok = tokens(m.name);
       // Share a distinctive brand token (e.g. "apollo", "fortis") …
       const nameMatch = mTok.some((t) => nameTok.has(t));
@@ -37,6 +37,19 @@ export class AccreditationService {
       const cityMatch = !cityL || !m.city || m.city.toLowerCase() === cityL || cityL.includes(m.city.toLowerCase()) || m.city.toLowerCase().includes(cityL);
       return nameMatch && cityMatch;
     }).map((m) => ({ body: m.body as AccreditationBody, identifier: m.identifier, validUntil: m.validUntil ? new Date(m.validUntil) : null, matchedName: m.name }));
+
+    // One brand token can match several registry rows — sister branches in the
+    // same city, plus a row per re-certification cycle. Keep only the current
+    // certificate per body: the one with the furthest-future validUntil. An
+    // unknown (null) validUntil loses to any dated row, and only wins if it's
+    // the sole hit for that body.
+    const best = new Map<AccreditationBody, AccreditationHit>();
+    const until = (h: AccreditationHit) => h.validUntil?.getTime() ?? -Infinity;
+    for (const h of hits) {
+      const cur = best.get(h.body);
+      if (!cur || until(h) > until(cur)) best.set(h.body, h);
+    }
+    return [...best.values()];
   }
 
   /** Manual identifier check (fallback path). Registry hit → fast-track; else null. */

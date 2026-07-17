@@ -105,6 +105,7 @@ let EnrichmentService = EnrichmentService_1 = class EnrichmentService {
             pros: Array.isArray(data?.pros) ? data.pros : [],
             cons: Array.isArray(data?.cons) ? data.cons : [],
             localBenchmarkUsd: data?.localBenchmarkUsd ? Math.round(data.localBenchmarkUsd) : null,
+            quotedPriceUsd: data?.quotedPriceUsd ? Math.round(data.quotedPriceUsd) : null,
         };
     }
     async enrichMissing(opts = {}) {

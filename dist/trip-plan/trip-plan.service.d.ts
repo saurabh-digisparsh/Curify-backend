@@ -19,22 +19,22 @@ export declare class TripPlanService {
     }>;
     getFlights(origin: string, destination: string): Promise<{
         id: string;
+        label: string | null;
         destination: string;
         origin: string;
         airline: string;
         price: number;
         duration: string;
         stops: string | null;
-        label: string | null;
         bookingUrl: string | null;
     }[]>;
     getInsurance(): Promise<{
         id: string;
         name: string;
+        coverage: string;
         bookingUrl: string | null;
         tagline: string | null;
         pricePerDay: number;
-        coverage: string;
         features: import("@prisma/client/runtime/library").JsonValue;
         recommended: boolean;
     }[]>;
@@ -54,27 +54,27 @@ export declare class TripPlanService {
     }): Promise<any>;
     listServices(userId: string, hospitalId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        userId: string;
-        hospitalId: string;
         type: string;
-        provider: string;
-        status: string;
-        proofPath: string | null;
-        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
         updatedAt: Date;
+        userId: string;
+        status: string;
+        provider: string;
+        hospitalId: string;
+        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        proofPath: string | null;
     }[]>;
     setServiceStatus(userId: string, hospitalId: string, type: ServiceType, status: ServiceStatus): import(".prisma/client").Prisma.Prisma__TripServiceStepClient<{
         id: string;
-        createdAt: Date;
-        userId: string;
-        hospitalId: string;
         type: string;
-        provider: string;
-        status: string;
-        proofPath: string | null;
-        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
         updatedAt: Date;
+        userId: string;
+        status: string;
+        provider: string;
+        hospitalId: string;
+        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        proofPath: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     attachProof(userId: string, hospitalId: string, type: ServiceType, file: Express.Multer.File, fields: {
         visaNumber?: string;
@@ -82,15 +82,15 @@ export declare class TripPlanService {
         travelDate?: string;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        userId: string;
-        hospitalId: string;
         type: string;
-        provider: string;
-        status: string;
-        proofPath: string | null;
-        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        createdAt: Date;
         updatedAt: Date;
+        userId: string;
+        status: string;
+        provider: string;
+        hospitalId: string;
+        meta: import("@prisma/client/runtime/library").JsonValue | null;
+        proofPath: string | null;
     }>;
     private upsertStep;
     private saveProof;

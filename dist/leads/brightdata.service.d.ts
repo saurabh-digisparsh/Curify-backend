@@ -153,8 +153,8 @@ export declare class BrightDataService {
             createdAt: Date;
             updatedAt: Date;
             temperature: string | null;
-            procedures: Prisma.JsonValue | null;
             category: import(".prisma/client").$Enums.LeadCategory | null;
+            procedures: Prisma.JsonValue | null;
             externalId: string;
             intentScore: number;
             categoryReason: string | null;
@@ -376,8 +376,8 @@ export declare class BrightDataService {
         createdAt: Date;
         updatedAt: Date;
         temperature: string | null;
-        procedures: Prisma.JsonValue | null;
         category: import(".prisma/client").$Enums.LeadCategory | null;
+        procedures: Prisma.JsonValue | null;
         externalId: string;
         intentScore: number;
         categoryReason: string | null;

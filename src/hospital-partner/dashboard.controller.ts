@@ -1,8 +1,9 @@
 import {
   Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request, Res,
-  StreamableFile,
+  StreamableFile, UploadedFile, UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import { createReadStream } from 'fs';
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,6 +11,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PartnerService } from './partner.service';
 import { TeleconsultService } from './teleconsult.service';
+import { BulkImportService, ImportKind, CSV_MAX_BYTES, csvFileFilter } from './bulk-import.service';
 import { DoctorDto, DoctorLeaveDto, PricingDto, ServicesDto, SetPasswordDto } from './dto/partner.dto';
 
 // Hospital dashboard — authenticated owner. Setup checklist gates Go-live (FR-20).
@@ -19,7 +21,11 @@ import { DoctorDto, DoctorLeaveDto, PricingDto, ServicesDto, SetPasswordDto } fr
 @Roles('HOSPITAL')
 @Controller('partner/dashboard')
 export class DashboardController {
-  constructor(private readonly svc: PartnerService, private readonly tele: TeleconsultService) {}
+  constructor(
+    private readonly svc: PartnerService,
+    private readonly tele: TeleconsultService,
+    private readonly bulk: BulkImportService,
+  ) {}
 
   @ApiOperation({ summary: 'Dashboard payload + setup checklist' })
   @Get()
@@ -52,6 +58,33 @@ export class DashboardController {
   @ApiOperation({ summary: 'Set pricing & capacity' })
   @Put('pricing')
   pricing(@Body() dto: PricingDto, @Request() req) { return this.svc.setPricing(req.user.id, dto); }
+
+  @ApiOperation({ summary: 'Download the CSV template for a bulk import' })
+  @Get('import/:kind/template')
+  template(@Param('kind') kind: ImportKind, @Res({ passthrough: true }) res: Response) {
+    const csv = this.bulk.template(kind);
+    res.set({
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="curify-${kind}-template.csv"`,
+    });
+    return csv;
+  }
+
+  @ApiOperation({ summary: 'Bulk-import doctors from a CSV' })
+  @ApiConsumes('multipart/form-data')
+  @Post('import/doctors')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: CSV_MAX_BYTES }, fileFilter: csvFileFilter }))
+  importDoctors(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return this.svc.importDoctors(req.user.id, file);
+  }
+
+  @ApiOperation({ summary: 'Bulk-import treatment packages + prices from a CSV' })
+  @ApiConsumes('multipart/form-data')
+  @Post('import/packages')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: CSV_MAX_BYTES }, fileFilter: csvFileFilter }))
+  importPackages(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return this.svc.importPackages(req.user.id, file);
+  }
 
   @ApiOperation({ summary: 'Set patient services (languages, insurers, facilities)' })
   @Put('services')

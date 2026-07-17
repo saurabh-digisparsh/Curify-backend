@@ -18,9 +18,9 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
@@ -37,9 +37,9 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
@@ -56,9 +56,9 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
@@ -75,16 +75,16 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
         triggeredBy: string | null;
         finishedAt: Date | null;
     }>;
-    scrapeOneHospital(hospitalId: string, triggeredBy: string): Promise<{
+    scrapeOneHospital(hospitalId: string, triggeredBy: string, minReviews?: number): Promise<{
         error: string | null;
         params: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
@@ -94,9 +94,9 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
@@ -115,9 +115,9 @@ export declare class ScrapeService {
         created: number;
         status: import(".prisma/client").$Enums.ScrapeStatus;
         startedAt: Date | null;
-        skipped: number;
         target: string;
         updated: number;
+        skipped: number;
         stages: import("@prisma/client/runtime/library").JsonValue | null;
         logPath: string | null;
         output: string | null;
