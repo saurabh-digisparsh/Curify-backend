@@ -46,7 +46,7 @@ export class TripPlanController {
     @Body() body: {
       hospitalId: string; diagnosis: string; treatment: string; country: string;
       departureCity?: string; travelDate?: string; travelers?: number; stayNights?: number;
-      passport?: string; visaHelp?: string; accommodation?: string; notes?: string;
+      accommodation?: string;
       // Doctor's accepted quote → becomes the authoritative treatment cost line.
       treatmentCost?: number; treatmentCurrency?: string;
     },

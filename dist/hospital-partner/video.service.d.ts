@@ -11,9 +11,11 @@ export interface VideoToken {
     jwt: string;
     displayName: string;
 }
+export declare function isVideoConfigured(settings: SettingsService): Promise<boolean>;
 export declare class VideoService {
     private jwt;
     private settings;
     constructor(jwt: JwtService, settings: SettingsService);
+    enabled(): Promise<boolean>;
     mintJitsi(roomName: string, user: VideoUser, isModerator: boolean): Promise<VideoToken>;
 }

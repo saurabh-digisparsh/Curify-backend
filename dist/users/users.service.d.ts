@@ -6,10 +6,10 @@ export declare class UsersService {
         id: string;
         name: string | null;
         email: string;
-        phone: string | null;
-        country: string | null;
-        verifyToken: string | null;
         password: string;
+        country: string | null;
+        phone: string | null;
+        verifyToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;
@@ -24,10 +24,10 @@ export declare class UsersService {
         id: string;
         name: string | null;
         email: string;
-        phone: string | null;
-        country: string | null;
-        verifyToken: string | null;
         password: string;
+        country: string | null;
+        phone: string | null;
+        verifyToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
         emailVerifiedAt: Date | null;

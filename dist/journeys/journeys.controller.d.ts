@@ -5,15 +5,15 @@ export declare class JourneysController {
     list(req: any, page?: string, pageSize?: string): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -27,15 +27,15 @@ export declare class JourneysController {
         journeys: {
             treatment: string | null;
             id: string;
-            travelDate: Date | null;
+            description: string | null;
+            title: string | null;
             city: string | null;
             urgency: string | null;
+            travelDate: Date | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
             status: string;
-            title: string | null;
             hospitalId: string | null;
             reportId: string | null;
             homeCountry: string | null;
@@ -53,15 +53,15 @@ export declare class JourneysController {
     get(req: any, id: string): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -75,15 +75,15 @@ export declare class JourneysController {
     create(req: any, body: any): import(".prisma/client").Prisma.Prisma__JourneyClient<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -97,15 +97,15 @@ export declare class JourneysController {
     update(req: any, id: string, body: any): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;

@@ -2,6 +2,7 @@ import { OnboardingStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from './notification.service';
 import { AccreditationService } from './accreditation.service';
+import { VideoService } from './video.service';
 import { EnrichmentService } from '../admin/enrichment.service';
 import { ScrapeService } from '../admin/scrape.service';
 import { ApplyDto, ContactDto, VerifyOtpDto, AccreditationDto, UploadDocDto, AgreementDto, DoctorDto, PricingDto, ServicesDto, SetAvailabilityDto, ReviewDocDto } from './dto/partner.dto';
@@ -9,9 +10,10 @@ export declare class PartnerService {
     private prisma;
     private notify;
     private accred;
+    private video;
     private enrich;
     private scrape;
-    constructor(prisma: PrismaService, notify: NotificationService, accred: AccreditationService, enrich: EnrichmentService, scrape: ScrapeService);
+    constructor(prisma: PrismaService, notify: NotificationService, accred: AccreditationService, video: VideoService, enrich: EnrichmentService, scrape: ScrapeService);
     apply(dto: ApplyDto): Promise<{
         id: string;
         sessionToken: string;

@@ -21,8 +21,8 @@ export declare class AuthService {
             id: string;
             name: string | null;
             email: string;
-            phone: string | null;
             country: string | null;
+            phone: string | null;
             verifyToken: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
@@ -49,8 +49,8 @@ export declare class AuthService {
             id: string;
             name: string | null;
             email: string;
-            phone: string | null;
             country: string | null;
+            phone: string | null;
             verifyToken: string | null;
             role: import(".prisma/client").$Enums.Role;
             medicalConsentAt: Date | null;
@@ -72,8 +72,8 @@ export declare class AuthService {
         id: string;
         name: string | null;
         email: string;
-        phone: string | null;
         country: string | null;
+        phone: string | null;
         verifyToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;
@@ -92,8 +92,8 @@ export declare class AuthService {
         id: string;
         name: string | null;
         email: string;
-        phone: string | null;
         country: string | null;
+        phone: string | null;
         verifyToken: string | null;
         role: import(".prisma/client").$Enums.Role;
         medicalConsentAt: Date | null;

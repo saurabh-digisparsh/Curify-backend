@@ -23,13 +23,14 @@ export declare class BookingsService {
             specialty: string | null;
             id: string;
             name: string;
+            priority: boolean;
             country: string;
             city: string;
             createdAt: Date;
+            fairnessScore: number | null;
             flag: string | null;
             imageUrl: string | null;
             jciAccredited: boolean;
-            fairnessScore: number | null;
             overallRating: number | null;
             quotedPriceUsd: number | null;
             localPriceUsd: number | null;
@@ -53,7 +54,6 @@ export declare class BookingsService {
             ownerUserId: string | null;
             approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
             nabhAccredited: boolean;
-            priority: boolean;
         };
         statusUpdates: {
             id: string;

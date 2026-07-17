@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const hospitals_controller_1 = require("./hospitals.controller");
 const hospitals_service_1 = require("./hospitals.service");
 const ai_module_1 = require("../ai/ai.module");
+const admin_module_1 = require("../admin/admin.module");
 let HospitalsModule = class HospitalsModule {
 };
 exports.HospitalsModule = HospitalsModule;
 exports.HospitalsModule = HospitalsModule = __decorate([
     (0, common_1.Module)({
-        imports: [ai_module_1.AiModule],
+        imports: [ai_module_1.AiModule, admin_module_1.AdminModule],
         controllers: [hospitals_controller_1.HospitalsController],
         providers: [hospitals_service_1.HospitalsService],
         exports: [hospitals_service_1.HospitalsService],

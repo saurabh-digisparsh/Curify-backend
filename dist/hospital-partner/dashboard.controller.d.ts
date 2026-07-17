@@ -48,9 +48,9 @@ export declare class DashboardController {
             documents: {
                 id: string;
                 createdAt: Date;
+                originalName: string;
                 sender: import(".prisma/client").$Enums.TeleconsultDocSender;
                 kind: string;
-                originalName: string;
             }[];
             doctor: {
                 id: string;

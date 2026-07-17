@@ -42,11 +42,12 @@ export declare class LeadsService {
         items: {
             query: string | null;
             id: string;
+            url: string;
+            description: string | null;
+            title: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             status: import(".prisma/client").$Enums.LeadStatus;
-            title: string;
             notes: string | null;
             region: import(".prisma/client").$Enums.LeadRegion;
             lang: string | null;
@@ -63,7 +64,6 @@ export declare class LeadsService {
             commentCount: number | null;
             aiProcedure: string | null;
             externalId: string;
-            url: string;
             intentScore: number;
             matchedKeywords: Prisma.JsonValue | null;
             transcript: string | null;
@@ -104,9 +104,9 @@ export declare class LeadsService {
             params: Prisma.JsonValue | null;
             id: string;
             createdAt: Date;
+            created: number;
             status: string;
             startedAt: Date | null;
-            created: number;
             updated: number;
             finishedAt: Date | null;
             trigger: string | null;
@@ -122,11 +122,12 @@ export declare class LeadsService {
     }): Promise<{
         query: string | null;
         id: string;
+        url: string;
+        description: string | null;
+        title: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         status: import(".prisma/client").$Enums.LeadStatus;
-        title: string;
         notes: string | null;
         region: import(".prisma/client").$Enums.LeadRegion;
         lang: string | null;
@@ -143,7 +144,6 @@ export declare class LeadsService {
         commentCount: number | null;
         aiProcedure: string | null;
         externalId: string;
-        url: string;
         intentScore: number;
         matchedKeywords: Prisma.JsonValue | null;
         transcript: string | null;
@@ -167,9 +167,9 @@ export declare class LeadsService {
         params: Prisma.JsonValue | null;
         id: string;
         createdAt: Date;
+        created: number;
         status: string;
         startedAt: Date | null;
-        created: number;
         updated: number;
         finishedAt: Date | null;
         trigger: string | null;
@@ -224,9 +224,9 @@ export declare class LeadsService {
             params: Prisma.JsonValue | null;
             id: string;
             createdAt: Date;
+            created: number;
             status: string;
             startedAt: Date | null;
-            created: number;
             updated: number;
             finishedAt: Date | null;
             trigger: string | null;
@@ -271,6 +271,7 @@ export declare class LeadsService {
         items: {
             query: string | null;
             id: string;
+            url: string;
             description: string | null;
             title: string;
             region: import(".prisma/client").$Enums.LeadRegion;
@@ -287,7 +288,6 @@ export declare class LeadsService {
             commentCount: number | null;
             aiProcedure: string | null;
             externalId: string;
-            url: string;
             intentScore: number;
             matchedKeywords: Prisma.JsonValue | null;
             aiLead: boolean | null;
@@ -324,9 +324,9 @@ export declare class LeadsService {
         params: Prisma.JsonValue | null;
         id: string;
         createdAt: Date;
+        created: number;
         status: string;
         startedAt: Date | null;
-        created: number;
         updated: number;
         finishedAt: Date | null;
         trigger: string | null;

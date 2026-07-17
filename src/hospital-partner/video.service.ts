@@ -18,9 +18,36 @@ export interface VideoToken {
   displayName: string;
 }
 
+// Values that mean "not filled in yet" — treated as INVALID, same as missing. A
+// consult booked against a placeholder secret would fail to connect at join time.
+const PLACEHOLDER = /^(changeme|change[_-]?me|your[_-]?(app[_-]?)?secret|your[_-]?secret[_-]?here|replace[_-]?me|secret|todo|none|xxx+)$/i;
+
+/**
+ * Is the Jitsi stack usably configured (domain + app id + a real app secret)?
+ *
+ * When this is false the whole video-consult SCHEDULING flow is skipped — we do
+ * not advertise bookable doctors, hand out slots, take bookings, or gate go-live
+ * on teleconsult availability. Better to hide the feature than let a patient book
+ * a call that can never connect.
+ */
+export async function isVideoConfigured(settings: SettingsService): Promise<boolean> {
+  const [domain, appId, appSecret] = await Promise.all([
+    settings.get('JITSI_DOMAIN'),
+    settings.get('JITSI_APP_ID'),
+    settings.get('JITSI_APP_SECRET'),
+  ]);
+  const ok = (v?: string) => !!v && v.trim().length > 0 && !PLACEHOLDER.test(v.trim());
+  return ok(domain) && ok(appId) && ok(appSecret);
+}
+
 @Injectable()
 export class VideoService {
   constructor(private jwt: JwtService, private settings: SettingsService) {}
+
+  /** Whether video consults are available at all (see isVideoConfigured). */
+  enabled(): Promise<boolean> {
+    return isVideoConfigured(this.settings);
+  }
 
   /**
    * Mint a short-lived Jitsi JWT for one participant of one room. Signed HS256
@@ -31,14 +58,14 @@ export class VideoService {
    * don't block the whole app's boot for an unconfigured optional feature.
    */
   async mintJitsi(roomName: string, user: VideoUser, isModerator: boolean): Promise<VideoToken> {
+    if (!(await this.enabled())) {
+      throw new ServiceUnavailableException('Video consultations are not configured yet.');
+    }
     const [domain, appId, appSecret] = await Promise.all([
       this.settings.get('JITSI_DOMAIN'),
       this.settings.get('JITSI_APP_ID'),
       this.settings.get('JITSI_APP_SECRET'),
     ]);
-    if (!domain || !appId || !appSecret) {
-      throw new ServiceUnavailableException('Video consultations are not configured yet.');
-    }
     const displayName = user.name || (isModerator ? 'Doctor' : 'Patient');
     const jwt = await this.jwt.signAsync(
       {

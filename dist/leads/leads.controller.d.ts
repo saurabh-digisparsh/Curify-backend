@@ -40,9 +40,9 @@ export declare class LeadsController {
             params: import("@prisma/client/runtime/library").JsonValue | null;
             id: string;
             createdAt: Date;
+            created: number;
             status: string;
             startedAt: Date | null;
-            created: number;
             updated: number;
             finishedAt: Date | null;
             trigger: string | null;
@@ -57,9 +57,9 @@ export declare class LeadsController {
         params: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
         createdAt: Date;
+        created: number;
         status: string;
         startedAt: Date | null;
-        created: number;
         updated: number;
         finishedAt: Date | null;
         trigger: string | null;
@@ -114,9 +114,9 @@ export declare class LeadsController {
             params: import("@prisma/client/runtime/library").JsonValue | null;
             id: string;
             createdAt: Date;
+            created: number;
             status: string;
             startedAt: Date | null;
-            created: number;
             updated: number;
             finishedAt: Date | null;
             trigger: string | null;
@@ -199,6 +199,7 @@ export declare class LeadsController {
         items: {
             query: string | null;
             id: string;
+            url: string;
             description: string | null;
             title: string;
             region: import(".prisma/client").$Enums.LeadRegion;
@@ -215,7 +216,6 @@ export declare class LeadsController {
             commentCount: number | null;
             aiProcedure: string | null;
             externalId: string;
-            url: string;
             intentScore: number;
             matchedKeywords: import("@prisma/client/runtime/library").JsonValue | null;
             aiLead: boolean | null;
@@ -239,11 +239,12 @@ export declare class LeadsController {
         items: {
             query: string | null;
             id: string;
+            url: string;
+            description: string | null;
+            title: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             status: import(".prisma/client").$Enums.LeadStatus;
-            title: string;
             notes: string | null;
             region: import(".prisma/client").$Enums.LeadRegion;
             lang: string | null;
@@ -260,7 +261,6 @@ export declare class LeadsController {
             commentCount: number | null;
             aiProcedure: string | null;
             externalId: string;
-            url: string;
             intentScore: number;
             matchedKeywords: import("@prisma/client/runtime/library").JsonValue | null;
             transcript: string | null;
@@ -286,9 +286,9 @@ export declare class LeadsController {
         params: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;
         createdAt: Date;
+        created: number;
         status: string;
         startedAt: Date | null;
-        created: number;
         updated: number;
         finishedAt: Date | null;
         trigger: string | null;
@@ -303,11 +303,12 @@ export declare class LeadsController {
     }): Promise<{
         query: string | null;
         id: string;
+        url: string;
+        description: string | null;
+        title: string;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         status: import(".prisma/client").$Enums.LeadStatus;
-        title: string;
         notes: string | null;
         region: import(".prisma/client").$Enums.LeadRegion;
         lang: string | null;
@@ -324,7 +325,6 @@ export declare class LeadsController {
         commentCount: number | null;
         aiProcedure: string | null;
         externalId: string;
-        url: string;
         intentScore: number;
         matchedKeywords: import("@prisma/client/runtime/library").JsonValue | null;
         transcript: string | null;
@@ -494,14 +494,15 @@ export declare class LeadsController {
     captures(page?: string, pageSize?: string, platform?: string, category?: string, temperature?: string, minSignals?: string, q?: string, includeDeleted?: string, includeSpam?: string, sort?: string, needsReview?: string): Promise<{
         items: {
             id: string;
+            raw: import("@prisma/client/runtime/library").JsonValue;
+            url: string | null;
+            title: string | null;
             createdAt: Date;
             updatedAt: Date;
+            temperature: string | null;
             procedures: import("@prisma/client/runtime/library").JsonValue | null;
-            title: string | null;
-            raw: import("@prisma/client/runtime/library").JsonValue;
             category: import(".prisma/client").$Enums.LeadCategory | null;
             externalId: string;
-            url: string | null;
             intentScore: number;
             categoryReason: string | null;
             categoryConfidence: number | null;
@@ -520,7 +521,6 @@ export declare class LeadsController {
             hasCost: boolean;
             hasOrigin: boolean;
             signalCount: number;
-            temperature: string | null;
             origins: import("@prisma/client/runtime/library").JsonValue | null;
             isSpam: boolean;
             aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
@@ -556,14 +556,15 @@ export declare class LeadsController {
     }>;
     capture(id: string): import(".prisma/client").Prisma.Prisma__SourceCaptureClient<{
         id: string;
+        raw: import("@prisma/client/runtime/library").JsonValue;
+        url: string | null;
+        title: string | null;
         createdAt: Date;
         updatedAt: Date;
+        temperature: string | null;
         procedures: import("@prisma/client/runtime/library").JsonValue | null;
-        title: string | null;
-        raw: import("@prisma/client/runtime/library").JsonValue;
         category: import(".prisma/client").$Enums.LeadCategory | null;
         externalId: string;
-        url: string | null;
         intentScore: number;
         categoryReason: string | null;
         categoryConfidence: number | null;
@@ -582,7 +583,6 @@ export declare class LeadsController {
         hasCost: boolean;
         hasOrigin: boolean;
         signalCount: number;
-        temperature: string | null;
         origins: import("@prisma/client/runtime/library").JsonValue | null;
         isSpam: boolean;
         aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
@@ -605,7 +605,7 @@ export declare class LeadsController {
     }, req: any): Promise<{
         ok: boolean;
         id: string;
-        category: "OTHER" | "LEAD" | "PARTNER" | "MARKETING" | "NEWS";
+        category: "LEAD" | "PARTNER" | "MARKETING" | "NEWS" | "OTHER";
     }>;
     restoreCapture(id: string): Promise<{
         ok: boolean;

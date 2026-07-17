@@ -120,6 +120,8 @@ export class TeleconsultService {
   /** Open teleconsult slots a patient can book with this doctor over the next two
    *  weeks — derived from the doctor's recurring weekly windows (FR-27). */
   async availableSlots(doctorId: string): Promise<string[]> {
+    // Video not configured → no bookable slots at all (scheduling flow is skipped).
+    if (!(await this.video.enabled())) return [];
     const doc = await this.prisma.onboardingDoctor.findFirst({
       where: { id: doctorId, teleconsultEnabled: true },
       select: { timezone: true, windows: { select: { weekday: true, start: true, end: true } } },
@@ -139,6 +141,10 @@ export class TeleconsultService {
    * if that ever matters.
    */
   async book(userId: string, dto: BookTeleconsultDto) {
+    // Never accept a booking we could not host — the join call would 503 later.
+    if (!(await this.video.enabled())) {
+      throw new BadRequestException('Video consultations are currently unavailable.');
+    }
     const doc = await this.prisma.onboardingDoctor.findFirst({
       where: { id: dto.doctorId, teleconsultEnabled: true },
       select: { id: true, name: true, email: true, timezone: true, availabilityToken: true, windows: { select: { weekday: true, start: true, end: true } } },

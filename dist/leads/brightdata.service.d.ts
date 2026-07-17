@@ -147,14 +147,15 @@ export declare class BrightDataService {
     }): Promise<{
         items: {
             id: string;
+            raw: Prisma.JsonValue;
+            url: string | null;
+            title: string | null;
             createdAt: Date;
             updatedAt: Date;
+            temperature: string | null;
             procedures: Prisma.JsonValue | null;
-            title: string | null;
-            raw: Prisma.JsonValue;
             category: import(".prisma/client").$Enums.LeadCategory | null;
             externalId: string;
-            url: string | null;
             intentScore: number;
             categoryReason: string | null;
             categoryConfidence: number | null;
@@ -173,7 +174,6 @@ export declare class BrightDataService {
             hasCost: boolean;
             hasOrigin: boolean;
             signalCount: number;
-            temperature: string | null;
             origins: Prisma.JsonValue | null;
             isSpam: boolean;
             aiCategory: import(".prisma/client").$Enums.LeadCategory | null;
@@ -327,7 +327,7 @@ export declare class BrightDataService {
     setCategoryByHuman(id: string, category: 'LEAD' | 'PARTNER' | 'MARKETING' | 'NEWS' | 'OTHER', reviewedBy?: string): Promise<{
         ok: boolean;
         id: string;
-        category: "OTHER" | "LEAD" | "PARTNER" | "MARKETING" | "NEWS";
+        category: "LEAD" | "PARTNER" | "MARKETING" | "NEWS" | "OTHER";
     }>;
     classificationScorecard(): Promise<{
         total: number;
@@ -370,14 +370,15 @@ export declare class BrightDataService {
     }>;
     getCapture(id: string): Prisma.Prisma__SourceCaptureClient<{
         id: string;
+        raw: Prisma.JsonValue;
+        url: string | null;
+        title: string | null;
         createdAt: Date;
         updatedAt: Date;
+        temperature: string | null;
         procedures: Prisma.JsonValue | null;
-        title: string | null;
-        raw: Prisma.JsonValue;
         category: import(".prisma/client").$Enums.LeadCategory | null;
         externalId: string;
-        url: string | null;
         intentScore: number;
         categoryReason: string | null;
         categoryConfidence: number | null;
@@ -396,7 +397,6 @@ export declare class BrightDataService {
         hasCost: boolean;
         hasOrigin: boolean;
         signalCount: number;
-        temperature: string | null;
         origins: Prisma.JsonValue | null;
         isSpam: boolean;
         aiCategory: import(".prisma/client").$Enums.LeadCategory | null;

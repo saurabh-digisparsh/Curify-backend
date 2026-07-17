@@ -43,9 +43,9 @@ export declare class StatsService {
             scrapes: {
                 id: string;
                 createdAt: Date;
+                created: number;
                 status: import(".prisma/client").$Enums.ScrapeStatus;
                 target: string;
-                created: number;
                 updated: number;
             }[];
         };

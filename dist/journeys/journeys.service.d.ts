@@ -66,15 +66,15 @@ export declare class JourneysService {
     }): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -88,15 +88,15 @@ export declare class JourneysService {
         journeys: {
             treatment: string | null;
             id: string;
-            travelDate: Date | null;
+            description: string | null;
+            title: string | null;
             city: string | null;
             urgency: string | null;
+            travelDate: Date | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
             status: string;
-            title: string | null;
             hospitalId: string | null;
             reportId: string | null;
             homeCountry: string | null;
@@ -114,15 +114,15 @@ export declare class JourneysService {
     get(userId: string, id: string): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -136,15 +136,15 @@ export declare class JourneysService {
     create(userId: string, body: Writable): import(".prisma/client").Prisma.Prisma__JourneyClient<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;
@@ -158,15 +158,15 @@ export declare class JourneysService {
     update(userId: string, id: string, body: Writable): Promise<{
         treatment: string | null;
         id: string;
-        travelDate: Date | null;
+        description: string | null;
+        title: string | null;
         city: string | null;
         urgency: string | null;
+        travelDate: Date | null;
         createdAt: Date;
         updatedAt: Date;
-        description: string | null;
         userId: string;
         status: string;
-        title: string | null;
         hospitalId: string | null;
         reportId: string | null;
         homeCountry: string | null;

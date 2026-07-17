@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
+import { SettingsService } from '../admin/settings/settings.service';
+import { isVideoConfigured } from '../hospital-partner/video.service';
 import { isRealCountry, natRegion } from '../common/regions';
 
 // Self-onboarded hospitals are hidden from every patient-facing query until an
@@ -104,7 +106,7 @@ function scoreHospital(h: any, specialty: string | null, urgency: string): numbe
 
 @Injectable()
 export class HospitalsService {
-  constructor(private prisma: PrismaService, private ai: AiService) {}
+  constructor(private prisma: PrismaService, private ai: AiService, private settings: SettingsService) {}
 
   async getStats() {
     const SERVED = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
@@ -272,8 +274,11 @@ export class HospitalsService {
     // links to its published Surgeon via publishedSurgeonId. Attach each doctor's
     // bookable id + enabled flag so the journey can show the scheduling section and
     // book against the RIGHT id (a Surgeon id would 404 in booking).
+    // Video not configured (missing/placeholder JITSI_APP_SECRET) → skip the whole
+    // scheduling flow: leave every doctor un-bookable so the journey never renders
+    // the "Schedule your consultation" section.
     const surgeonIds = hospital.doctors.map((d) => d.id);
-    if (surgeonIds.length) {
+    if (surgeonIds.length && (await isVideoConfigured(this.settings))) {
       const onboarded = await this.prisma.onboardingDoctor.findMany({
         where: { publishedSurgeonId: { in: surgeonIds }, teleconsultEnabled: true },
         select: { id: true, publishedSurgeonId: true },

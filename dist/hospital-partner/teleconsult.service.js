@@ -102,6 +102,8 @@ let TeleconsultService = class TeleconsultService {
         return new Set(rows.map((r) => r.scheduledAt.getTime()));
     }
     async availableSlots(doctorId) {
+        if (!(await this.video.enabled()))
+            return [];
         const doc = await this.prisma.onboardingDoctor.findFirst({
             where: { id: doctorId, teleconsultEnabled: true },
             select: { timezone: true, windows: { select: { weekday: true, start: true, end: true } } },
@@ -111,6 +113,9 @@ let TeleconsultService = class TeleconsultService {
         return computeSlots(doc.timezone, doc.windows, await this.bookedMs(doctorId));
     }
     async book(userId, dto) {
+        if (!(await this.video.enabled())) {
+            throw new common_1.BadRequestException('Video consultations are currently unavailable.');
+        }
         const doc = await this.prisma.onboardingDoctor.findFirst({
             where: { id: dto.doctorId, teleconsultEnabled: true },
             select: { id: true, name: true, email: true, timezone: true, availabilityToken: true, windows: { select: { weekday: true, start: true, end: true } } },

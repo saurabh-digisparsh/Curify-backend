@@ -9,6 +9,7 @@ import { AccreditationBody, AccreditationSource, DocStatus, OnboardingStatus, On
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from './notification.service';
 import { AccreditationService } from './accreditation.service';
+import { VideoService } from './video.service';
 import { EnrichmentService } from '../admin/enrichment.service';
 import { ScrapeService } from '../admin/scrape.service';
 import { HOSPITAL_DOCS_DIR } from './docs.storage';
@@ -48,6 +49,7 @@ export class PartnerService {
     private prisma: PrismaService,
     private notify: NotificationService,
     private accred: AccreditationService,
+    private video: VideoService,
     private enrich: EnrichmentService,
     private scrape: ScrapeService,
   ) {}
@@ -273,14 +275,18 @@ export class PartnerService {
   async dashboard(userId: string) {
     const app = await this.mine(userId);
     const teleDoctors = app.doctors.filter((d) => d.teleconsultEnabled);
+    // Video off (missing/placeholder JITSI_APP_SECRET) → the teleconsult step is
+    // not part of setup at all: it's neither shown as required nor gates go-live.
+    const videoEnabled = await this.video.enabled();
     const checklist = {
       doctorsAdded: app.doctors.length > 0,
       pricingSet: app.quotedPriceUsd != null,
-      teleconsultSetUp: teleDoctors.some((d) => d.windows.length > 0),
+      ...(videoEnabled ? { teleconsultSetUp: teleDoctors.some((d) => d.windows.length > 0) } : {}),
     };
-    const canGoLive = app.status !== OnboardingStatus.LIVE && checklist.doctorsAdded && checklist.teleconsultSetUp;
+    const canGoLive = app.status !== OnboardingStatus.LIVE && checklist.doctorsAdded
+      && (!videoEnabled || !!checklist.teleconsultSetUp);
     const { sessionToken, ...rest } = app as any;
-    return { ...rest, commission: COMMISSION, checklist, canGoLive };
+    return { ...rest, commission: COMMISSION, videoEnabled, checklist, canGoLive };
   }
 
   async addDoctor(userId: string, dto: DoctorDto) {
@@ -436,8 +442,12 @@ export class PartnerService {
     const app = await this.mine(userId);
     if (app.status === OnboardingStatus.LIVE) throw new BadRequestException('Already live.');
     if (app.doctors.length === 0) throw new BadRequestException('Add at least one doctor first.');
-    if (!app.doctors.some((d) => d.teleconsultEnabled && d.windows.length > 0)) {
-      throw new BadRequestException('Set up teleconsultation availability for at least one doctor.');
+    // Only gate on teleconsult availability when video is actually configured —
+    // otherwise the scheduling flow is skipped and this would block go-live forever.
+    if (await this.video.enabled()) {
+      if (!app.doctors.some((d) => d.teleconsultEnabled && d.windows.length > 0)) {
+        throw new BadRequestException('Set up teleconsultation availability for at least one doctor.');
+      }
     }
     const nabh = app.accreditations.some((a) => a.body === AccreditationBody.NABH && a.status === DocStatus.VERIFIED);
     const jci = app.accreditations.some((a) => a.body === AccreditationBody.JCI && a.status === DocStatus.VERIFIED);

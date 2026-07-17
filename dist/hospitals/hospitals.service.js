@@ -13,6 +13,8 @@ exports.HospitalsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ai_service_1 = require("../ai/ai.service");
+const settings_service_1 = require("../admin/settings/settings.service");
+const video_service_1 = require("../hospital-partner/video.service");
 const regions_1 = require("../common/regions");
 const VISIBLE = {
     OR: [{ approvalStatus: null }, { approvalStatus: 'APPROVED' }],
@@ -83,9 +85,10 @@ function scoreHospital(h, specialty, urgency) {
     return Math.round(score);
 }
 let HospitalsService = class HospitalsService {
-    constructor(prisma, ai) {
+    constructor(prisma, ai, settings) {
         this.prisma = prisma;
         this.ai = ai;
+        this.settings = settings;
     }
     async getStats() {
         const SERVED = ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
@@ -216,7 +219,7 @@ let HospitalsService = class HospitalsService {
         if (!hospital)
             throw new common_1.NotFoundException('Hospital not found');
         const surgeonIds = hospital.doctors.map((d) => d.id);
-        if (surgeonIds.length) {
+        if (surgeonIds.length && (await (0, video_service_1.isVideoConfigured)(this.settings))) {
             const onboarded = await this.prisma.onboardingDoctor.findMany({
                 where: { publishedSurgeonId: { in: surgeonIds }, teleconsultEnabled: true },
                 select: { id: true, publishedSurgeonId: true },
@@ -313,6 +316,6 @@ let HospitalsService = class HospitalsService {
 exports.HospitalsService = HospitalsService;
 exports.HospitalsService = HospitalsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, ai_service_1.AiService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, ai_service_1.AiService, settings_service_1.SettingsService])
 ], HospitalsService);
 //# sourceMappingURL=hospitals.service.js.map

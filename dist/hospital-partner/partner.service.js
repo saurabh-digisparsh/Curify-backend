@@ -19,6 +19,7 @@ const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const notification_service_1 = require("./notification.service");
 const accreditation_service_1 = require("./accreditation.service");
+const video_service_1 = require("./video.service");
 const enrichment_service_1 = require("../admin/enrichment.service");
 const scrape_service_1 = require("../admin/scrape.service");
 const docs_storage_1 = require("./docs.storage");
@@ -40,10 +41,11 @@ function isAccredited(app) {
     return (app.accreditations || []).some((a) => a.status === client_1.DocStatus.VERIFIED);
 }
 let PartnerService = class PartnerService {
-    constructor(prisma, notify, accred, enrich, scrape) {
+    constructor(prisma, notify, accred, video, enrich, scrape) {
         this.prisma = prisma;
         this.notify = notify;
         this.accred = accred;
+        this.video = video;
         this.enrich = enrich;
         this.scrape = scrape;
     }
@@ -238,14 +240,16 @@ let PartnerService = class PartnerService {
     async dashboard(userId) {
         const app = await this.mine(userId);
         const teleDoctors = app.doctors.filter((d) => d.teleconsultEnabled);
+        const videoEnabled = await this.video.enabled();
         const checklist = {
             doctorsAdded: app.doctors.length > 0,
             pricingSet: app.quotedPriceUsd != null,
-            teleconsultSetUp: teleDoctors.some((d) => d.windows.length > 0),
+            ...(videoEnabled ? { teleconsultSetUp: teleDoctors.some((d) => d.windows.length > 0) } : {}),
         };
-        const canGoLive = app.status !== client_1.OnboardingStatus.LIVE && checklist.doctorsAdded && checklist.teleconsultSetUp;
+        const canGoLive = app.status !== client_1.OnboardingStatus.LIVE && checklist.doctorsAdded
+            && (!videoEnabled || !!checklist.teleconsultSetUp);
         const { sessionToken, ...rest } = app;
-        return { ...rest, commission: COMMISSION, checklist, canGoLive };
+        return { ...rest, commission: COMMISSION, videoEnabled, checklist, canGoLive };
     }
     async addDoctor(userId, dto) {
         const app = await this.mine(userId);
@@ -377,8 +381,10 @@ let PartnerService = class PartnerService {
             throw new common_1.BadRequestException('Already live.');
         if (app.doctors.length === 0)
             throw new common_1.BadRequestException('Add at least one doctor first.');
-        if (!app.doctors.some((d) => d.teleconsultEnabled && d.windows.length > 0)) {
-            throw new common_1.BadRequestException('Set up teleconsultation availability for at least one doctor.');
+        if (await this.video.enabled()) {
+            if (!app.doctors.some((d) => d.teleconsultEnabled && d.windows.length > 0)) {
+                throw new common_1.BadRequestException('Set up teleconsultation availability for at least one doctor.');
+            }
         }
         const nabh = app.accreditations.some((a) => a.body === client_1.AccreditationBody.NABH && a.status === client_1.DocStatus.VERIFIED);
         const jci = app.accreditations.some((a) => a.body === client_1.AccreditationBody.JCI && a.status === client_1.DocStatus.VERIFIED);
@@ -569,6 +575,7 @@ exports.PartnerService = PartnerService = __decorate([
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         notification_service_1.NotificationService,
         accreditation_service_1.AccreditationService,
+        video_service_1.VideoService,
         enrichment_service_1.EnrichmentService,
         scrape_service_1.ScrapeService])
 ], PartnerService);

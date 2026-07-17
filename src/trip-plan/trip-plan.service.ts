@@ -89,7 +89,7 @@ export class TripPlanService {
   async generate(params: {
     hospitalId: string; diagnosis: string; treatment: string; country: string;
     departureCity?: string; travelDate?: string; travelers?: number; stayNights?: number;
-    passport?: string; visaHelp?: string; accommodation?: string; notes?: string;
+    accommodation?: string;
     treatmentCost?: number; treatmentCurrency?: string;
   }) {
     const hospital = await this.prisma.hospital.findUnique({

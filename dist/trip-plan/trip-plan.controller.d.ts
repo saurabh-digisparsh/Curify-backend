@@ -43,10 +43,7 @@ export declare class TripPlanController {
         travelDate?: string;
         travelers?: number;
         stayNights?: number;
-        passport?: string;
-        visaHelp?: string;
         accommodation?: string;
-        notes?: string;
         treatmentCost?: number;
         treatmentCurrency?: string;
     }): Promise<any>;
