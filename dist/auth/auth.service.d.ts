@@ -11,6 +11,9 @@ export declare class AuthService {
     private inquiries;
     constructor(prisma: PrismaService, jwt: JwtService, mail: MailService, inquiries: InquiriesService);
     private issueOtp;
+    emailExists(email: string): Promise<{
+        exists: boolean;
+    }>;
     signup(dto: SignupDto): Promise<{
         requiresVerification: boolean;
         email: string;

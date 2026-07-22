@@ -29,6 +29,15 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  // Throttled to blunt email-enumeration; the signup form already reveals the same
+  // "already registered" state, so this exposes nothing new — it just does it earlier.
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @ApiOperation({ summary: 'Check whether an account already exists for an email (chat intake early-exit)' })
+  @Post('check-email')
+  checkEmail(@Body() body: { email?: string }) {
+    return this.authService.emailExists(String(body?.email || '').toLowerCase());
+  }
+
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current authenticated user' })
   @UseGuards(JwtAuthGuard)

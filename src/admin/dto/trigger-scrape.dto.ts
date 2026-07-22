@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export const SCRAPE_TARGETS = ['full', 'jci', 'reviews', 'foreign-pipeline', 'surgeons', 'surgeon-reviews', 'prices'] as const;
@@ -28,3 +28,9 @@ export class TriggerScrapeDto {
   @IsOptional()
   minReviews?: number;
 }
+
+/**
+ * Body for the all-hospitals sweep: every field optional, since the routine trigger
+ * posts nothing and only a link-backfill run needs to raise `minReviews`.
+ */
+export class ScrapeAllDto extends PartialType(TriggerScrapeDto) {}

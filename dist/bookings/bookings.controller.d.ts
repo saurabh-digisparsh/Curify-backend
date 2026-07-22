@@ -54,6 +54,7 @@ export declare class BookingsController {
             ownerUserId: string | null;
             approvalStatus: import(".prisma/client").$Enums.ApprovalStatus | null;
             nabhAccredited: boolean;
+            visible: boolean;
         };
         statusUpdates: {
             id: string;
@@ -79,8 +80,8 @@ export declare class BookingsController {
         updatedAt: Date;
         userId: string;
         status: import(".prisma/client").$Enums.BookingStatus;
-        hospitalId: string;
         reportId: string | null;
+        hospitalId: string;
         plan: import(".prisma/client").$Enums.Plan;
         totalAmount: number | null;
         currency: string;

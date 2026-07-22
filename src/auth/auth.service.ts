@@ -30,6 +30,16 @@ export class AuthService {
     await this.mail.sendOtp(user.email, user.name, otp, verifyToken);
   }
 
+  /** Does a real account already exist for this email? Lets the chat intake stop
+   *  the visitor early and offer login, instead of making them fill the whole
+   *  signup form only to fail at the end (bug sheet). Throttled at the controller. */
+  async emailExists(email: string): Promise<{ exists: boolean }> {
+    const e = String(email || '').toLowerCase().trim();
+    if (!e) return { exists: false };
+    const user = await this.prisma.user.findUnique({ where: { email: e }, select: { id: true } });
+    return { exists: !!user };
+  }
+
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (exists) throw new ConflictException('Email already registered');

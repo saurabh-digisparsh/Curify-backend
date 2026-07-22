@@ -9,6 +9,9 @@ export declare class QuoteDto {
     currency?: string;
     note?: string;
 }
+export declare class CancelTeleconsultDto {
+    reason?: string;
+}
 export declare class TeleconsultDocDto {
     kind?: string;
 }

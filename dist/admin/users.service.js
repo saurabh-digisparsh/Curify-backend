@@ -8,10 +8,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var UsersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
 const bcrypt = require("bcryptjs");
+const promises_1 = require("fs/promises");
 const prisma_service_1 = require("../prisma/prisma.service");
 const SAFE_SELECT = {
     id: true,
@@ -23,9 +25,10 @@ const SAFE_SELECT = {
     createdAt: true,
     updatedAt: true,
 };
-let UsersService = class UsersService {
+let UsersService = UsersService_1 = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
+        this.logger = new common_1.Logger(UsersService_1.name);
     }
     async findAll(role) {
         return this.prisma.user.findMany({
@@ -80,12 +83,18 @@ let UsersService = class UsersService {
         }
         if (id === requesterId)
             throw new common_1.BadRequestException('You cannot delete your own account');
+        const reports = await this.prisma.report.findMany({ where: { userId: id }, select: { docPaths: true } });
+        const paths = reports.flatMap((r) => (Array.isArray(r.docPaths) ? r.docPaths : []))
+            .map((d) => d?.path).filter((p) => typeof p === 'string');
         await this.prisma.user.delete({ where: { id } });
-        return { deleted: true, id };
+        for (const p of paths) {
+            await (0, promises_1.unlink)(p).catch((err) => this.logger.warn(`Could not delete report document ${p}: ${err.message}`));
+        }
+        return { deleted: true, id, documentsDeleted: paths.length };
     }
 };
 exports.UsersService = UsersService;
-exports.UsersService = UsersService = __decorate([
+exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], UsersService);

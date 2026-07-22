@@ -38,6 +38,25 @@ let DashboardController = class DashboardController {
     removeDoctor(id, req) { return this.svc.removeDoctor(req.user.id, id); }
     link(id, req) { return this.svc.sendAvailabilityLink(req.user.id, id); }
     pricing(dto, req) { return this.svc.setPricing(req.user.id, dto); }
+    async templateAll(format, res) {
+        if (format === 'csv') {
+            res.set({
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': 'attachment; filename="curify-hospital-template.csv"',
+            });
+            return this.bulk.templateAllCsv();
+        }
+        const xlsx = await this.bulk.templateAllXlsx();
+        res.set({
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': 'attachment; filename="curify-hospital-template.xlsx"',
+            'Content-Length': String(xlsx.length),
+        });
+        return new common_1.StreamableFile(xlsx);
+    }
+    importAll(file, req) {
+        return this.svc.importAll(req.user.id, file);
+    }
     template(kind, res) {
         const csv = this.bulk.template(kind);
         res.set({
@@ -45,6 +64,9 @@ let DashboardController = class DashboardController {
             'Content-Disposition': `attachment; filename="curify-${kind}-template.csv"`,
         });
         return csv;
+    }
+    importProfile(file, req) {
+        return this.svc.importProfile(req.user.id, file);
     }
     importDoctors(file, req) {
         return this.svc.importDoctors(req.user.id, file);
@@ -149,7 +171,27 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "pricing", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Download the CSV template for a bulk import' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Download the ONE template covering profile + doctors + packages' }),
+    (0, common_1.Get)('import/all/template'),
+    __param(0, (0, common_1.Query)('format')),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], DashboardController.prototype, "templateAll", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Upload the ONE file covering profile + doctors + packages' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.Post)('import/all'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: bulk_import_service_1.CSV_MAX_BYTES }, fileFilter: bulk_import_service_1.csvFileFilter })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "importAll", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Download the CSV template for one table' }),
     (0, common_1.Get)('import/:kind/template'),
     __param(0, (0, common_1.Param)('kind')),
     __param(1, (0, common_1.Res)({ passthrough: true })),
@@ -157,6 +199,17 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], DashboardController.prototype, "template", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: "Bulk-import the hospital's own profile/pricing/services from a one-row CSV" }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, common_1.Post)('import/profile'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', { limits: { fileSize: bulk_import_service_1.CSV_MAX_BYTES }, fileFilter: bulk_import_service_1.csvFileFilter })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], DashboardController.prototype, "importProfile", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Bulk-import doctors from a CSV' }),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),

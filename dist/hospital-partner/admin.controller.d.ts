@@ -6,6 +6,10 @@ export declare class PartnerAdminController {
     constructor(svc: PartnerService);
     list(status?: OnboardingStatus): Promise<{
         applications: ({
+            _count: {
+                doctors: number;
+                documents: number;
+            };
             contact: {
                 name: string;
                 emailVerifiedAt: Date;
@@ -19,10 +23,6 @@ export declare class PartnerAdminController {
             agreement: {
                 signatoryName: string;
                 signedAt: Date;
-            };
-            _count: {
-                doctors: number;
-                documents: number;
             };
         } & {
             id: string;
@@ -69,12 +69,12 @@ export declare class PartnerAdminController {
         status: import(".prisma/client").$Enums.DocStatus;
         applicationId: string;
         note: string | null;
-        reviewedBy: string | null;
-        reviewedAt: Date | null;
         doctorId: string | null;
         autoClassifiedType: import(".prisma/client").$Enums.OnboardingDocType | null;
         fileUrl: string;
         originalName: string | null;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
     }>;
     setStatus(id: string, body: {
         status: OnboardingStatus;

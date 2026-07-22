@@ -57,18 +57,18 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
     findAll() {
         return this.prisma.scrapeJob.findMany({ orderBy: { createdAt: 'desc' }, take: 50 });
     }
-    async scrapeAllHospitals(triggeredBy) {
+    async scrapeAllHospitals(triggeredBy, minReviews) {
         const hospitals = await this.prisma.hospital.findMany({ select: { id: true, name: true, city: true } });
         const job = await this.prisma.scrapeJob.create({
             data: {
                 target: 'all-hospitals',
-                params: { count: hospitals.length },
+                params: { count: hospitals.length, minReviews },
                 status: 'RUNNING',
                 triggeredBy,
                 startedAt: new Date(),
             },
         });
-        void this.runAllHospitals(job.id, hospitals);
+        void this.runAllHospitals(job.id, hospitals, minReviews);
         return job;
     }
     async scrapeNextHospital(triggeredBy) {
@@ -149,11 +149,11 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
             this.logger.error(`rotation ${jobId} failed: ${e.message}`);
         }
     }
-    async runAllHospitals(jobId, hospitals) {
+    async runAllHospitals(jobId, hospitals, minReviews) {
         let created = 0, updated = 0, skipped = 0, done = 0, failed = 0;
         for (const h of hospitals) {
             try {
-                const { rows } = await this.spawnScraper('foreign-pipeline', { target: 'foreign-pipeline', location: h.city, hospitalName: h.name });
+                const { rows } = await this.spawnScraper('foreign-pipeline', { target: 'foreign-pipeline', location: h.city, hospitalName: h.name, minReviews });
                 const counts = await this.importPipeline(rows, h.city, h.id);
                 created += counts.revNew ?? counts.created ?? 0;
                 updated += counts.revUpd ?? counts.updated ?? 0;
@@ -476,8 +476,10 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
                 existingId = found?.id;
             }
             if (existingId) {
-                if (surgeonId)
-                    await this.prisma.review.update({ where: { id: existingId }, data: { surgeonId } });
+                const mapsLink = (r.link || '').startsWith('http') ? r.link : null;
+                const patch = { ...(surgeonId ? { surgeonId } : {}), ...(mapsLink ? { link: mapsLink } : {}) };
+                if (Object.keys(patch).length)
+                    await this.prisma.review.update({ where: { id: existingId }, data: patch });
                 reviewIdByHash.set(contentHash, existingId);
                 log.push(rev('updated', 'already stored — refreshed'));
                 updated++;
@@ -667,7 +669,8 @@ let ScrapeService = ScrapeService_1 = class ScrapeService {
                         where: { hospitalId: hospital.id, contentHash }, select: { id: true },
                     });
                     if (dup) {
-                        await this.prisma.review.update({ where: { id: dup.id }, data });
+                        const { link, ...rest } = data;
+                        await this.prisma.review.update({ where: { id: dup.id }, data: link ? data : rest });
                         log.push(rev('updated', 'already stored — metrics/text refreshed'));
                         updated++;
                     }

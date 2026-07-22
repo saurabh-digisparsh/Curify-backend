@@ -19,6 +19,8 @@ const crypto_1 = require("crypto");
 const Razorpay = require("razorpay");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bookings_service_1 = require("../bookings/bookings.service");
+const settings_service_1 = require("../admin/settings/settings.service");
+const teleconsult_service_1 = require("../hospital-partner/teleconsult.service");
 const razorpay_provider_1 = require("./razorpay.provider");
 const PLAN_PRICES = {
     ESSENTIAL: 19900,
@@ -31,13 +33,58 @@ const METHOD_CONFIG = {
     all: undefined,
 };
 let PaymentsService = PaymentsService_1 = class PaymentsService {
-    constructor(rzp, prisma, bookings) {
+    constructor(rzp, prisma, bookings, settings, teleconsults) {
         this.rzp = rzp;
         this.prisma = prisma;
         this.bookings = bookings;
+        this.settings = settings;
+        this.teleconsults = teleconsults;
         this.log = new common_1.Logger(PaymentsService_1.name);
         this.currency = process.env.RAZORPAY_CURRENCY || 'USD';
         this.capture = (process.env.PAYMENTS_CAPTURE_MODE || 'auto') === 'auto' ? 1 : 0;
+    }
+    async createTeleconsultOrder(userId, teleconsultId) {
+        const tc = await this.prisma.teleconsult.findUnique({
+            where: { id: teleconsultId },
+            select: { id: true, patientId: true, status: true, holdExpiresAt: true, scheduledAt: true },
+        });
+        if (!tc || tc.patientId !== userId)
+            throw new common_1.NotFoundException('Consultation not found');
+        if (tc.status !== 'PENDING_PAYMENT') {
+            throw new common_1.BadRequestException('This consultation does not need payment.');
+        }
+        if (tc.holdExpiresAt && tc.holdExpiresAt.getTime() <= Date.now()) {
+            throw new common_1.BadRequestException('Your slot hold expired. Please pick a time again.');
+        }
+        const fee = await this.settings.getNumber('TELECONSULT_FEE');
+        if (!Number.isFinite(fee) || fee <= 0) {
+            throw new common_1.BadRequestException('Paid consultations are not available right now.');
+        }
+        const amount = Math.round(fee * 100);
+        const order = await this.rzp.orders.create({
+            amount,
+            currency: this.currency,
+            receipt: `curify_tc_${teleconsultId.slice(0, 8)}_${Date.now()}`,
+            payment_capture: this.capture,
+            notes: { userId, purpose: 'TELECONSULT', teleconsultId },
+        });
+        await this.prisma.payment.create({
+            data: {
+                userId,
+                razorpayOrderId: order.id,
+                amount,
+                currency: this.currency,
+                status: 'CREATED',
+                notes: { userId, purpose: 'TELECONSULT', teleconsultId },
+            },
+        });
+        return {
+            orderId: order.id,
+            amount,
+            currency: this.currency,
+            keyId: process.env.RAZORPAY_KEY_ID,
+            method: METHOD_CONFIG.all,
+        };
     }
     async createOrder(userId, dto) {
         const amount = PLAN_PRICES[dto.plan];
@@ -97,7 +144,7 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
             signature: dto.razorpay_signature,
         });
         if (won) {
-            const bookingId = await this.confirmBooking(payment.id, {
+            const bookingId = await this.fulfil(payment.id, {
                 downPayment: dto.downPayment,
                 installments: dto.installments,
             });
@@ -165,6 +212,15 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
         });
         return res.count === 1;
     }
+    async fulfil(paymentId, extra) {
+        const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+        const notes = (payment?.notes ?? {});
+        if (notes.purpose === 'TELECONSULT') {
+            await this.teleconsults.activatePaidConsult(notes.teleconsultId, paymentId);
+            return null;
+        }
+        return this.confirmBooking(paymentId, extra);
+    }
     async confirmBooking(paymentId, extra) {
         const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
         if (!payment)
@@ -206,7 +262,7 @@ let PaymentsService = PaymentsService_1 = class PaymentsService {
                     method: entity.method,
                 });
                 if (won)
-                    await this.confirmBooking(paymentId);
+                    await this.fulfil(paymentId);
                 break;
             }
             case 'payment.failed':
@@ -251,6 +307,8 @@ exports.PaymentsService = PaymentsService = PaymentsService_1 = __decorate([
     __param(0, (0, common_1.Inject)(razorpay_provider_1.RAZORPAY_CLIENT)),
     __metadata("design:paramtypes", [Razorpay,
         prisma_service_1.PrismaService,
-        bookings_service_1.BookingsService])
+        bookings_service_1.BookingsService,
+        settings_service_1.SettingsService,
+        teleconsult_service_1.TeleconsultService])
 ], PaymentsService);
 //# sourceMappingURL=payments.service.js.map

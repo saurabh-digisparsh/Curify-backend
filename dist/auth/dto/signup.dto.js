@@ -26,11 +26,11 @@ __decorate([
     __metadata("design:type", String)
 ], SignupDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'Str0ng!Passw0rd', minLength: 12 }),
+    (0, swagger_1.ApiProperty)({ example: 'Str0ng!Pwd', minLength: 8 }),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(12),
+    (0, class_validator_1.MinLength)(8),
     (0, class_validator_1.Matches)(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
-        message: 'Password must be at least 12 characters and include uppercase, lowercase, a number and a symbol.',
+        message: 'Password must be at least 8 characters and include uppercase, lowercase, a number and a symbol.',
     }),
     __metadata("design:type", String)
 ], SignupDto.prototype, "password", void 0);

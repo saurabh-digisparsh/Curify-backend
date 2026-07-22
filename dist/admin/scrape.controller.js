@@ -41,8 +41,8 @@ let AdminScrapeController = class AdminScrapeController {
     trigger(dto, req) {
         return this.scrape.trigger(dto, req.user.id);
     }
-    scrapeAll(req) {
-        return this.scrape.scrapeAllHospitals(req.user.id);
+    scrapeAll(dto, req) {
+        return this.scrape.scrapeAllHospitals(req.user.id, dto?.minReviews);
     }
     scrapeNext(req) {
         return this.scrape.scrapeNextHospital(req.user.id);
@@ -94,9 +94,10 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Scrape ALL hospitals in the DB (refresh reviews). Async — returns a job.' }),
     (0, common_1.Post)('all-hospitals'),
-    __param(0, (0, common_1.Request)()),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [trigger_scrape_dto_1.ScrapeAllDto, Object]),
     __metadata("design:returntype", void 0)
 ], AdminScrapeController.prototype, "scrapeAll", null);
 __decorate([

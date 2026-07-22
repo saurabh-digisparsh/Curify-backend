@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 
-const NON_LATIN = /[֐-׿؀-ۿЀ-ӿ一-鿿぀-ヿ가-힯ঀ-৿ऀ-ॿ฀-๿԰-֏ሀ-፿]/;
+// Blocks, in order: Hebrew, Arabic, Cyrillic, CJK, Kana, Hangul, Bengali,
+// Devanagari, Thai, Armenian, Ethiopic. Written as escapes, not raw characters —
+// the literal form is unreadable in review and any tool that re-encodes the file
+// silently corrupts the ranges. Some blocks include combining marks, which is
+// intended: this only asks "is any non-Latin character present here".
+const NON_LATIN = /[\u0590-\u05FF\u0600-\u06FF\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0980-\u09FF\u0900-\u097F\u0E00-\u0E7F\u0530-\u058F\u1200-\u137F]/u;
 
 /**
  * Detects each review's language, stores an English translation (textEn) and the native

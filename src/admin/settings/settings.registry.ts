@@ -237,6 +237,19 @@ export const SETTINGS_REGISTRY: SettingDef[] = [
 
   // ── Scheduling & Jobs ──────────────────────────────────────────────────────
   {
+    key: 'TELECONSULT_FEE',
+    label: 'Paid Teleconsult Fee',
+    description:
+      'Price of a video consultation once a patient has used their free allowance on a ' +
+      'journey. In whole currency units of RAZORPAY_CURRENCY (e.g. 49 = $49). 0 makes ' +
+      'every consult free.',
+    category: 'scheduling',
+    type: 'int',
+    env: 'TELECONSULT_FEE',
+    default: '49',
+    min: 0,
+  },
+  {
     key: 'SCRAPE_CRON_DISABLED',
     label: 'Disable Scrape Cron',
     description: 'Turn off the daily 2:00 IST hospital scrape job.',

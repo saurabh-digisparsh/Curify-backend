@@ -32,7 +32,7 @@ export declare class FamilyDashboardService {
         source: string;
     }>;
     private getDemoState;
-    getUpdates(params: {
+    getUpdates(_params: {
         procedure: string;
         hospital: string;
         surgeon: string;

@@ -11,6 +11,13 @@ export declare class PaymentsController {
         keyId: string;
         method: Record<string, boolean>;
     }>;
+    createTeleconsultOrder(teleconsultId: string, req: any): Promise<{
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+        method: Record<string, boolean>;
+    }>;
     verify(dto: VerifyPaymentDto, req: any): Promise<{
         status: string;
         bookingId: string;

@@ -74,8 +74,11 @@ model Journey {
   stayOrGo    Json?
   hospitalId  String?
   tripPlan    Json?
-  // Live chat with the selected hospital (patient ↔ Curify staff on the hospital's
-  // behalf): { messages: [{ id, sender, kind, body, reportId?, amountUsd?, at }] }.
+  // RETIRED (2026-07-22): the hospital chat was removed from the patient portal and
+  // the admin inbox. Nothing reads or writes this any more — it is kept only so the
+  // existing patient↔staff transcripts aren't destroyed. Drop the column (and the
+  // stored messages) once Product confirms the history isn't needed.
+  // Shape was: { messages: [{ id, sender, kind, body, reportId?, amountUsd?, at }] }.
   hospitalChat Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -186,6 +189,13 @@ model Report {
   treatment        String?
   country          String?
   urgency          String?
+  // Source documents kept on disk ([{ path, name, mime }]) so an analysis can be
+  // re-run, and so a later upload is analysed TOGETHER with the earlier reports
+  // instead of on its own. PHI: gitignored dir, never served statically.
+  docPaths         Json?
+  // Re-runs of this report's analysis. Capped (MAX_REANALYSIS) — each one is a
+  // full GPU generation, and the inputs haven't changed.
+  reanalysisCount  Int      @default(0)
   createdAt        DateTime @default(now())
 
   // Cascade: deleting a user removes their reports (right-to-erasure).
@@ -241,6 +251,11 @@ model Hospital {
   approvalStatus       ApprovalStatus?
   nabhAccredited       Boolean         @default(false)
   priority             Boolean         @default(false) // fast-track (accredited) ranking
+  // Admin kill-switch, independent of approvalStatus: false hides the hospital from
+  // every patient-facing query (public catalog + journey matching/comparison) without
+  // deleting it or touching its onboarding state. Default true so existing and newly
+  // scraped rows stay visible. Toggled from Admin → Catalog → Hospitals.
+  visible              Boolean         @default(true)
 
   createdAt            DateTime @default(now())
 
@@ -462,6 +477,10 @@ model OnboardingDoctor {
 }
 
 enum TeleconsultStatus {
+  // Slot is HELD while the patient pays for a consult beyond the free allowance.
+  // Holds the slot (so nobody books it mid-checkout) but is not a real booking:
+  // no join token, no emails, and it expires (holdExpiresAt) if payment never lands.
+  PENDING_PAYMENT
   SCHEDULED
   IN_PROGRESS // doctor has joined the room — "connected / live now"
   COMPLETED
@@ -501,6 +520,20 @@ model Teleconsult {
   // When the patient accepted the quote — the go-signal that unlocks trip planning
   // (the accepted amount becomes the plan's treatment cost). Null = not yet accepted.
   quoteAcceptedAt DateTime?
+  // ─── Paid consults (beyond the free per-journey allowance) ───────────────────
+  // The first FREE_CONSULTS_PER_JOURNEY consults on a journey are free; the rest
+  // must be paid for before the slot becomes a real booking. paymentId is set when
+  // the Payment is CAPTURED (unique → one consult per payment, no double-redeem).
+  // holdExpiresAt is only set while status = PENDING_PAYMENT: past it, the slot is
+  // released back to the doctor's open slots (lazy expiry, no cron).
+  paymentId     String?   @unique
+  holdExpiresAt DateTime?
+  // ─── Cancellation trail ──────────────────────────────────────────────────────
+  // Who called it off ("PATIENT" | "DOCTOR") and the comment they left. A CANCELLED
+  // consult never counts against the free per-journey allowance (QUOTA_STATUSES),
+  // so a doctor-side cancellation costs the patient nothing.
+  cancelledBy   String?
+  cancelReason  String?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 

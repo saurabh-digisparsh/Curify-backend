@@ -1,4 +1,5 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../admin/settings/settings.service';
 import { VideoService } from './video.service';
 import { NotificationService } from './notification.service';
 import { BookTeleconsultDto, QuoteDto } from './dto/partner.dto';
@@ -14,38 +15,24 @@ export declare class TeleconsultService {
     private prisma;
     private video;
     private notif;
-    constructor(prisma: PrismaService, video: VideoService, notif: NotificationService);
+    private settings;
+    private readonly log;
+    constructor(prisma: PrismaService, video: VideoService, notif: NotificationService, settings: SettingsService);
     private bookedMs;
     availableSlots(doctorId: string): Promise<string[]>;
-    book(userId: string, dto: BookTeleconsultDto): Promise<{
-        id: string;
-        status: import(".prisma/client").$Enums.TeleconsultStatus;
-        startedAt: Date;
-        documents: {
-            id: string;
-            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
-            createdAt: Date;
-            kind: string;
-            originalName: string;
-        }[];
-        journeyId: string;
-        scheduledAt: Date;
-        doctor: {
-            specialty: string;
-            id: string;
-            name: string;
-            application: {
-                legalName: string;
-            };
-        };
-        endedAt: Date;
-        quoteAmount: number;
-        quoteCurrency: string;
-        quoteNote: string;
-        quotedAt: Date;
-        quoteAcceptedAt: Date;
+    quota(userId: string, journeyId?: string): Promise<{
+        used: number;
+        limit: number;
+        remaining: number;
+        requiresPayment: boolean;
+        fee: number;
+        currency: string;
     }>;
-    cancel(userId: string, id: string): Promise<{
+    book(userId: string, dto: BookTeleconsultDto): Promise<{
+        requiresPayment: boolean;
+        fee: number;
+        currency: string;
+        holdMinutes: number;
         id: string;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
         startedAt: Date;
@@ -56,8 +43,8 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        journeyId: string;
         scheduledAt: Date;
+        journeyId: string;
         doctor: {
             specialty: string;
             id: string;
@@ -72,6 +59,72 @@ export declare class TeleconsultService {
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+    } | {
+        requiresPayment: boolean;
+        id: string;
+        status: import(".prisma/client").$Enums.TeleconsultStatus;
+        startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        scheduledAt: Date;
+        journeyId: string;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
+        endedAt: Date;
+        quoteAmount: number;
+        quoteCurrency: string;
+        quoteNote: string;
+        quotedAt: Date;
+        quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+    }>;
+    activatePaidConsult(teleconsultId: string, paymentId: string): Promise<boolean>;
+    cancel(userId: string, id: string, reason?: string): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.TeleconsultStatus;
+        startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        scheduledAt: Date;
+        journeyId: string;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+            application: {
+                legalName: string;
+            };
+        };
+        endedAt: Date;
+        quoteAmount: number;
+        quoteCurrency: string;
+        quoteNote: string;
+        quotedAt: Date;
+        quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
     }[]>;
     acceptQuote(userId: string, id: string): Promise<{
         id: string;
@@ -84,8 +137,8 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        journeyId: string;
         scheduledAt: Date;
+        journeyId: string;
         doctor: {
             specialty: string;
             id: string;
@@ -100,6 +153,9 @@ export declare class TeleconsultService {
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
     }[]>;
     mine(userId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
@@ -112,8 +168,8 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        journeyId: string;
         scheduledAt: Date;
+        journeyId: string;
         doctor: {
             specialty: string;
             id: string;
@@ -128,8 +184,20 @@ export declare class TeleconsultService {
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
     }[]>;
-    patientVideoToken(userId: string, id: string): Promise<import("./video.service").VideoToken>;
+    private assertJoinWindowOpen;
+    private callDeadline;
+    patientVideoToken(userId: string, id: string): Promise<{
+        endsAt: string;
+        provider: "jitsi";
+        domain: string;
+        roomName: string;
+        jwt: string;
+        displayName: string;
+    }>;
     patientAddDoc(userId: string, id: string, file: Express.Multer.File, kind?: string): Promise<{
         id: string;
         status: import(".prisma/client").$Enums.TeleconsultStatus;
@@ -141,8 +209,8 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        journeyId: string;
         scheduledAt: Date;
+        journeyId: string;
         doctor: {
             specialty: string;
             id: string;
@@ -157,8 +225,18 @@ export declare class TeleconsultService {
         quoteNote: string;
         quotedAt: Date;
         quoteAcceptedAt: Date;
+        holdExpiresAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
     }[]>;
-    doctorVideoToken(availabilityToken: string, id: string): Promise<import("./video.service").VideoToken>;
+    doctorVideoToken(availabilityToken: string, id: string): Promise<{
+        endsAt: string;
+        provider: "jitsi";
+        domain: string;
+        roomName: string;
+        jwt: string;
+        displayName: string;
+    }>;
     private doctorTcOrThrow;
     doctorConsults(token: string): Promise<{
         id: string;
@@ -171,10 +249,6 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        patient: {
-            name: string;
-            email: string;
-        };
         scheduledAt: Date;
         doctor: {
             specialty: string;
@@ -186,6 +260,12 @@ export declare class TeleconsultService {
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
     }[]>;
     setQuote(token: string, id: string, dto: QuoteDto): Promise<{
         id: string;
@@ -198,10 +278,6 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        patient: {
-            name: string;
-            email: string;
-        };
         scheduledAt: Date;
         doctor: {
             specialty: string;
@@ -213,6 +289,41 @@ export declare class TeleconsultService {
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
+    }[]>;
+    doctorCancel(token: string, id: string, reason?: string): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.TeleconsultStatus;
+        startedAt: Date;
+        documents: {
+            id: string;
+            sender: import(".prisma/client").$Enums.TeleconsultDocSender;
+            createdAt: Date;
+            kind: string;
+            originalName: string;
+        }[];
+        scheduledAt: Date;
+        doctor: {
+            specialty: string;
+            id: string;
+            name: string;
+        };
+        endedAt: Date;
+        quoteAmount: number;
+        quoteCurrency: string;
+        quoteNote: string;
+        quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
     }[]>;
     doctorComplete(token: string, id: string): Promise<{
         id: string;
@@ -225,10 +336,6 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        patient: {
-            name: string;
-            email: string;
-        };
         scheduledAt: Date;
         doctor: {
             specialty: string;
@@ -240,6 +347,12 @@ export declare class TeleconsultService {
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
     }[]>;
     doctorEndCall(token: string, id: string): Promise<{
         id: string;
@@ -252,10 +365,6 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        patient: {
-            name: string;
-            email: string;
-        };
         scheduledAt: Date;
         doctor: {
             specialty: string;
@@ -267,6 +376,12 @@ export declare class TeleconsultService {
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
     }[]>;
     doctorAddDoc(token: string, id: string, file: Express.Multer.File, kind?: string): Promise<{
         id: string;
@@ -279,10 +394,6 @@ export declare class TeleconsultService {
             kind: string;
             originalName: string;
         }[];
-        patient: {
-            name: string;
-            email: string;
-        };
         scheduledAt: Date;
         doctor: {
             specialty: string;
@@ -294,6 +405,12 @@ export declare class TeleconsultService {
         quoteCurrency: string;
         quoteNote: string;
         quotedAt: Date;
+        cancelledBy: string;
+        cancelReason: string;
+        patient: {
+            name: string;
+            email: string;
+        };
     }[]>;
     hospitalConsults(userId: string): Promise<{
         consults: {
@@ -307,9 +424,6 @@ export declare class TeleconsultService {
                 kind: string;
                 originalName: string;
             }[];
-            patient: {
-                name: string;
-            };
             scheduledAt: Date;
             doctor: {
                 specialty: string;
@@ -321,6 +435,11 @@ export declare class TeleconsultService {
             quoteCurrency: string;
             quoteNote: string;
             quotedAt: Date;
+            cancelledBy: string;
+            cancelReason: string;
+            patient: {
+                name: string;
+            };
         }[];
         stats: {
             total: number;

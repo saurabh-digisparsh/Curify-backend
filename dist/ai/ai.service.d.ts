@@ -44,16 +44,13 @@ export declare class AiService {
         country?: string;
         urgency?: string;
     }): Promise<any>;
-    private mockAnalysis;
+    private static readonly BANDS;
+    private scoreReport;
     generateStayOrGo(params: {
         diagnosis: string;
         country: string;
         treatment: string;
         urgency: string;
-    }): Promise<any>;
-    analyzeHospitalChat(params: {
-        transcript: string;
-        treatment: string;
     }): Promise<any>;
     localizeReview(text: string): Promise<{
         lang: string;

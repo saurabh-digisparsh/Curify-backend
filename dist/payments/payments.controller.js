@@ -26,6 +26,9 @@ let PaymentsController = class PaymentsController {
     createOrder(dto, req) {
         return this.service.createOrder(req.user.id, dto);
     }
+    createTeleconsultOrder(teleconsultId, req) {
+        return this.service.createTeleconsultOrder(req.user.id, teleconsultId);
+    }
     verify(dto, req) {
         return this.service.verify(req.user.id, dto);
     }
@@ -40,6 +43,15 @@ __decorate([
     __metadata("design:paramtypes", [create_order_dto_1.CreateOrderDto, Object]),
     __metadata("design:returntype", void 0)
 ], PaymentsController.prototype, "createOrder", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Create a Razorpay order for a held (beyond-free-allowance) consult' }),
+    (0, common_1.Post)('teleconsult/:teleconsultId/order'),
+    __param(0, (0, common_1.Param)('teleconsultId')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], PaymentsController.prototype, "createTeleconsultOrder", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Verify payment signature and confirm the booking' }),
     (0, common_1.Post)('verify'),

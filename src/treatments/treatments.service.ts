@@ -36,7 +36,19 @@ export class TreatmentsService {
     // AI rejected it (greeting / gibberish / not a treatment).
     if (!r.label) throw new BadRequestException('Not a recognizable treatment');
 
-    // Real treatment, not in the catalog → add it (auto-add per product decision).
+    // Don't create a condition-level duplicate: if a GENERIC specialty chip for the
+    // resolved specialty already exists (its label IS the specialty, e.g. "Dermatology"),
+    // reuse it. We deliberately do NOT reuse a specialty represented only by a specific
+    // procedure (e.g. "Liver Transplant" for Gastroenterology) — that would mis-map an
+    // unrelated condition; instead we add the proper specialty below.
+    const norm = (s?: string | null) => (s || '').replace(/[^\p{L}\p{N}\s&()'-]/gu, '').trim().toLowerCase();
+    const spec = norm(r.specialty);
+    if (spec) {
+      const generic = catalog.find((c) => norm(c.specialty) === spec && norm(c.label) === spec);
+      if (generic) return { ...generic, matched: true, created: false };
+    }
+
+    // Genuinely new specialty (not an existing chip) → add it as a specialty entry.
     const added = await this.add(r.label, r.specialty);
     return { ...added, matched: false, created: true };
   }

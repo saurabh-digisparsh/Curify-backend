@@ -16,10 +16,10 @@ export declare class TripPlanController {
     getFlights(origin: string, destination: string): Promise<{
         id: string;
         label: string | null;
+        price: number;
         destination: string;
         origin: string;
         airline: string;
-        price: number;
         duration: string;
         stops: string | null;
         bookingUrl: string | null;
@@ -54,8 +54,8 @@ export declare class TripPlanController {
         updatedAt: Date;
         userId: string;
         status: string;
-        provider: string;
         hospitalId: string;
+        provider: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
         proofPath: string | null;
     }[]>;
@@ -69,8 +69,8 @@ export declare class TripPlanController {
         updatedAt: Date;
         userId: string;
         status: string;
-        provider: string;
         hospitalId: string;
+        provider: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
         proofPath: string | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
@@ -86,8 +86,8 @@ export declare class TripPlanController {
         updatedAt: Date;
         userId: string;
         status: string;
-        provider: string;
         hospitalId: string;
+        provider: string;
         meta: import("@prisma/client/runtime/library").JsonValue | null;
         proofPath: string | null;
     }>;

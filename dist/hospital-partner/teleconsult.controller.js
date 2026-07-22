@@ -28,6 +28,9 @@ let TeleconsultController = class TeleconsultController {
     mine(req) {
         return this.svc.mine(req.user.id);
     }
+    quota(req, journeyId) {
+        return this.svc.quota(req.user.id, journeyId);
+    }
     slots(doctorId) {
         return this.svc.availableSlots(doctorId);
     }
@@ -37,8 +40,8 @@ let TeleconsultController = class TeleconsultController {
     video(req, id) {
         return this.svc.patientVideoToken(req.user.id, id);
     }
-    cancel(req, id) {
-        return this.svc.cancel(req.user.id, id);
+    cancel(req, id, dto) {
+        return this.svc.cancel(req.user.id, id, dto.reason);
     }
     acceptQuote(req, id) {
         return this.svc.acceptQuote(req.user.id, id);
@@ -61,6 +64,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], TeleconsultController.prototype, "mine", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Free-consultation allowance for a journey (drives pricing copy)' }),
+    (0, common_1.Get)('quota'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('journeyId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], TeleconsultController.prototype, "quota", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Open teleconsult slots for a doctor (next 2 weeks)' }),
     (0, common_1.Get)('doctors/:doctorId/slots'),
@@ -88,12 +100,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TeleconsultController.prototype, "video", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Cancel my teleconsult' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel my teleconsult (with an optional comment)' }),
     (0, common_1.Post)(':id/cancel'),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, partner_dto_1.CancelTeleconsultDto]),
     __metadata("design:returntype", void 0)
 ], TeleconsultController.prototype, "cancel", null);
 __decorate([

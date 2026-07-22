@@ -14,7 +14,7 @@ exports.ReviewLangService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ai_service_1 = require("../ai/ai.service");
-const NON_LATIN = /[֐-׿؀-ۿЀ-ӿ一-鿿぀-ヿ가-힯ঀ-৿ऀ-ॿ฀-๿԰-֏ሀ-፿]/;
+const NON_LATIN = /[\u0590-\u05FF\u0600-\u06FF\u0400-\u04FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF\u0980-\u09FF\u0900-\u097F\u0E00-\u0E7F\u0530-\u058F\u1200-\u137F]/u;
 let ReviewLangService = ReviewLangService_1 = class ReviewLangService {
     constructor(prisma, ai) {
         this.prisma = prisma;

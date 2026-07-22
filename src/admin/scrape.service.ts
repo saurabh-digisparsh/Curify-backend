@@ -65,18 +65,18 @@ export class ScrapeService {
    * tracked ScrapeJob and loops sequentially in the background; returns immediately.
    * Used by the manual trigger and the daily 02:00 IST cron.
    */
-  async scrapeAllHospitals(triggeredBy: string) {
+  async scrapeAllHospitals(triggeredBy: string, minReviews?: number) {
     const hospitals = await this.prisma.hospital.findMany({ select: { id: true, name: true, city: true } });
     const job = await this.prisma.scrapeJob.create({
       data: {
         target: 'all-hospitals',
-        params: { count: hospitals.length } as any,
+        params: { count: hospitals.length, minReviews } as any,
         status: 'RUNNING',
         triggeredBy,
         startedAt: new Date(),
       },
     });
-    void this.runAllHospitals(job.id, hospitals);
+    void this.runAllHospitals(job.id, hospitals, minReviews);
     return job;
   }
 
@@ -178,11 +178,14 @@ export class ScrapeService {
     }
   }
 
-  private async runAllHospitals(jobId: string, hospitals: { id: string; name: string; city: string }[]) {
+  private async runAllHospitals(jobId: string, hospitals: { id: string; name: string; city: string }[], minReviews?: number) {
     let created = 0, updated = 0, skipped = 0, done = 0, failed = 0;
     for (const h of hospitals) {
       try {
-        const { rows } = await this.spawnScraper('foreign-pipeline', { target: 'foreign-pipeline', location: h.city, hospitalName: h.name } as TriggerScrapeDto);
+        // minReviews raises the per-hospital collection target. The default (2) stops as
+        // soon as the minimum is met, which is right for a routine refresh but far too
+        // shallow to re-reach older reviews — pass a high value to backfill their links.
+        const { rows } = await this.spawnScraper('foreign-pipeline', { target: 'foreign-pipeline', location: h.city, hospitalName: h.name, minReviews } as TriggerScrapeDto);
         const counts: any = await this.importPipeline(rows, h.city, h.id);
         created += counts.revNew ?? counts.created ?? 0; updated += counts.revUpd ?? counts.updated ?? 0; skipped += counts.skipped ?? 0;
       } catch (e: any) {
@@ -538,8 +541,12 @@ export class ScrapeService {
       }
 
       if (existingId) {
-        // duplicate → update (attach a surgeon link if this row carries one).
-        if (surgeonId) await this.prisma.review.update({ where: { id: existingId }, data: { surgeonId } });
+        // duplicate → update (attach a surgeon link if this row carries one, and
+        // backfill the Maps permalink — reviews imported before the scraper captured
+        // it are stored with link=null, and a re-scrape is their only way to get one).
+        const mapsLink = (r.link || '').startsWith('http') ? r.link : null;
+        const patch = { ...(surgeonId ? { surgeonId } : {}), ...(mapsLink ? { link: mapsLink } : {}) };
+        if (Object.keys(patch).length) await this.prisma.review.update({ where: { id: existingId }, data: patch });
         reviewIdByHash.set(contentHash, existingId);
         log.push(rev('updated', 'already stored — refreshed'));
         updated++; revUpd++;
@@ -713,7 +720,10 @@ export class ScrapeService {
             where: { hospitalId: hospital.id, contentHash }, select: { id: true },
           });
           if (dup) {
-            await this.prisma.review.update({ where: { id: dup.id }, data });
+            // Keep the stored permalink when this pass didn't capture one — otherwise a
+            // re-run that misses the link wipes a working "View on Google Maps" button.
+            const { link, ...rest } = data;
+            await this.prisma.review.update({ where: { id: dup.id }, data: link ? data : rest });
             log.push(rev('updated', 'already stored — metrics/text refreshed'));
             updated++;
           } else {

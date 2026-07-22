@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
@@ -18,6 +18,14 @@ export class PaymentsController {
   @Post('order')
   createOrder(@Body() dto: CreateOrderDto, @Request() req) {
     return this.service.createOrder(req.user.id, dto);
+  }
+
+  @ApiOperation({ summary: 'Create a Razorpay order for a held (beyond-free-allowance) consult' })
+  @Post('teleconsult/:teleconsultId/order')
+  createTeleconsultOrder(@Param('teleconsultId') teleconsultId: string, @Request() req) {
+    // No body: the fee is the admin-set TELECONSULT_FEE and ownership is checked
+    // against the consult itself, so there is nothing for the client to supply.
+    return this.service.createTeleconsultOrder(req.user.id, teleconsultId);
   }
 
   @ApiOperation({ summary: 'Verify payment signature and confirm the booking' })

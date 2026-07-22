@@ -33,6 +33,11 @@ export declare class AuthController {
         };
         token: string;
     }>;
+    checkEmail(body: {
+        email?: string;
+    }): Promise<{
+        exists: boolean;
+    }>;
     getMe(req: any): Promise<{
         id: string;
         name: string | null;

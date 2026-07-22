@@ -36,15 +36,6 @@ let JourneysController = class JourneysController {
     remove(req, id) {
         return this.service.remove(req.user.id, id);
     }
-    getChat(req, id) {
-        return this.service.getChat(req.user.id, id);
-    }
-    postChat(req, id, body) {
-        return this.service.addPatientMessage(req.user.id, id, body || {});
-    }
-    analyzeChat(req, id) {
-        return this.service.analyzeChat(req.user.id, id);
-    }
 };
 exports.JourneysController = JourneysController;
 __decorate([
@@ -94,34 +85,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], JourneysController.prototype, "remove", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Read my chat with the selected hospital' }),
-    (0, common_1.Get)(':id/chat'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], JourneysController.prototype, "getChat", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Send a chat message / share a report / request a quote' }),
-    (0, common_1.Post)(':id/chat'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
-    __metadata("design:returntype", void 0)
-], JourneysController.prototype, "postChat", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'AI-analyze the whole chat and refresh the trip plan' }),
-    (0, common_1.Post)(':id/chat/analyze'),
-    __param(0, (0, common_1.Request)()),
-    __param(1, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], JourneysController.prototype, "analyzeChat", null);
 exports.JourneysController = JourneysController = __decorate([
     (0, swagger_1.ApiTags)('Journeys'),
     (0, swagger_1.ApiBearerAuth)(),

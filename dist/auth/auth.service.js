@@ -39,6 +39,13 @@ let AuthService = class AuthService {
         });
         await this.mail.sendOtp(user.email, user.name, otp, verifyToken);
     }
+    async emailExists(email) {
+        const e = String(email || '').toLowerCase().trim();
+        if (!e)
+            return { exists: false };
+        const user = await this.prisma.user.findUnique({ where: { email: e }, select: { id: true } });
+        return { exists: !!user };
+    }
     async signup(dto) {
         const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (exists)

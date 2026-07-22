@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReviewDocDto = exports.SetAvailabilityDto = exports.ServicesDto = exports.PricingDto = exports.DoctorLeaveDto = exports.DoctorDto = exports.SetPasswordDto = exports.AgreementDto = exports.UploadDocDto = exports.NotAccreditedDto = exports.AccreditationDto = exports.VerifyOtpDto = exports.ContactDto = exports.ApplyDto = exports.TeleconsultDocDto = exports.QuoteDto = exports.BookTeleconsultDto = void 0;
+exports.ReviewDocDto = exports.SetAvailabilityDto = exports.ServicesDto = exports.PricingDto = exports.DoctorLeaveDto = exports.DoctorDto = exports.SetPasswordDto = exports.AgreementDto = exports.UploadDocDto = exports.NotAccreditedDto = exports.AccreditationDto = exports.VerifyOtpDto = exports.ContactDto = exports.ApplyDto = exports.TeleconsultDocDto = exports.CancelTeleconsultDto = exports.QuoteDto = exports.BookTeleconsultDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
@@ -54,6 +54,16 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], QuoteDto.prototype, "note", void 0);
+class CancelTeleconsultDto {
+}
+exports.CancelTeleconsultDto = CancelTeleconsultDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ example: 'Something came up — I would like to rebook.' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], CancelTeleconsultDto.prototype, "reason", void 0);
 class TeleconsultDocDto {
 }
 exports.TeleconsultDocDto = TeleconsultDocDto;

@@ -10,12 +10,12 @@ export class SignupDto {
   @IsString()
   name: string;
 
-  // Strong password policy: ≥12 chars with upper, lower, number and symbol.
-  @ApiProperty({ example: 'Str0ng!Passw0rd', minLength: 12 })
+  // Strong password policy: ≥8 chars with upper, lower, number and symbol.
+  @ApiProperty({ example: 'Str0ng!Pwd', minLength: 8 })
   @IsString()
-  @MinLength(12)
+  @MinLength(8)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
-    message: 'Password must be at least 12 characters and include uppercase, lowercase, a number and a symbol.',
+    message: 'Password must be at least 8 characters and include uppercase, lowercase, a number and a symbol.',
   })
   password: string;
 

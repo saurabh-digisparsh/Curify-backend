@@ -38,6 +38,13 @@ let TreatmentsService = class TreatmentsService {
         }
         if (!r.label)
             throw new common_1.BadRequestException('Not a recognizable treatment');
+        const norm = (s) => (s || '').replace(/[^\p{L}\p{N}\s&()'-]/gu, '').trim().toLowerCase();
+        const spec = norm(r.specialty);
+        if (spec) {
+            const generic = catalog.find((c) => norm(c.specialty) === spec && norm(c.label) === spec);
+            if (generic)
+                return { ...generic, matched: true, created: false };
+        }
         const added = await this.add(r.label, r.specialty);
         return { ...added, matched: false, created: true };
     }

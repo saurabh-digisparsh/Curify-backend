@@ -1,16 +1,27 @@
 import Razorpay = require('razorpay');
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingsService } from '../bookings/bookings.service';
+import { SettingsService } from '../admin/settings/settings.service';
+import { TeleconsultService } from '../hospital-partner/teleconsult.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 export declare class PaymentsService {
     private readonly rzp;
     private readonly prisma;
     private readonly bookings;
+    private readonly settings;
+    private readonly teleconsults;
     private readonly log;
     private readonly currency;
     private readonly capture;
-    constructor(rzp: Razorpay, prisma: PrismaService, bookings: BookingsService);
+    constructor(rzp: Razorpay, prisma: PrismaService, bookings: BookingsService, settings: SettingsService, teleconsults: TeleconsultService);
+    createTeleconsultOrder(userId: string, teleconsultId: string): Promise<{
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+        method: Record<string, boolean>;
+    }>;
     createOrder(userId: string, dto: CreateOrderDto): Promise<{
         orderId: string;
         amount: number;
@@ -37,6 +48,7 @@ export declare class PaymentsService {
     }>;
     private verifySignature;
     private markCaptured;
+    private fulfil;
     private confirmBooking;
     private applyEvent;
 }

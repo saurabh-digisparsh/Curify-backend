@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const multer_1 = require("multer");
+const fs_1 = require("fs");
 const upload_service_1 = require("./upload.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const ALLOWED_MIMES = [
@@ -39,8 +40,23 @@ let UploadController = class UploadController {
     async uploadMulti(files, body, req) {
         return this.uploadService.analyzeAndStore({ userId: req.user.id, files, ...body });
     }
+    reanalyze(id, req) {
+        return this.uploadService.reanalyze(id, req.user.id, req.user.role === 'ADMIN');
+    }
     getAnalysis(id, req) {
         return this.uploadService.getReport(id, req.user.id, req.user.role === 'ADMIN');
+    }
+    listFiles(req) {
+        return this.uploadService.listMyDocuments(req.user.id);
+    }
+    async file(reportId, index, req, res) {
+        const { path, name, mime } = await this.uploadService.documentFile(reportId, Number(index), req.user.id, req.user.role === 'ADMIN');
+        res.set({
+            'Content-Type': mime || 'application/octet-stream',
+            'Content-Disposition': `inline; filename="${encodeURIComponent(name)}"`,
+            'Cache-Control': 'private, no-store',
+        });
+        return new common_1.StreamableFile((0, fs_1.createReadStream)(path));
     }
 };
 exports.UploadController = UploadController;
@@ -87,6 +103,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UploadController.prototype, "uploadMulti", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: "Re-run an existing report's analysis on its stored documents (owner only, capped)" }),
+    (0, common_1.Post)('reanalyze/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], UploadController.prototype, "reanalyze", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get a stored analysis by ID (owner or admin only)' }),
     (0, common_1.Get)('analysis/:id'),
     __param(0, (0, common_1.Param)('id')),
@@ -95,6 +120,25 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], UploadController.prototype, "getAnalysis", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'List every document I have uploaded, grouped by journey' }),
+    (0, common_1.Get)('files'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UploadController.prototype, "listFiles", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Stream one of my uploaded documents (owner or admin only)' }),
+    (0, common_1.Get)('files/:reportId/:index'),
+    __param(0, (0, common_1.Param)('reportId')),
+    __param(1, (0, common_1.Param)('index')),
+    __param(2, (0, common_1.Request)()),
+    __param(3, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], UploadController.prototype, "file", null);
 exports.UploadController = UploadController = __decorate([
     (0, swagger_1.ApiTags)('Upload & Analysis'),
     (0, swagger_1.ApiBearerAuth)(),

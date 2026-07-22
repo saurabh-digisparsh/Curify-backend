@@ -36,6 +36,9 @@ let AvailabilityController = class AvailabilityController {
     quote(token, id, dto) {
         return this.tele.setQuote(token, id, dto);
     }
+    cancel(token, id, dto) {
+        return this.tele.doctorCancel(token, id, dto.reason);
+    }
     complete(token, id) {
         return this.tele.doctorComplete(token, id);
     }
@@ -96,6 +99,16 @@ __decorate([
     __metadata("design:paramtypes", [String, String, partner_dto_1.QuoteDto]),
     __metadata("design:returntype", void 0)
 ], AvailabilityController.prototype, "quote", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Cancel a booked teleconsult (notifies the patient, no free consult used)' }),
+    (0, common_1.Post)(':token/teleconsults/:id/cancel'),
+    __param(0, (0, common_1.Param)('token')),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, partner_dto_1.CancelTeleconsultDto]),
+    __metadata("design:returntype", void 0)
+], AvailabilityController.prototype, "cancel", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Mark a teleconsult complete' }),
     (0, common_1.Post)(':token/teleconsults/:id/complete'),

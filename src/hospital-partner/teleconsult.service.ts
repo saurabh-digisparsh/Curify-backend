@@ -1,11 +1,41 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { join } from 'path';
 import { TeleconsultStatus, TeleconsultDocSender } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../admin/settings/settings.service';
 import { VideoService } from './video.service';
 import { NotificationService } from './notification.service';
 import { HOSPITAL_DOCS_DIR } from './docs.storage';
 import { BookTeleconsultDto, QuoteDto } from './dto/partner.dto';
+
+// Free video consultations included per journey. Beyond this the patient pays the
+// admin-configured TELECONSULT_FEE before the held slot becomes a real booking.
+// ponytail: a constant, not a setting — move it next to TELECONSULT_FEE in
+//   settings.registry.ts when the allowance itself needs changing without a deploy.
+const FREE_CONSULTS_PER_JOURNEY = 2;
+
+// Statuses that consume the free allowance: booked and not cancelled. A cancelled
+// consult hands the free slot back, and PENDING_PAYMENT is excluded because it is a
+// PAID consult mid-checkout — an abandoned one must never eat a free slot.
+const QUOTA_STATUSES = [
+  TeleconsultStatus.SCHEDULED,
+  TeleconsultStatus.IN_PROGRESS,
+  TeleconsultStatus.COMPLETED,
+] as const;
+
+// How long the patient has to finish checkout before the held slot is released.
+const HOLD_MINUTES = 15;
+
+// How long a FREE consultation's room stays open. Paid consults are uncapped —
+// they bought the call, so we don't cut them off.
+// ponytail: constants, not settings — move next to TELECONSULT_FEE in
+//   settings.registry.ts when these need changing without a deploy.
+const FREE_CONSULT_MINUTES = 15;
+
+// Nobody may open the room before its scheduled time. The 30s of slack absorbs
+// clock skew between the browser and this server — without it a user whose clock
+// runs slightly slow watches the countdown hit 0:00 and still get refused.
+const JOIN_GRACE_MS = 30_000;
 
 // Documents shared during a consult — safe fields (never the on-disk filename).
 const DOC_SELECT = {
@@ -17,7 +47,12 @@ const DOC_SELECT = {
 // and the documents exchanged so the patient can review them.
 const TELECONSULT_SELECT = {
   id: true, scheduledAt: true, status: true, startedAt: true, endedAt: true, journeyId: true,
+  // Set only while PENDING_PAYMENT — lets the UI show the checkout countdown.
+  holdExpiresAt: true,
   quoteAmount: true, quoteCurrency: true, quoteNote: true, quotedAt: true, quoteAcceptedAt: true,
+  // So the patient sees "your doctor cancelled — here's why" rather than a bare
+  // CANCELLED pill, and knows their free consultation was handed back.
+  cancelledBy: true, cancelReason: true,
   doctor: { select: { id: true, name: true, specialty: true, application: { select: { legalName: true } } } },
   documents: { select: DOC_SELECT, orderBy: { createdAt: 'asc' as const } },
 } as const;
@@ -27,6 +62,7 @@ const TELECONSULT_SELECT = {
 const MONITOR_SELECT = {
   id: true, scheduledAt: true, status: true, startedAt: true, endedAt: true,
   quoteAmount: true, quoteCurrency: true, quoteNote: true, quotedAt: true,
+  cancelledBy: true, cancelReason: true,
   patient: { select: { name: true } },
   doctor: { select: { id: true, name: true, specialty: true } },
   documents: { select: DOC_SELECT, orderBy: { createdAt: 'asc' as const } },
@@ -100,17 +136,30 @@ export function computeSlots(timeZone: string, windows: Win[], bookedMs: Set<num
 
 @Injectable()
 export class TeleconsultService {
-  constructor(private prisma: PrismaService, private video: VideoService, private notif: NotificationService) {}
+  private readonly log = new Logger(TeleconsultService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private video: VideoService,
+    private notif: NotificationService,
+    private settings: SettingsService,
+  ) {}
 
   // ─── Patient side (JWT) ─────────────────────────────────────────────────────
 
   /** Instants already taken (scheduled or live) for a doctor, from now on — so
    *  slot generation and booking never hand out a slot twice. */
   private async bookedMs(doctorId: string): Promise<Set<number>> {
+    const now = new Date();
     const rows = await this.prisma.teleconsult.findMany({
       where: {
-        doctorId, scheduledAt: { gte: new Date() },
-        status: { in: [TeleconsultStatus.SCHEDULED, TeleconsultStatus.IN_PROGRESS] },
+        doctorId, scheduledAt: { gte: now },
+        OR: [
+          { status: { in: [TeleconsultStatus.SCHEDULED, TeleconsultStatus.IN_PROGRESS] } },
+          // An unpaid hold keeps its slot only until it expires, so an abandoned
+          // checkout can't park a doctor's slot forever (lazy expiry — no cron).
+          { status: TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { gt: now } },
+        ],
       },
       select: { scheduledAt: true },
     });
@@ -140,6 +189,31 @@ export class TeleconsultService {
    * means two consults share a slot; add a unique (doctorId, scheduledAt) index
    * if that ever matters.
    */
+  /**
+   * Free-allowance state for one journey. Drives the scheduler copy ("1 free
+   * consultation left" vs "$49 for this consultation") AND is the server-side gate
+   * in book() — the client never decides whether a consult is free.
+   *
+   * The allowance is per JOURNEY; consults with no journey (legacy / dashboard-
+   * initiated) share a single bucket keyed on the patient alone.
+   */
+  async quota(userId: string, journeyId?: string) {
+    const used = await this.prisma.teleconsult.count({
+      where: { patientId: userId, journeyId: journeyId ?? null, status: { in: [...QUOTA_STATUSES] } },
+    });
+    const remaining = Math.max(0, FREE_CONSULTS_PER_JOURNEY - used);
+    const fee = await this.settings.getNumber('TELECONSULT_FEE');
+    return {
+      used,
+      limit: FREE_CONSULTS_PER_JOURNEY,
+      remaining,
+      // A fee of 0 means the admin has turned charging off — everything stays free.
+      requiresPayment: remaining === 0 && fee > 0,
+      fee,
+      currency: process.env.RAZORPAY_CURRENCY || 'USD',
+    };
+  }
+
   async book(userId: string, dto: BookTeleconsultDto) {
     // Never accept a booking we could not host — the join call would 503 later.
     if (!(await this.video.enabled())) {
@@ -153,21 +227,57 @@ export class TeleconsultService {
 
     // One active consult per journey: block a second booking on the same journey.
     if (dto.journeyId) {
+      const now = new Date();
       const existing = await this.prisma.teleconsult.findFirst({
-        where: { journeyId: dto.journeyId, status: { in: [TeleconsultStatus.SCHEDULED, TeleconsultStatus.IN_PROGRESS] } },
-        select: { id: true },
+        where: {
+          journeyId: dto.journeyId,
+          OR: [
+            { status: { in: [TeleconsultStatus.SCHEDULED, TeleconsultStatus.IN_PROGRESS] } },
+            { status: TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { gt: now } },
+          ],
+        },
+        select: { id: true, status: true, patientId: true },
       });
-      if (existing) throw new BadRequestException('You already have a consultation booked for this journey. Cancel it first to rebook.');
+      // The patient's OWN unpaid hold is replaced, not treated as a clash: they
+      // abandoned checkout and came back to pick a different slot, and making them
+      // wait out the 15-minute hold would be a dead end.
+      if (existing?.status === TeleconsultStatus.PENDING_PAYMENT && existing.patientId === userId) {
+        await this.prisma.teleconsult.update({
+          where: { id: existing.id },
+          data: { status: TeleconsultStatus.CANCELLED, holdExpiresAt: null },
+        });
+      } else if (existing) {
+        throw new BadRequestException('You already have a consultation booked for this journey. Cancel it first to rebook.');
+      }
     }
 
     const wanted = new Date(dto.scheduledAt).toISOString();
     const open = computeSlots(doc.timezone, doc.windows, await this.bookedMs(doc.id));
     if (!open.includes(wanted)) throw new BadRequestException('That time is no longer available. Please pick another slot.');
 
+    // Server-side gate: the client tells us nothing about price or entitlement.
+    const q = await this.quota(userId, dto.journeyId);
+
     const tc = await this.prisma.teleconsult.create({
-      data: { patientId: userId, doctorId: doc.id, journeyId: dto.journeyId ?? null, scheduledAt: new Date(wanted) },
+      data: {
+        patientId: userId, doctorId: doc.id, journeyId: dto.journeyId ?? null,
+        scheduledAt: new Date(wanted),
+        // Out of free consults → the slot is only HELD until checkout completes.
+        ...(q.requiresPayment
+          ? {
+              status: TeleconsultStatus.PENDING_PAYMENT,
+              holdExpiresAt: new Date(Date.now() + HOLD_MINUTES * 60_000),
+            }
+          : {}),
+      },
       select: TELECONSULT_SELECT,
     });
+
+    // Paid consult: not a real booking yet. No confirmation mail and no join token
+    // until PaymentsService captures the payment and calls activatePaidConsult().
+    if (q.requiresPayment) {
+      return { ...tc, requiresPayment: true, fee: q.fee, currency: q.currency, holdMinutes: HOLD_MINUTES };
+    }
 
     // Email both sides the join links + calendar invites (fire-and-forget: mail
     // never throws, and a mail hiccup must not fail the booking).
@@ -178,15 +288,70 @@ export class TeleconsultService {
       doctor: { name: doc.name, email: doc.email, availabilityToken: doc.availabilityToken, timezone: doc.timezone },
     }).catch(() => {});
 
-    return tc;
+    return { ...tc, requiresPayment: false };
   }
 
-  /** Patient cancels their own consult — frees the journey to rebook. */
-  async cancel(userId: string, id: string) {
+  /**
+   * Payment captured → the held slot becomes a real booking. Called by
+   * PaymentsService; the dependency runs payments → hospital-partner only (this
+   * service never imports PaymentsService), so there is no module cycle.
+   *
+   * Idempotent: the sync /payments/verify call and the Razorpay webhook can both
+   * land, so the PENDING_PAYMENT → SCHEDULED move is a conditional update and only
+   * the winner sends the confirmation mail. Returns whether it made the transition.
+   */
+  async activatePaidConsult(teleconsultId: string, paymentId: string): Promise<boolean> {
+    const tc = await this.prisma.teleconsult.findUnique({
+      where: { id: teleconsultId },
+      select: {
+        id: true, status: true, doctorId: true, scheduledAt: true,
+        patient: { select: { email: true, name: true } },
+        doctor: { select: { name: true, email: true, availabilityToken: true, timezone: true } },
+      },
+    });
+    if (!tc || tc.status !== TeleconsultStatus.PENDING_PAYMENT) return false;
+
+    // The hold can expire while the patient is in checkout, and a slow payer may
+    // come back to find the slot gone. Never activate into a double-booking — the
+    // payment stands and support refunds or reschedules it.
+    const clash = await this.prisma.teleconsult.findFirst({
+      where: {
+        id: { not: tc.id }, doctorId: tc.doctorId, scheduledAt: tc.scheduledAt,
+        status: { in: [TeleconsultStatus.SCHEDULED, TeleconsultStatus.IN_PROGRESS] },
+      },
+      select: { id: true },
+    });
+    if (clash) {
+      this.log.error(
+        `Paid teleconsult ${tc.id} lost its held slot to ${clash.id}; payment ${paymentId} needs a refund or reschedule.`,
+      );
+      return false;
+    }
+
+    const res = await this.prisma.teleconsult.updateMany({
+      where: { id: tc.id, status: TeleconsultStatus.PENDING_PAYMENT },
+      data: { status: TeleconsultStatus.SCHEDULED, paymentId, holdExpiresAt: null },
+    });
+    if (res.count !== 1) return false; // a concurrent writer already activated it
+
+    this.notif.sendTeleconsultBooked({
+      teleconsultId: tc.id, scheduledAt: tc.scheduledAt,
+      patient: { email: tc.patient?.email, name: tc.patient?.name },
+      doctor: tc.doctor,
+    }).catch(() => {});
+    return true;
+  }
+
+  /** Patient cancels their own consult — frees the journey to rebook. The optional
+   *  comment is kept so the hospital/doctor sees why the slot came back. */
+  async cancel(userId: string, id: string, reason?: string) {
     const tc = await this.prisma.teleconsult.findUnique({ where: { id }, select: { patientId: true, status: true } });
     if (!tc || tc.patientId !== userId) throw new NotFoundException('Consultation not found');
     if (tc.status === TeleconsultStatus.COMPLETED) throw new BadRequestException('This consultation is already completed.');
-    await this.prisma.teleconsult.update({ where: { id }, data: { status: TeleconsultStatus.CANCELLED } });
+    await this.prisma.teleconsult.update({
+      where: { id },
+      data: { status: TeleconsultStatus.CANCELLED, cancelledBy: 'PATIENT', cancelReason: reason?.trim() || null },
+    });
     return this.mine(userId);
   }
 
@@ -206,26 +371,76 @@ export class TeleconsultService {
     return this.mine(userId);
   }
 
-  /** The caller's teleconsults (with quote + documents). */
+  /** The caller's teleconsults (with quote + documents). Expired unpaid holds are
+   *  hidden — they never became bookings, so showing them would just be clutter
+   *  that also blocks the scheduler UI. */
   mine(userId: string) {
+    const now = new Date();
     return this.prisma.teleconsult.findMany({
-      where: { patientId: userId },
+      where: {
+        patientId: userId,
+        NOT: { status: TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { lte: now } },
+      },
       orderBy: { scheduledAt: 'asc' },
       select: TELECONSULT_SELECT,
     });
+  }
+
+  /**
+   * When this call's room must close, as an ISO string — or null for "no limit".
+   *
+   * Free consultations get FREE_CONSULT_MINUTES from the moment the room first
+   * opens; paid ones are uncapped. The clock is anchored to startedAt, and THIS
+   * is the only place that stamps it, so whoever joins first starts the clock and
+   * both sides are then handed the identical deadline. The client counts down to
+   * it but never decides it.
+   */
+  /**
+   * The room opens at the appointment time, not before. Enforced here rather than
+   * only in the UI: the join token IS the key to the room, so handing one out early
+   * would let anyone bypass the countdown by calling the endpoint directly.
+   */
+  private assertJoinWindowOpen(scheduledAt: Date) {
+    const msAway = scheduledAt.getTime() - Date.now();
+    if (msAway > JOIN_GRACE_MS) {
+      throw new BadRequestException(
+        `This consultation starts at ${scheduledAt.toISOString()}. You can join once it begins.`,
+      );
+    }
+  }
+
+  private async callDeadline(tc: { id: string; paymentId: string | null; startedAt: Date | null }): Promise<string | null> {
+    if (tc.paymentId) return null; // paid consult — they bought the time
+    let startedAt = tc.startedAt;
+    if (!startedAt) {
+      // Conditional write: if the other side stamped it a moment ago, keep THEIRS,
+      // otherwise the two participants would count down to different instants.
+      await this.prisma.teleconsult.updateMany({
+        where: { id: tc.id, startedAt: null }, data: { startedAt: new Date() },
+      });
+      startedAt = (await this.prisma.teleconsult.findUnique({
+        where: { id: tc.id }, select: { startedAt: true },
+      }))?.startedAt ?? new Date();
+    }
+    return new Date(startedAt.getTime() + FREE_CONSULT_MINUTES * 60_000).toISOString();
   }
 
   /** Patient join token — must own the teleconsult (active = scheduled or live). */
   async patientVideoToken(userId: string, id: string) {
     const tc = await this.prisma.teleconsult.findUnique({
       where: { id },
-      select: { patientId: true, status: true, roomName: true, patient: { select: { name: true } } },
+      select: {
+        id: true, patientId: true, status: true, roomName: true, scheduledAt: true,
+        paymentId: true, startedAt: true, patient: { select: { name: true } },
+      },
     });
     if (!tc || tc.patientId !== userId) throw new NotFoundException('Consultation not found');
     if (tc.status !== TeleconsultStatus.SCHEDULED && tc.status !== TeleconsultStatus.IN_PROGRESS) {
       throw new BadRequestException('This consultation is not active.');
     }
-    return this.video.mintJitsi(tc.roomName, { id: userId, name: tc.patient?.name || 'Patient' }, false);
+    this.assertJoinWindowOpen(tc.scheduledAt);
+    const token = await this.video.mintJitsi(tc.roomName, { id: userId, name: tc.patient?.name || 'Patient' }, false);
+    return { ...token, endsAt: await this.callDeadline(tc) };
   }
 
   /** Patient shares a document (report/scan) into a consult they own. */
@@ -249,19 +464,27 @@ export class TeleconsultService {
     });
     if (!doc) throw new NotFoundException('Invalid or expired link');
     const tc = await this.prisma.teleconsult.findUnique({
-      where: { id }, select: { doctorId: true, status: true, roomName: true, startedAt: true },
+      where: { id },
+      select: { id: true, doctorId: true, status: true, roomName: true, scheduledAt: true, startedAt: true, paymentId: true },
     });
     if (!tc || tc.doctorId !== doc.id) throw new NotFoundException('Consultation not found');
     if (tc.status === TeleconsultStatus.COMPLETED || tc.status === TeleconsultStatus.CANCELLED) {
       throw new BadRequestException('This consultation is not active.');
     }
-    // Doctor joining marks the consult "connected / live now".
+    this.assertJoinWindowOpen(tc.scheduledAt);
+    // Doctor joining marks the consult "connected / live now". startedAt is left to
+    // callDeadline so a single place owns the clock (the patient may have opened
+    // the room first, and that earlier instant is the one that counts).
     if (tc.status === TeleconsultStatus.SCHEDULED) {
       await this.prisma.teleconsult.update({
-        where: { id }, data: { status: TeleconsultStatus.IN_PROGRESS, startedAt: tc.startedAt ?? new Date() },
+        where: { id }, data: { status: TeleconsultStatus.IN_PROGRESS },
       });
     }
-    return this.video.mintJitsi(tc.roomName, { id: doc.id, name: `Dr ${doc.name}` }, true);
+    // Some doctor names already carry the honorific — prefix only when missing,
+    // otherwise the call header reads "Dr Dr. Anita Rao".
+    const display = /^dr\.?\s/i.test(doc.name) ? doc.name : `Dr. ${doc.name}`;
+    const token = await this.video.mintJitsi(tc.roomName, { id: doc.id, name: display }, true);
+    return { ...token, endsAt: await this.callDeadline(tc) };
   }
 
   private async doctorTcOrThrow(token: string, id: string) {
@@ -288,6 +511,39 @@ export class TeleconsultService {
       where: { id },
       data: { quoteAmount: dto.amount, quoteCurrency: dto.currency || 'USD', quoteNote: dto.note ?? null, quotedAt: new Date() },
     });
+    return this.doctorConsults(token);
+  }
+
+  /**
+   * Doctor calls off a booked consultation. The patient is emailed straight away
+   * (they planned their day around it), and because the free-consult allowance
+   * only counts SCHEDULED/IN_PROGRESS/COMPLETED, a doctor-side cancellation gives
+   * the free consultation back automatically — the patient is never charged for a
+   * call the hospital cancelled.
+   */
+  async doctorCancel(token: string, id: string, reason?: string) {
+    await this.doctorTcOrThrow(token, id);
+    const tc = await this.prisma.teleconsult.findUnique({
+      where: { id },
+      select: {
+        id: true, status: true, scheduledAt: true, journeyId: true,
+        patient: { select: { email: true, name: true } },
+        doctor: { select: { name: true } },
+      },
+    });
+    if (!tc) throw new NotFoundException('Consultation not found');
+    if (tc.status === TeleconsultStatus.COMPLETED) throw new BadRequestException('This consultation is already completed.');
+    if (tc.status === TeleconsultStatus.CANCELLED) return this.doctorConsults(token); // idempotent
+
+    await this.prisma.teleconsult.update({
+      where: { id },
+      data: { status: TeleconsultStatus.CANCELLED, cancelledBy: 'DOCTOR', cancelReason: reason?.trim() || null, holdExpiresAt: null },
+    });
+    // Fire-and-forget: a mail hiccup must not fail the cancellation itself.
+    this.notif.sendTeleconsultCancelled({
+      teleconsultId: tc.id, scheduledAt: tc.scheduledAt, reason: reason?.trim(),
+      patient: tc.patient, doctorName: tc.doctor.name,
+    }).catch(() => {});
     return this.doctorConsults(token);
   }
 

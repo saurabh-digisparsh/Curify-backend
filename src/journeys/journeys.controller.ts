@@ -46,23 +46,4 @@ export class JourneysController {
   remove(@Request() req, @Param('id') id: string) {
     return this.service.remove(req.user.id, id);
   }
-
-  // ── Hospital chat (patient side) ──
-  @ApiOperation({ summary: 'Read my chat with the selected hospital' })
-  @Get(':id/chat')
-  getChat(@Request() req, @Param('id') id: string) {
-    return this.service.getChat(req.user.id, id);
-  }
-
-  @ApiOperation({ summary: 'Send a chat message / share a report / request a quote' })
-  @Post(':id/chat')
-  postChat(@Request() req, @Param('id') id: string, @Body() body: { body?: string; kind?: any; reportId?: string }) {
-    return this.service.addPatientMessage(req.user.id, id, body || {});
-  }
-
-  @ApiOperation({ summary: 'AI-analyze the whole chat and refresh the trip plan' })
-  @Post(':id/chat/analyze')
-  analyzeChat(@Request() req, @Param('id') id: string) {
-    return this.service.analyzeChat(req.user.id, id);
-  }
 }

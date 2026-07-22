@@ -64,7 +64,15 @@ describe('PaymentsService webhook idempotency + state machine', () => {
         return { bookingId: 'b1', paymentRef: 'pay_1', status: 'CONFIRMED' };
       },
     };
-    const svc = new PaymentsService({} as any, prisma, bookings);
+    // Settings + teleconsults are only reached by TELECONSULT-purpose payments;
+    // these fixtures are plan payments, so stubs that would throw if used are fine.
+    const settings: any = { getNumber: async () => 49 };
+    const teleconsults: any = {
+      activatePaidConsult: async () => {
+        throw new Error('plan payments must not touch the teleconsult path');
+      },
+    };
+    const svc = new PaymentsService({} as any, prisma, bookings, settings, teleconsults);
     return { svc, payment, get creates() { return bookingCreates; } };
   }
 

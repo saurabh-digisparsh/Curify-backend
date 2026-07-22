@@ -10,7 +10,7 @@ import type { Response } from 'express';
 import { PartnerService } from './partner.service';
 import { TeleconsultService } from './teleconsult.service';
 import { hospitalDocStorage, docFileFilter } from './docs.storage';
-import { SetAvailabilityDto, QuoteDto, TeleconsultDocDto } from './dto/partner.dto';
+import { SetAvailabilityDto, QuoteDto, TeleconsultDocDto, CancelTeleconsultDto } from './dto/partner.dto';
 
 // PUBLIC, no auth: a doctor opens their private (WhatsApp) link to set recurring
 // weekly availability (FR-26/27) and to run their teleconsults — join calls, share
@@ -44,6 +44,12 @@ export class AvailabilityController {
   @Post(':token/teleconsults/:id/quote')
   quote(@Param('token') token: string, @Param('id') id: string, @Body() dto: QuoteDto) {
     return this.tele.setQuote(token, id, dto);
+  }
+
+  @ApiOperation({ summary: 'Cancel a booked teleconsult (notifies the patient, no free consult used)' })
+  @Post(':token/teleconsults/:id/cancel')
+  cancel(@Param('token') token: string, @Param('id') id: string, @Body() dto: CancelTeleconsultDto) {
+    return this.tele.doctorCancel(token, id, dto.reason);
   }
 
   @ApiOperation({ summary: 'Mark a teleconsult complete' })

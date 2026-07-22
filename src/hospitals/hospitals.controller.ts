@@ -51,11 +51,17 @@ export class HospitalsController {
     @Query('treatment') treatment?: string,
     @Query('urgency') urgency?: string,
     @Query('search') search?: string,
+    @Query('jci') jci?: string,
+    @Query('minRating') minRating?: string,
+    @Query('maxPrice') maxPrice?: string,
   ) {
     return this.hospitalsService.getComparison({
       page: page ? parseInt(page, 10) : 1,
       pageSize: pageSize ? parseInt(pageSize, 10) : 20,
       city, sort, treatment, urgency, search,
+      jci: jci === 'true',
+      minRating: minRating ? parseFloat(minRating) : undefined,
+      maxPrice: maxPrice ? parseInt(maxPrice, 10) : undefined,
     });
   }
 

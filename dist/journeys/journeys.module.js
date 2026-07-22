@@ -11,7 +11,6 @@ const common_1 = require("@nestjs/common");
 const journeys_controller_1 = require("./journeys.controller");
 const public_tracking_controller_1 = require("./public-tracking.controller");
 const journeys_service_1 = require("./journeys.service");
-const admin_hospital_chat_controller_1 = require("./admin-hospital-chat.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
 const ai_module_1 = require("../ai/ai.module");
 let JourneysModule = class JourneysModule {
@@ -20,7 +19,7 @@ exports.JourneysModule = JourneysModule;
 exports.JourneysModule = JourneysModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule, ai_module_1.AiModule],
-        controllers: [journeys_controller_1.JourneysController, public_tracking_controller_1.PublicTrackingController, admin_hospital_chat_controller_1.AdminHospitalChatController],
+        controllers: [journeys_controller_1.JourneysController, public_tracking_controller_1.PublicTrackingController],
         providers: [journeys_service_1.JourneysService],
     })
 ], JourneysModule);

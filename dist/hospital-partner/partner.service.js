@@ -300,11 +300,30 @@ let PartnerService = PartnerService_1 = class PartnerService {
     }
     async importDoctors(userId, file) {
         const app = await this.mine(userId);
-        const { rows, errors } = this.bulk.parse('doctors', file);
+        const { rows, errors } = await this.bulk.parse('doctors', file);
         if (errors.length)
             return { imported: 0, errors, data: await this.dashboard(userId) };
+        const imported = await this.writeDoctors(app, rows);
+        return { imported, errors: [], data: await this.dashboard(userId) };
+    }
+    async writeDoctors(app, rows) {
+        const existing = await this.prisma.onboardingDoctor.findMany({
+            where: { applicationId: app.id },
+            select: { name: true, registrationNo: true, email: true },
+        });
+        const key = (d) => (d.registrationNo || d.email || d.name || '').trim().toLowerCase();
+        const seen = new Set(existing.map(key));
+        const fresh = rows.filter((d) => {
+            const k = key(d);
+            if (!k || seen.has(k))
+                return false;
+            seen.add(k);
+            return true;
+        });
+        if (!fresh.length)
+            return 0;
         await this.prisma.onboardingDoctor.createMany({
-            data: rows.map((d) => ({
+            data: fresh.map((d) => ({
                 applicationId: app.id, availabilityToken: tok(24),
                 status: isAccredited(app) ? client_1.OnboardingDoctorStatus.APPROVED : client_1.OnboardingDoctorStatus.IN_REVIEW,
                 name: d.name, qualifications: d.qualifications, specialty: d.specialty, subspecialty: d.subspecialty,
@@ -313,13 +332,17 @@ let PartnerService = PartnerService_1 = class PartnerService {
                 teleconsultEnabled: d.teleconsultEnabled ?? false, timezone: 'Asia/Kolkata',
             })),
         });
-        return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+        return fresh.length;
     }
     async importPackages(userId, file) {
         const app = await this.mine(userId);
-        const { rows, errors } = this.bulk.parse('packages', file);
+        const { rows, errors } = await this.bulk.parse('packages', file);
         if (errors.length)
             return { imported: 0, errors, data: await this.dashboard(userId) };
+        await this.writePackages(app, rows);
+        return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+    }
+    async writePackages(app, rows) {
         const packages = rows.map((p) => ({ name: p.name, priceUsd: p.priceUsd, included: p.included ?? [], notes: p.notes ?? null }));
         const procedures = packages.map((p) => p.name);
         const from = Math.min(...packages.map((p) => p.priceUsd));
@@ -328,7 +351,73 @@ let PartnerService = PartnerService_1 = class PartnerService {
         if (app.publishedHospitalId) {
             await this.prisma.hospital.update({ where: { id: app.publishedHospitalId }, data: { ...data, procedures: procedures } });
         }
-        return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+    }
+    async importProfile(userId, file) {
+        const app = await this.mine(userId);
+        const { rows, errors } = await this.bulk.parse('profile', file);
+        if (errors.length)
+            return { imported: 0, errors, data: await this.dashboard(userId) };
+        if (rows.length !== 1) {
+            return {
+                imported: 0,
+                errors: [{ row: 2, message: `The profile template holds ONE row — your hospital. This file has ${rows.length}.` }],
+                data: await this.dashboard(userId),
+            };
+        }
+        await this.writeProfile(app, rows[0]);
+        return { imported: 1, errors: [], data: await this.dashboard(userId) };
+    }
+    async writeProfile(app, p) {
+        await this.prisma.hospitalApplication.update({
+            where: { id: app.id },
+            data: {
+                city: p.city ?? undefined, address: p.address ?? undefined, website: p.website ?? undefined,
+                ownership: p.ownership ?? undefined, totalBeds: p.totalBeds ?? undefined, icuBeds: p.icuBeds ?? undefined,
+                airportDistanceKm: p.airportDistanceKm ?? undefined,
+                specialties: p.specialties ?? undefined, procedures: p.procedures ?? undefined,
+                languages: p.languages ?? undefined, insurers: p.insurers ?? undefined, intlFacilities: p.intlFacilities ?? undefined,
+                quotedPriceUsd: p.quotedPriceUsd ?? undefined, localBenchmarkUsd: p.localBenchmarkUsd ?? undefined,
+                patientsPerYear: p.patientsPerYear ?? undefined, imageUrl: p.imageUrl ?? undefined,
+                included: p.included ?? undefined, notIncluded: p.notIncluded ?? undefined,
+                pros: p.pros ?? undefined, cons: p.cons ?? undefined,
+            },
+        });
+        if (app.publishedHospitalId) {
+            await this.prisma.hospital.update({
+                where: { id: app.publishedHospitalId },
+                data: {
+                    city: p.city ?? undefined, procedures: p.procedures ?? undefined,
+                    specialty: p.specialties ? (p.specialties[0] ?? null) : undefined,
+                    quotedPriceUsd: p.quotedPriceUsd ?? undefined, localBenchmarkUsd: p.localBenchmarkUsd ?? undefined,
+                    patientsPerYear: p.patientsPerYear ?? undefined, imageUrl: p.imageUrl ?? undefined,
+                    included: p.included ?? undefined, notIncluded: p.notIncluded ?? undefined,
+                    pros: p.pros ?? undefined, cons: p.cons ?? undefined,
+                },
+            });
+        }
+    }
+    async importAll(userId, file) {
+        const app = await this.mine(userId);
+        const { profile, doctors, packages, errors } = await this.bulk.parseAll(file);
+        if (errors.length)
+            return { imported: 0, errors, data: await this.dashboard(userId), detail: null };
+        if (profile)
+            await this.writeProfile(app, profile);
+        const doctorsAdded = doctors.length ? await this.writeDoctors(app, doctors) : 0;
+        if (packages.length)
+            await this.writePackages(await this.mine(userId), packages);
+        const detail = {
+            profile: profile ? 1 : 0,
+            doctors: doctorsAdded,
+            doctorsSkipped: doctors.length - doctorsAdded,
+            packages: packages.length,
+        };
+        return {
+            imported: detail.profile + detail.doctors + detail.packages,
+            errors: [],
+            data: await this.dashboard(userId),
+            detail,
+        };
     }
     async doctorOfMine(userId, doctorId) {
         const app = await this.mine(userId);

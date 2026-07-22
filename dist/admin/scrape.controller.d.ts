@@ -2,7 +2,7 @@ import { ScrapeService } from './scrape.service';
 import { EnrichmentService } from './enrichment.service';
 import { ReviewLangService } from './review-lang.service';
 import { FileImportService } from './file-import.service';
-import { TriggerScrapeDto } from './dto/trigger-scrape.dto';
+import { TriggerScrapeDto, ScrapeAllDto } from './dto/trigger-scrape.dto';
 export declare class AdminScrapeController {
     private readonly scrape;
     private readonly enrichment;
@@ -46,7 +46,7 @@ export declare class AdminScrapeController {
         triggeredBy: string | null;
         finishedAt: Date | null;
     }>;
-    scrapeAll(req: any): Promise<{
+    scrapeAll(dto: ScrapeAllDto, req: any): Promise<{
         error: string | null;
         params: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;

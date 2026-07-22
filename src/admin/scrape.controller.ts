@@ -9,7 +9,7 @@ import { ScrapeService } from './scrape.service';
 import { EnrichmentService } from './enrichment.service';
 import { ReviewLangService } from './review-lang.service';
 import { FileImportService } from './file-import.service';
-import { TriggerScrapeDto } from './dto/trigger-scrape.dto';
+import { TriggerScrapeDto, ScrapeAllDto } from './dto/trigger-scrape.dto';
 
 @ApiTags('Admin · Scrape')
 @ApiBearerAuth()
@@ -45,8 +45,8 @@ export class AdminScrapeController {
 
   @ApiOperation({ summary: 'Scrape ALL hospitals in the DB (refresh reviews). Async — returns a job.' })
   @Post('all-hospitals')
-  scrapeAll(@Request() req) {
-    return this.scrape.scrapeAllHospitals(req.user.id);
+  scrapeAll(@Body() dto: ScrapeAllDto, @Request() req) {
+    return this.scrape.scrapeAllHospitals(req.user.id, dto?.minReviews);
   }
 
   @ApiOperation({ summary: 'Scrape the NEXT hospital in the daily round-robin (full pipeline). Async — returns a job.' })

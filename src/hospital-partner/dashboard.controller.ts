@@ -59,7 +59,40 @@ export class DashboardController {
   @Put('pricing')
   pricing(@Body() dto: PricingDto, @Request() req) { return this.svc.setPricing(req.user.id, dto); }
 
-  @ApiOperation({ summary: 'Download the CSV template for a bulk import' })
+  /**
+   * The combined template — the whole listing in one file. Excel by default (a
+   * worksheet per table, which is what hospitals actually fill in); `?format=csv`
+   * returns the same three tables as marker-separated blocks for systems that can
+   * only export CSV. Declared before `:kind` so "all" never matches that param.
+   */
+  @ApiOperation({ summary: 'Download the ONE template covering profile + doctors + packages' })
+  @Get('import/all/template')
+  async templateAll(@Query('format') format: string | undefined, @Res({ passthrough: true }) res: Response) {
+    if (format === 'csv') {
+      res.set({
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="curify-hospital-template.csv"',
+      });
+      return this.bulk.templateAllCsv();
+    }
+    const xlsx = await this.bulk.templateAllXlsx();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="curify-hospital-template.xlsx"',
+      'Content-Length': String(xlsx.length),
+    });
+    return new StreamableFile(xlsx);
+  }
+
+  @ApiOperation({ summary: 'Upload the ONE file covering profile + doctors + packages' })
+  @ApiConsumes('multipart/form-data')
+  @Post('import/all')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: CSV_MAX_BYTES }, fileFilter: csvFileFilter }))
+  importAll(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return this.svc.importAll(req.user.id, file);
+  }
+
+  @ApiOperation({ summary: 'Download the CSV template for one table' })
   @Get('import/:kind/template')
   template(@Param('kind') kind: ImportKind, @Res({ passthrough: true }) res: Response) {
     const csv = this.bulk.template(kind);
@@ -68,6 +101,14 @@ export class DashboardController {
       'Content-Disposition': `attachment; filename="curify-${kind}-template.csv"`,
     });
     return csv;
+  }
+
+  @ApiOperation({ summary: "Bulk-import the hospital's own profile/pricing/services from a one-row CSV" })
+  @ApiConsumes('multipart/form-data')
+  @Post('import/profile')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: CSV_MAX_BYTES }, fileFilter: csvFileFilter }))
+  importProfile(@UploadedFile() file: Express.Multer.File, @Request() req) {
+    return this.svc.importProfile(req.user.id, file);
   }
 
   @ApiOperation({ summary: 'Bulk-import doctors from a CSV' })

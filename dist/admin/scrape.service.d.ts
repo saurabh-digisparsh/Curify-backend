@@ -46,7 +46,7 @@ export declare class ScrapeService {
         triggeredBy: string | null;
         finishedAt: Date | null;
     }[]>;
-    scrapeAllHospitals(triggeredBy: string): Promise<{
+    scrapeAllHospitals(triggeredBy: string, minReviews?: number): Promise<{
         error: string | null;
         params: import("@prisma/client/runtime/library").JsonValue | null;
         id: string;

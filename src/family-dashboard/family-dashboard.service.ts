@@ -106,8 +106,9 @@ export class FamilyDashboardService {
     };
   }
 
-  async getUpdates(params: { procedure: string; hospital: string; surgeon: string; stage: string }) {
-    // Legacy endpoint — return demo state based on stage
+  // Legacy endpoint: the caller still posts the case details, but the demo state
+  // ignores them — the param is kept so the route contract doesn't change.
+  async getUpdates(_params: { procedure: string; hospital: string; surgeon: string; stage: string }) {
     return this.getDemoState();
   }
 }

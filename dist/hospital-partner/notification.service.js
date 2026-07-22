@@ -70,10 +70,10 @@ let NotificationService = class NotificationService {
     async sendAvailabilityLink(doctor, token) {
         const url = `${this.base()}/availability/${token}`;
         if (doctor.email) {
-            await this.mail.send(doctor.email, 'Set your teleconsultation availability', this.card(`Hello Dr. ${doctor.name} 👋`, 'Set the weekly times you are available for video consultations with international patients. You can edit this anytime.', { label: 'Set your availability', url }, 'This link is personal to you — please don’t forward it beyond your coordinator.'), `availability link → ${url}`);
+            await this.mail.send(doctor.email, 'Set your video consultation availability', this.card(`Hello Dr. ${doctor.name} 👋`, 'Set the weekly times you are available for video consultations with international patients. You can edit this anytime.', { label: 'Set your availability', url }, 'This link is personal to you — please don’t forward it beyond your coordinator.'), `availability link → ${url}`);
         }
         if (doctor.whatsapp)
-            await this.whatsapp(doctor.whatsapp, `Set your Curify teleconsult availability: ${url}`);
+            await this.whatsapp(doctor.whatsapp, `Set your Curify video consultation availability: ${url}`);
     }
     async sendTeleconsultBooked(p) {
         const minutes = p.minutes ?? 30;
@@ -89,9 +89,20 @@ let NotificationService = class NotificationService {
             await this.mail.send(p.patient.email, 'Your Curify video consultation is booked', this.card('Your consultation is confirmed ✅', `You're booked for a video consultation with <b>Dr. ${p.doctor.name}</b> on <b>${fmt()}</b> (your local time).<br/><br/>Join from the button below at the scheduled time. The calendar invite is attached.`, { label: 'Join / manage consultation', url: patientUrl }, 'Add the attached invite to your calendar so you get a reminder.'), `consult ${fmt()} → ${patientUrl}`, [{ filename: 'consultation.ics', content: ics, contentType: 'text/calendar' }]);
         }
         if (p.doctor.email) {
-            const ics = buildIcs({ uid: `${p.teleconsultId}-doc`, start: p.scheduledAt, minutes, summary: `Teleconsult with a Curify patient`, description: `Open your Curify availability page to join: ${doctorUrl}`, url: doctorUrl });
-            await this.mail.send(p.doctor.email, 'New teleconsultation booked', this.card(`Hello Dr. ${p.doctor.name} 👋`, `A patient has booked a video consultation with you on <b>${fmt(p.doctor.timezone)}</b>${p.doctor.timezone ? ` (${p.doctor.timezone})` : ''}.<br/><br/>Join from your availability page at the scheduled time. The calendar invite is attached.`, { label: 'Open your consultations', url: doctorUrl }, 'This link is personal to you — please don’t forward it.'), `consult ${fmt(p.doctor.timezone)} → ${doctorUrl}`, [{ filename: 'consultation.ics', content: ics, contentType: 'text/calendar' }]);
+            const ics = buildIcs({ uid: `${p.teleconsultId}-doc`, start: p.scheduledAt, minutes, summary: `Video consultation with a Curify patient`, description: `Open your Curify availability page to join: ${doctorUrl}`, url: doctorUrl });
+            await this.mail.send(p.doctor.email, 'New video consultation booked', this.card(`Hello Dr. ${p.doctor.name} 👋`, `A patient has booked a video consultation with you on <b>${fmt(p.doctor.timezone)}</b>${p.doctor.timezone ? ` (${p.doctor.timezone})` : ''}.<br/><br/>Join from your availability page at the scheduled time. The calendar invite is attached.`, { label: 'Open your consultations', url: doctorUrl }, 'This link is personal to you — please don’t forward it.'), `consult ${fmt(p.doctor.timezone)} → ${doctorUrl}`, [{ filename: 'consultation.ics', content: ics, contentType: 'text/calendar' }]);
         }
+    }
+    async sendTeleconsultCancelled(p) {
+        if (!p.patient.email)
+            return;
+        const url = `${this.base()}/dashboard/journeys`;
+        const when = new Intl.DateTimeFormat('en-US', {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+        }).format(p.scheduledAt);
+        await this.mail.send(p.patient.email, 'Your Curify video consultation was cancelled', this.card('Your consultation was cancelled', `Dr. ${p.doctorName} had to cancel your video consultation scheduled for <b>${when}</b>.`
+            + (p.reason ? `<br/><br/><b>Reason:</b> ${p.reason}` : '')
+            + '<br/><br/>You have <b>not</b> been charged and this did not use one of your free consultations — pick a new time whenever you are ready.', { label: 'Book another time', url }, 'Sorry for the disruption — our care team can help if you would prefer a different doctor.'), `consult ${when} cancelled by doctor${p.reason ? ` — ${p.reason}` : ''}`);
     }
 };
 exports.NotificationService = NotificationService;

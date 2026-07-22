@@ -10,6 +10,8 @@ exports.PaymentsModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("../prisma/prisma.module");
 const bookings_module_1 = require("../bookings/bookings.module");
+const admin_module_1 = require("../admin/admin.module");
+const hospital_partner_module_1 = require("../hospital-partner/hospital-partner.module");
 const payments_controller_1 = require("./payments.controller");
 const webhooks_controller_1 = require("./webhooks.controller");
 const payments_service_1 = require("./payments.service");
@@ -19,7 +21,7 @@ let PaymentsModule = class PaymentsModule {
 exports.PaymentsModule = PaymentsModule;
 exports.PaymentsModule = PaymentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, bookings_module_1.BookingsModule],
+        imports: [prisma_module_1.PrismaModule, bookings_module_1.BookingsModule, admin_module_1.AdminModule, hospital_partner_module_1.HospitalPartnerModule],
         controllers: [payments_controller_1.PaymentsController, webhooks_controller_1.WebhooksController],
         providers: [payments_service_1.PaymentsService, razorpay_provider_1.razorpayProvider],
     })

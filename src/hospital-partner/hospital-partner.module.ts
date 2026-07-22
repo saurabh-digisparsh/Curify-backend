@@ -23,5 +23,7 @@ import { PartnerAdminController } from './admin.controller';
   // route GET /partner/dashboard would otherwise be shadowed by GET /partner/:id.
   controllers: [DashboardController, ApplicationController, AvailabilityController, TeleconsultController, PartnerAdminController],
   providers: [PartnerService, BulkImportService, NotificationService, AccreditationService, VideoService, TeleconsultService],
+  // PaymentsModule activates a paid consult once Razorpay captures the fee.
+  exports: [TeleconsultService],
 })
 export class HospitalPartnerModule {}

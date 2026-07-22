@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 export declare class UsersService {
     private prisma;
+    private readonly logger;
     constructor(prisma: PrismaService);
     findAll(role?: Role): Promise<{
         id: string;
@@ -48,5 +49,6 @@ export declare class UsersService {
     remove(id: string, requesterId: string): Promise<{
         deleted: boolean;
         id: string;
+        documentsDeleted: number;
     }>;
 }

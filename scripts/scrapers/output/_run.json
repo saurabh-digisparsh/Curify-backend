@@ -1,47 +1,10 @@
 {
     "place": {
-        "name": "Fortis Hiranandani Hospital",
-        "rating": 4.7,
-        "address": "Mini, Seashore Rd, Juhu Nagar, Sector 10A, Vashi, Navi Mumbai, Maharashtra 400703 "
+        "name": "This site can\u2019t be reached",
+        "rating": 0,
+        "address": ""
     },
-    "foreign": [
-        {
-            "id": "Ci9DQUlRQUNvZENodHljRjlvT21ONlVWbEJjVU5MY1VKUk16aHhUREpaY1hkUWJXYxAB",
-            "name": "SeeGoodness",
-            "rating": 5,
-            "date": "a year ago",
-            "text": "Fortis hospital Vashi:\n\nVery good experience for full body checkup. Very professional, soft spoken, competent and trained doctors and staff. I didn't feel any push to take up extra tests or procedures. The extra tests prescribed were in fact helpful in diagnosing hidden problem.\n\nThree of us from the same company got the full body checkup done recently. We work in India on an assignment for a US engineering company (we are originally from India ofcourse but lived and worked abroad for many years) and really liked this hospital and the value for money it brings. The tests are world class at very competitive prices. You get the results and reports within hours and the consultations are available on the same day. The best feature is that all tests are a available in the same facility within 1st and 2nd floors (compared to abroad where not all tests are available at the same place and one has to wait for appointments and days before having the tests).\nThere is something special in the recruitment and training process of this hospital because the people seem to be fit for and dedicated to their job. They also help you in getting around the process of checkup.\nThe food on ground floor restaurant is good and reasonably priced.\nWe will definitely recommend this hospital to our friends and colleagues.\nThanks ladies and gents of Hiranandani Fortis hospital Vashi! Keep up the good work.",
-            "profile": "https://www.google.com/maps/contrib/106464033333870041179/reviews?hl=en",
-            "country": "abroad",
-            "region": "phrase_signal",
-            "flags": [],
-            "tokens": [
-                "abroad"
-            ],
-            "lang": "en"
-        },
-        {
-            "id": "ChZDSUhNMG9nS0VJQ0FnSUNyMnBEbENBEAE",
-            "name": "Dipanjan G",
-            "rating": 5,
-            "date": "2 years ago",
-            "text": "One of my family members  underwent a surgery last week. Dr Kulkarni is a very good surgeon and explained us the details prior to the procedure. He is very considerate and the care towards his patients clearly shows in all interactions\nKudos to all departments of this hospital as they were excellent in delivering services post surgery. Patient care is foremost in this facility.\nSpecial mention also for Nisha Bhise as she helped me to coordinate end to end TPA and other formalities , given that I stay away in Kuala Lumpur. She was very supportive during the entire stay of my patient in the premises and ensured top of line services delivered during this.\nMany thanks to the entire staff and support functions\nKind Regards\nDips",
-            "profile": "https://www.google.com/maps/contrib/110109027607546627042/reviews?hl=en",
-            "country": "Malaysia",
-            "region": "southeast_asia",
-            "flags": [],
-            "tokens": [
-                "Malaysia"
-            ],
-            "lang": "en"
-        }
-    ],
-    "doctors": {
-        "Kulkarni": [
-            1
-        ]
-    },
-    "external": {
-        "Kulkarni": []
-    }
+    "foreign": [],
+    "doctors": {},
+    "external": {}
 }

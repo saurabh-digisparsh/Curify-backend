@@ -17,6 +17,7 @@ const settings_service_1 = require("../admin/settings/settings.service");
 const video_service_1 = require("../hospital-partner/video.service");
 const regions_1 = require("../common/regions");
 const VISIBLE = {
+    visible: true,
     OR: [{ approvalStatus: null }, { approvalStatus: 'APPROVED' }],
 };
 const VISIBLE_SURGEON = {
@@ -286,8 +287,12 @@ let HospitalsService = class HospitalsService {
         if (params.treatment) {
             const specialty = mapTreatmentToSpecialty(params.treatment);
             list = list
-                .map((h) => ({ ...h, aiMatchScore: scoreHospital(h, specialty, params.urgency || 'flexible') }))
-                .sort((a, b) => b.aiMatchScore - a.aiMatchScore);
+                .map((h) => ({
+                ...h,
+                inRegion: cityMatches(h.city, params.city),
+                aiMatchScore: scoreHospital(h, specialty, params.urgency || 'flexible'),
+            }))
+                .sort((a, b) => (Number(b.inRegion) - Number(a.inRegion)) || (Number(!!b.priority) - Number(!!a.priority)) || (b.aiMatchScore - a.aiMatchScore));
             const top = list[0];
             topRecommendation = top?.id ?? null;
             recommendationReason = top
@@ -296,16 +301,29 @@ let HospitalsService = class HospitalsService {
         }
         const cities = [...new Set(all.map((h) => h.city.split(' ')[0]).filter(Boolean))].sort();
         if (params.city && params.city !== 'all') {
-            const c = params.city.toLowerCase();
-            list = list.filter((h) => h.city.toLowerCase().includes(c));
+            list = list.filter((h) => cityMatches(h.city, params.city));
         }
         const q = params.search?.trim().toLowerCase();
         if (q)
             list = list.filter((h) => h.name.toLowerCase().includes(q));
+        if (params.jci)
+            list = list.filter((h) => h.jciAccredited);
+        const minRating = Number(params.minRating) || 0;
+        if (minRating)
+            list = list.filter((h) => (h.overallRating ?? 0) >= minRating);
+        const maxPrice = Number(params.maxPrice) || 0;
+        if (maxPrice)
+            list = list.filter((h) => h.quotedPriceUsd != null && h.quotedPriceUsd <= maxPrice);
+        const asc = (h) => (h.quotedPriceUsd == null ? Infinity : h.quotedPriceUsd);
+        const desc = (h) => (h.quotedPriceUsd == null ? -Infinity : h.quotedPriceUsd);
         if (params.sort === 'rating')
             list.sort((a, b) => (b.overallRating ?? 0) - (a.overallRating ?? 0));
         else if (params.sort === 'reviews')
             list.sort((a, b) => b.reviewCount - a.reviewCount);
+        else if (params.sort === 'price')
+            list.sort((a, b) => asc(a) - asc(b));
+        else if (params.sort === 'price-desc')
+            list.sort((a, b) => desc(b) - desc(a));
         const total = list.length;
         const pageCount = Math.max(1, Math.ceil(total / pageSize));
         const clamped = Math.min(page, pageCount);

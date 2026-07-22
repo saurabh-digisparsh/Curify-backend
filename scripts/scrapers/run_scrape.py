@@ -424,6 +424,10 @@ _GMAPS_EXTRACT_JS = r"""
 const blocks = [...document.querySelectorAll('div[data-review-id].jftiEf, .jftiEf[data-review-id], .jftiEf')];
 const seen = new Set();
 const out = [];
+// The place pane URL carries the full feature id as !1s0x<hex>:0x<hex>. That plus
+// each review's data-review-id is what builds a per-review permalink (done in Python,
+// see _review_permalink) — emit it here so every extracted review carries it.
+const placeFid = (location.href.match(/!1s(0x[0-9a-f]+:0x[0-9a-f]+)/) || [])[1] || '';
 for (const el of blocks) {
   const id = el.getAttribute('data-review-id') || '';
   if (id && seen.has(id)) continue; seen.add(id);
@@ -435,13 +439,15 @@ for (const el of blocks) {
   const prof = el.querySelector('button[data-href*="contrib"], a[href*="contrib"]');
   let rating = 0;
   if (starEl) { const m=(starEl.getAttribute('aria-label')||'').match(/(\d(?:\.\d)?)/); if(m) rating=Math.round(parseFloat(m[1])); }
+  const profile = prof ? (prof.getAttribute('data-href') || prof.getAttribute('href') || '') : '';
   out.push({
     id,
     name,
     rating,
     date: dateEl ? (dateEl.innerText||'').trim() : '',
     text: textEl ? (textEl.innerText||'').trim() : '',
-    profile: prof ? (prof.getAttribute('data-href') || prof.getAttribute('href') || '') : '',
+    profile,
+    placeFid,
   });
 }
 return out.filter(r => r.name && r.text);
@@ -454,6 +460,29 @@ return [...document.querySelectorAll('.jftiEf')].map(el => {
   return t ? (t.innerText || '').trim() : '';
 });
 """
+
+
+def _review_permalink(review_id: str, place_fid: str, profile: str = "") -> str:
+    """Build the Google Maps deep-link for one review.
+
+    This is byte-for-byte the shape the Places API returns as a review's own
+    `googleMapsUri` (see test_review_permalink.py) — `review_id` is the DOM's
+    data-review-id, `place_fid` the FULL feature id `0x<hex>:0x<hex>` from the
+    place pane URL. Both halves are required: the older `0x0:<cid>` form Google
+    used to emit no longer resolves. Falls back to the reviewer's profile URL so
+    a review always carries some Maps link.
+    """
+    if not review_id or ":" not in place_fid:
+        return profile
+    return ("https://www.google.com/maps/reviews/data=!4m6!14m5!1m4!2m3!1s"
+            f"{review_id}!2m1!1s{place_fid}")
+
+
+def _attach_links(rows):
+    """Fill `link` on freshly extracted review rows (in place) and return them."""
+    for r in rows:
+        r["link"] = _review_permalink(r.get("id", ""), r.get("placeFid", ""), r.get("profile", ""))
+    return rows
 
 
 def _gmaps_load(driver, q: str):
@@ -500,11 +529,28 @@ def _gmaps_apply_sort(driver, sort_key: str):
     log(f"gmaps: sorted reviews by {label}")
 
 
+def _gmaps_open_reviews(driver, attempts: int = 3):
+    """Open the reviews list on the CURRENT place page and wait for it to render.
+    Maps often needs more than one go: the tab exists but the pane hasn't hydrated,
+    so a single click-then-count reports zero reviews on a place that has thousands.
+    Returns (opened, have)."""
+    import time
+    opened = False
+    for _ in range(attempts):
+        opened = driver.run_js(_GMAPS_REVIEWS_TAB_JS) or opened
+        driver.long_random_sleep()
+        driver.run_js(_GMAPS_SCROLL_JS); time.sleep(1)
+        have = driver.run_js("return document.querySelectorAll('.jftiEf').length") or 0
+        if have:
+            return opened, have
+    return opened, 0
+
+
 def _gmaps_open(driver, query: str):
     """Navigate to the place and OPEN its reviews. Handles search-LIST (click
-    result → Reviews tab) and exact-match DIRECT place (re-search broader to force
-    a list). Returns (place_meta, opened, have) where have = reviews are loaded."""
-    import time
+    result → Reviews tab) and exact-match DIRECT place (re-search broader, which
+    may itself resolve direct). Returns (place_meta, opened, have) where
+    have = reviews are loaded."""
     words = query.split()
     _gmaps_load(driver, query)
     has_feed = driver.run_js("return !!document.querySelector('div[role=feed] a.hfpxzc')")
@@ -512,22 +558,20 @@ def _gmaps_open(driver, query: str):
         _gmaps_click_match(driver, max(words, key=len) if words else query)
         driver.long_random_sleep()
     place = driver.run_js(_GMAPS_PLACE_JS) or {}
-    opened = driver.run_js(_GMAPS_REVIEWS_TAB_JS)
-    driver.long_random_sleep(); driver.long_random_sleep()
-    driver.run_js(_GMAPS_SCROLL_JS); time.sleep(1)
-    have = driver.run_js("return document.querySelectorAll('.jftiEf').length") or 0
+    opened, have = _gmaps_open_reviews(driver)
 
-    if not have and not has_feed and len(words) >= 2:
+    if not have and len(words) >= 2:
         broad, token = f"{words[0]} {words[-1]}", max(words, key=len)
-        log(f"reviews: direct place empty — retry via list '{broad}' matching {token!r}")
+        log(f"reviews: place empty — retry via '{broad}' matching {token!r}")
         _gmaps_load(driver, broad)
         if driver.run_js("return !!document.querySelector('div[role=feed] a.hfpxzc')"):
             _gmaps_click_match(driver, token); driver.long_random_sleep()
-            place = driver.run_js(_GMAPS_PLACE_JS) or place
-            opened = driver.run_js(_GMAPS_REVIEWS_TAB_JS)
-            driver.long_random_sleep(); driver.long_random_sleep()
-            driver.run_js(_GMAPS_SCROLL_JS); time.sleep(1)
-            have = driver.run_js("return document.querySelectorAll('.jftiEf').length") or 0
+        # No feed means the broad search ALSO resolved straight to the place page —
+        # that is still the hospital we want, so open its reviews instead of bailing.
+        # (Unambiguous names like "Lilavati Mumbai" always land here.)
+        place = driver.run_js(_GMAPS_PLACE_JS) or place
+        opened2, have = _gmaps_open_reviews(driver)
+        opened = opened or opened2
     return place, opened, have
 
 
@@ -560,7 +604,7 @@ def _gmaps_scroll_extract(driver, max_n: int, target_foreign: int = 0):
         driver.run_js(_GMAPS_EXPAND_JS); time.sleep(0.8)
     except Exception:
         pass
-    raw = driver.run_js(_GMAPS_EXTRACT_JS) or []
+    raw = _attach_links(driver.run_js(_GMAPS_EXTRACT_JS) or [])
     log(f"gmaps: loaded {len(raw)} review nodes (cap {max_n})")
     return raw[:max_n]
 
@@ -591,7 +635,7 @@ def _gmaps_search_keywords(driver, keywords, target_foreign: int):
             driver.run_js(_GMAPS_EXPAND_JS); time.sleep(0.4)
         except Exception:
             pass
-        for r in (driver.run_js(_GMAPS_EXTRACT_JS) or []):
+        for r in _attach_links(driver.run_js(_GMAPS_EXTRACT_JS) or []):
             key = r.get("id") or r.get("text", "")[:60]
             if key in collected:
                 continue
@@ -778,7 +822,9 @@ def _places_details(place_id: str, key: str):
             "date": rv.get("relativePublishTimeDescription", ""),
             "text": txt,
             "lang": lang.split("-")[0],
-            "link": author.get("uri", ""),
+            # Prefer the review's own Maps permalink; the author profile URL is only
+            # a fallback (it points at the reviewer, not at this review).
+            "link": rv.get("googleMapsUri") or author.get("uri", ""),
             "profile": author.get("uri", ""),
             "total_reviews": 1,
         })

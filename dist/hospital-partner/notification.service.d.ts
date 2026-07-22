@@ -37,4 +37,14 @@ export declare class NotificationService {
             timezone?: string | null;
         };
     }): Promise<void>;
+    sendTeleconsultCancelled(p: {
+        teleconsultId: string;
+        scheduledAt: Date;
+        reason?: string | null;
+        patient: {
+            email?: string | null;
+            name?: string | null;
+        };
+        doctorName: string;
+    }): Promise<void>;
 }

@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Param, Body, UseGuards, Request, UploadedFile, UseInterceptors,
+  Controller, Get, Post, Param, Body, Query, UseGuards, Request, UploadedFile, UseInterceptors,
   Res, StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -9,7 +9,7 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TeleconsultService } from './teleconsult.service';
 import { hospitalDocStorage, docFileFilter } from './docs.storage';
-import { BookTeleconsultDto, TeleconsultDocDto } from './dto/partner.dto';
+import { BookTeleconsultDto, TeleconsultDocDto, CancelTeleconsultDto } from './dto/partner.dto';
 
 // Patient-facing teleconsult booking + video join + document sharing. Every route
 // is JWT-guarded; ownership (this consult is mine) is enforced in the service.
@@ -24,6 +24,12 @@ export class TeleconsultController {
   @Get('mine')
   mine(@Request() req) {
     return this.svc.mine(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Free-consultation allowance for a journey (drives pricing copy)' })
+  @Get('quota')
+  quota(@Request() req, @Query('journeyId') journeyId?: string) {
+    return this.svc.quota(req.user.id, journeyId);
   }
 
   @ApiOperation({ summary: 'Open teleconsult slots for a doctor (next 2 weeks)' })
@@ -44,10 +50,10 @@ export class TeleconsultController {
     return this.svc.patientVideoToken(req.user.id, id);
   }
 
-  @ApiOperation({ summary: 'Cancel my teleconsult' })
+  @ApiOperation({ summary: 'Cancel my teleconsult (with an optional comment)' })
   @Post(':id/cancel')
-  cancel(@Request() req, @Param('id') id: string) {
-    return this.svc.cancel(req.user.id, id);
+  cancel(@Request() req, @Param('id') id: string, @Body() dto: CancelTeleconsultDto) {
+    return this.svc.cancel(req.user.id, id, dto.reason);
   }
 
   @ApiOperation({ summary: "Accept the doctor's quote (unlocks trip planning)" })

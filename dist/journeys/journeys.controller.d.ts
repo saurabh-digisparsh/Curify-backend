@@ -14,14 +14,14 @@ export declare class JourneysController {
         updatedAt: Date;
         userId: string;
         status: string;
-        hospitalId: string | null;
-        reportId: string | null;
         homeCountry: string | null;
+        urgent: boolean;
         step: string;
+        reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
         stayOrGo: import("@prisma/client/runtime/library").JsonValue | null;
+        hospitalId: string | null;
         tripPlan: import("@prisma/client/runtime/library").JsonValue | null;
-        urgent: boolean;
         hospitalChat: import("@prisma/client/runtime/library").JsonValue | null;
     }[] | {
         journeys: {
@@ -36,14 +36,14 @@ export declare class JourneysController {
             updatedAt: Date;
             userId: string;
             status: string;
-            hospitalId: string | null;
-            reportId: string | null;
             homeCountry: string | null;
+            urgent: boolean;
             step: string;
+            reportId: string | null;
             analysis: import("@prisma/client/runtime/library").JsonValue | null;
             stayOrGo: import("@prisma/client/runtime/library").JsonValue | null;
+            hospitalId: string | null;
             tripPlan: import("@prisma/client/runtime/library").JsonValue | null;
-            urgent: boolean;
             hospitalChat: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
         total: number;
@@ -62,14 +62,14 @@ export declare class JourneysController {
         updatedAt: Date;
         userId: string;
         status: string;
-        hospitalId: string | null;
-        reportId: string | null;
         homeCountry: string | null;
+        urgent: boolean;
         step: string;
+        reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
         stayOrGo: import("@prisma/client/runtime/library").JsonValue | null;
+        hospitalId: string | null;
         tripPlan: import("@prisma/client/runtime/library").JsonValue | null;
-        urgent: boolean;
         hospitalChat: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     create(req: any, body: any): import(".prisma/client").Prisma.Prisma__JourneyClient<{
@@ -84,14 +84,14 @@ export declare class JourneysController {
         updatedAt: Date;
         userId: string;
         status: string;
-        hospitalId: string | null;
-        reportId: string | null;
         homeCountry: string | null;
+        urgent: boolean;
         step: string;
+        reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
         stayOrGo: import("@prisma/client/runtime/library").JsonValue | null;
+        hospitalId: string | null;
         tripPlan: import("@prisma/client/runtime/library").JsonValue | null;
-        urgent: boolean;
         hospitalChat: import("@prisma/client/runtime/library").JsonValue | null;
     }, never, import("@prisma/client/runtime/library").DefaultArgs>;
     update(req: any, id: string, body: any): Promise<{
@@ -106,34 +106,17 @@ export declare class JourneysController {
         updatedAt: Date;
         userId: string;
         status: string;
-        hospitalId: string | null;
-        reportId: string | null;
         homeCountry: string | null;
+        urgent: boolean;
         step: string;
+        reportId: string | null;
         analysis: import("@prisma/client/runtime/library").JsonValue | null;
         stayOrGo: import("@prisma/client/runtime/library").JsonValue | null;
+        hospitalId: string | null;
         tripPlan: import("@prisma/client/runtime/library").JsonValue | null;
-        urgent: boolean;
         hospitalChat: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     remove(req: any, id: string): Promise<{
         ok: boolean;
-    }>;
-    getChat(req: any, id: string): Promise<{
-        messages: import("./journeys.service").ChatMsg[];
-        hospitalId: string;
-    }>;
-    postChat(req: any, id: string, body: {
-        body?: string;
-        kind?: any;
-        reportId?: string;
-    }): Promise<{
-        messages: import("./journeys.service").ChatMsg[];
-    }>;
-    analyzeChat(req: any, id: string): Promise<{
-        summary: any;
-        agreedQuoteUsd: any;
-        inclusions: any;
-        tripPlan: any;
     }>;
 }

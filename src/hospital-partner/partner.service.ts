@@ -366,10 +366,36 @@ export class PartnerService {
    */
   async importDoctors(userId: string, file: Express.Multer.File) {
     const app = await this.mine(userId);
-    const { rows, errors } = this.bulk.parse<DoctorDto>('doctors', file);
+    const { rows, errors } = await this.bulk.parse<DoctorDto>('doctors', file);
     if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId) };
+    const imported = await this.writeDoctors(app, rows);
+    return { imported, errors: [], data: await this.dashboard(userId) };
+  }
+
+  /**
+   * Add roster rows, skipping doctors this application already has. Re-uploading a
+   * sheet after fixing one cell is the normal way hospitals work — and with the
+   * combined file it re-submits the whole roster every time — so an append-only
+   * import would silently duplicate the list. Identity is the doctor's registration
+   * number or email when given (those are unique in practice), else their name.
+   */
+  private async writeDoctors(app: { id: string; accreditations?: { status: DocStatus }[] }, rows: DoctorDto[]) {
+    const existing = await this.prisma.onboardingDoctor.findMany({
+      where: { applicationId: app.id },
+      select: { name: true, registrationNo: true, email: true },
+    });
+    const key = (d: { name?: string; registrationNo?: string | null; email?: string | null }) =>
+      (d.registrationNo || d.email || d.name || '').trim().toLowerCase();
+    const seen = new Set(existing.map(key));
+    const fresh = rows.filter((d) => {
+      const k = key(d);
+      if (!k || seen.has(k)) return false;
+      seen.add(k); // also de-duplicates repeats WITHIN the uploaded sheet
+      return true;
+    });
+    if (!fresh.length) return 0;
     await this.prisma.onboardingDoctor.createMany({
-      data: rows.map((d) => ({
+      data: fresh.map((d) => ({
         applicationId: app.id, availabilityToken: tok(24),
         status: isAccredited(app) ? OnboardingDoctorStatus.APPROVED : OnboardingDoctorStatus.IN_REVIEW,
         name: d.name, qualifications: d.qualifications, specialty: d.specialty, subspecialty: d.subspecialty,
@@ -378,7 +404,7 @@ export class PartnerService {
         teleconsultEnabled: d.teleconsultEnabled ?? false, timezone: 'Asia/Kolkata',
       })),
     });
-    return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+    return fresh.length;
   }
 
   /**
@@ -390,8 +416,17 @@ export class PartnerService {
    */
   async importPackages(userId: string, file: Express.Multer.File) {
     const app = await this.mine(userId);
-    const { rows, errors } = this.bulk.parse<{ name: string; priceUsd: number; included?: string[]; notes?: string }>('packages', file);
+    const { rows, errors } = await this.bulk.parse<{ name: string; priceUsd: number; included?: string[]; notes?: string }>('packages', file);
     if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId) };
+    await this.writePackages(app, rows);
+    return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+  }
+
+  /** Replace the package list (+ the flat `procedures` names every reader uses). */
+  private async writePackages(
+    app: { id: string; quotedPriceUsd: number | null; publishedHospitalId: string | null },
+    rows: { name: string; priceUsd: number; included?: string[]; notes?: string }[],
+  ) {
     const packages = rows.map((p) => ({ name: p.name, priceUsd: p.priceUsd, included: p.included ?? [], notes: p.notes ?? null }));
     const procedures = packages.map((p) => p.name);
     // Headline "from" price on the comparison card = the cheapest package, unless
@@ -402,7 +437,100 @@ export class PartnerService {
     if (app.publishedHospitalId) {
       await this.prisma.hospital.update({ where: { id: app.publishedHospitalId }, data: { ...data, procedures: procedures as any } });
     }
-    return { imported: rows.length, errors: [], data: await this.dashboard(userId) };
+  }
+
+  /**
+   * Bulk-import the hospital's OWN record from a one-row CSV — everything the
+   * Profile, Pricing, Treatments and Services screens write, in a single file, so a
+   * hospital can complete its whole listing from a spreadsheet.
+   *
+   * Blank cells are omitted by the parser and therefore left untouched (same
+   * skip-undefined rule as setPricing/setServices), so the same file works as a
+   * partial update. Mirrored to the published Hospital exactly like setPricing does,
+   * so a live listing reflects the import immediately.
+   */
+  async importProfile(userId: string, file: Express.Multer.File) {
+    const app = await this.mine(userId);
+    const { rows, errors } = await this.bulk.parse<Record<string, any>>('profile', file);
+    if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId) };
+    // One hospital, one row. A file with several is a doctors/packages sheet by
+    // mistake — importing only the first would silently drop the rest.
+    if (rows.length !== 1) {
+      return {
+        imported: 0,
+        errors: [{ row: 2, message: `The profile template holds ONE row — your hospital. This file has ${rows.length}.` }],
+        data: await this.dashboard(userId),
+      };
+    }
+    await this.writeProfile(app, rows[0]);
+    return { imported: 1, errors: [], data: await this.dashboard(userId) };
+  }
+
+  /** Apply one profile row. Blank cells arrive absent, so `?? undefined` leaves
+   *  every field the hospital didn't fill exactly as it was. */
+  private async writeProfile(app: { id: string; publishedHospitalId: string | null }, p: Record<string, any>) {
+    await this.prisma.hospitalApplication.update({
+      where: { id: app.id },
+      data: {
+        city: p.city ?? undefined, address: p.address ?? undefined, website: p.website ?? undefined,
+        ownership: p.ownership ?? undefined, totalBeds: p.totalBeds ?? undefined, icuBeds: p.icuBeds ?? undefined,
+        airportDistanceKm: p.airportDistanceKm ?? undefined,
+        specialties: p.specialties ?? undefined, procedures: p.procedures ?? undefined,
+        languages: p.languages ?? undefined, insurers: p.insurers ?? undefined, intlFacilities: p.intlFacilities ?? undefined,
+        quotedPriceUsd: p.quotedPriceUsd ?? undefined, localBenchmarkUsd: p.localBenchmarkUsd ?? undefined,
+        patientsPerYear: p.patientsPerYear ?? undefined, imageUrl: p.imageUrl ?? undefined,
+        included: p.included ?? undefined, notIncluded: p.notIncluded ?? undefined,
+        pros: p.pros ?? undefined, cons: p.cons ?? undefined,
+      },
+    });
+    if (app.publishedHospitalId) {
+      await this.prisma.hospital.update({
+        where: { id: app.publishedHospitalId },
+        data: {
+          city: p.city ?? undefined, procedures: p.procedures ?? undefined,
+          // Published hospital carries a single primary specialty (first of the list).
+          specialty: p.specialties ? (p.specialties[0] ?? null) : undefined,
+          quotedPriceUsd: p.quotedPriceUsd ?? undefined, localBenchmarkUsd: p.localBenchmarkUsd ?? undefined,
+          patientsPerYear: p.patientsPerYear ?? undefined, imageUrl: p.imageUrl ?? undefined,
+          included: p.included ?? undefined, notIncluded: p.notIncluded ?? undefined,
+          pros: p.pros ?? undefined, cons: p.cons ?? undefined,
+        },
+      });
+    }
+  }
+
+  /**
+   * ONE upload that carries the whole listing — profile, doctor roster and price
+   * list together, from an Excel workbook (a sheet per table) or a CSV with section
+   * markers. A table the hospital left blank is skipped, so this file is equally a
+   * first-time setup and a later partial update.
+   *
+   * All-or-nothing across the WHOLE file: one bad cell anywhere and nothing is
+   * written, otherwise a half-applied listing would go live while the hospital is
+   * still fixing the sheet.
+   */
+  async importAll(userId: string, file: Express.Multer.File) {
+    const app = await this.mine(userId);
+    const { profile, doctors, packages, errors } = await this.bulk.parseAll(file);
+    if (errors.length) return { imported: 0, errors, data: await this.dashboard(userId), detail: null };
+
+    if (profile) await this.writeProfile(app, profile);
+    const doctorsAdded = doctors.length ? await this.writeDoctors(app, doctors as DoctorDto[]) : 0;
+    // Re-read: writeProfile may have just set the headline price writePackages reads.
+    if (packages.length) await this.writePackages(await this.mine(userId), packages as any);
+
+    const detail = {
+      profile: profile ? 1 : 0,
+      doctors: doctorsAdded,
+      doctorsSkipped: doctors.length - doctorsAdded, // already on the roster
+      packages: packages.length,
+    };
+    return {
+      imported: detail.profile + detail.doctors + detail.packages,
+      errors: [],
+      data: await this.dashboard(userId),
+      detail,
+    };
   }
 
   private async doctorOfMine(userId: string, doctorId: string) {

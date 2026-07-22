@@ -32,6 +32,9 @@ let AuthController = class AuthController {
     login(dto) {
         return this.authService.login(dto);
     }
+    checkEmail(body) {
+        return this.authService.emailExists(String(body?.email || '').toLowerCase());
+    }
     getMe(req) {
         return this.authService.getMe(req.user.id);
     }
@@ -76,6 +79,15 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { ttl: 60_000, limit: 10 } }),
+    (0, swagger_1.ApiOperation)({ summary: 'Check whether an account already exists for an email (chat intake early-exit)' }),
+    (0, common_1.Post)('check-email'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "checkEmail", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Get current authenticated user' }),

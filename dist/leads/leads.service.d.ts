@@ -47,12 +47,14 @@ export declare class LeadsService {
             title: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.LeadStatus;
             category: import(".prisma/client").$Enums.LeadCategory | null;
+            status: import(".prisma/client").$Enums.LeadStatus;
             source: import(".prisma/client").$Enums.LeadSource;
             notes: string | null;
             region: import(".prisma/client").$Enums.LeadRegion;
             lang: string | null;
+            reviewedBy: string | null;
+            reviewedAt: Date | null;
             viewCount: number | null;
             regionCode: string | null;
             channelId: string | null;
@@ -75,8 +77,6 @@ export declare class LeadsService {
             categoryConfidence: number | null;
             categoryVotes: Prisma.JsonValue | null;
             needsReview: boolean;
-            reviewedBy: string | null;
-            reviewedAt: Date | null;
             categorizedAt: Date | null;
         }[];
         total: number;
@@ -127,12 +127,14 @@ export declare class LeadsService {
         title: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.LeadStatus;
         category: import(".prisma/client").$Enums.LeadCategory | null;
+        status: import(".prisma/client").$Enums.LeadStatus;
         source: import(".prisma/client").$Enums.LeadSource;
         notes: string | null;
         region: import(".prisma/client").$Enums.LeadRegion;
         lang: string | null;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
         viewCount: number | null;
         regionCode: string | null;
         channelId: string | null;
@@ -155,8 +157,6 @@ export declare class LeadsService {
         categoryConfidence: number | null;
         categoryVotes: Prisma.JsonValue | null;
         needsReview: boolean;
-        reviewedBy: string | null;
-        reviewedAt: Date | null;
         categorizedAt: Date | null;
     }>;
     remove(id: string): Promise<{

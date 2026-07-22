@@ -48,5 +48,6 @@ export declare class AdminUsersController {
     remove(id: string, req: any): Promise<{
         deleted: boolean;
         id: string;
+        documentsDeleted: number;
     }>;
 }

@@ -1,6 +1,7 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { unlink } from 'fs/promises';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,6 +19,7 @@ const SAFE_SELECT = {
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   constructor(private prisma: PrismaService) {}
 
   /** List users, optionally filtered by role. Never returns password hashes. */
@@ -83,7 +85,19 @@ export class UsersService {
     }
     if (id === requesterId) throw new BadRequestException('You cannot delete your own account');
 
+    // Right-to-erasure: the row cascade removes the report records, but their source
+    // documents live on disk and would be orphaned there indefinitely. Read the paths
+    // BEFORE the cascade destroys them, then unlink. Best-effort per file — a missing
+    // or locked file must not block the user's deletion.
+    const reports = await this.prisma.report.findMany({ where: { userId: id }, select: { docPaths: true } });
+    const paths = reports.flatMap((r) => (Array.isArray(r.docPaths) ? (r.docPaths as any[]) : []))
+      .map((d) => d?.path).filter((p): p is string => typeof p === 'string');
+
     await this.prisma.user.delete({ where: { id } });
-    return { deleted: true, id };
+
+    for (const p of paths) {
+      await unlink(p).catch((err) => this.logger.warn(`Could not delete report document ${p}: ${err.message}`));
+    }
+    return { deleted: true, id, documentsDeleted: paths.length };
   }
 }

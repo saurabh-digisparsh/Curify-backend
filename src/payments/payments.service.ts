@@ -9,6 +9,8 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import Razorpay = require('razorpay'); // export = (CommonJS): default import is not a constructor
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingsService } from '../bookings/bookings.service';
+import { SettingsService } from '../admin/settings/settings.service';
+import { TeleconsultService } from '../hospital-partner/teleconsult.service';
 import { RAZORPAY_CLIENT } from './razorpay.provider';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
@@ -48,7 +50,66 @@ export class PaymentsService {
     @Inject(RAZORPAY_CLIENT) private readonly rzp: Razorpay,
     private readonly prisma: PrismaService,
     private readonly bookings: BookingsService,
+    private readonly settings: SettingsService,
+    private readonly teleconsults: TeleconsultService,
   ) {}
+
+  // ── Teleconsult top-up: pay for a consult beyond the free per-journey allowance ─
+  /**
+   * Price and open a Razorpay order for a consult the patient has already HELD
+   * (Teleconsult in PENDING_PAYMENT). Takes no amount and no price hint from the
+   * client — the fee comes from the admin-controlled TELECONSULT_FEE setting, and
+   * the consult must be the caller's own, still held, and not yet expired.
+   */
+  async createTeleconsultOrder(userId: string, teleconsultId: string) {
+    const tc = await this.prisma.teleconsult.findUnique({
+      where: { id: teleconsultId },
+      select: { id: true, patientId: true, status: true, holdExpiresAt: true, scheduledAt: true },
+    });
+    // 404 for missing OR not-owner so consult ids can't be probed.
+    if (!tc || tc.patientId !== userId) throw new NotFoundException('Consultation not found');
+    if (tc.status !== 'PENDING_PAYMENT') {
+      throw new BadRequestException('This consultation does not need payment.');
+    }
+    if (tc.holdExpiresAt && tc.holdExpiresAt.getTime() <= Date.now()) {
+      throw new BadRequestException('Your slot hold expired. Please pick a time again.');
+    }
+
+    // Fee is configured in whole currency units (49 = $49); Razorpay wants the
+    // smallest unit. Guard against a 0/blank setting reaching checkout as a free order.
+    const fee = await this.settings.getNumber('TELECONSULT_FEE');
+    if (!Number.isFinite(fee) || fee <= 0) {
+      throw new BadRequestException('Paid consultations are not available right now.');
+    }
+    const amount = Math.round(fee * 100);
+
+    const order = await this.rzp.orders.create({
+      amount,
+      currency: this.currency,
+      receipt: `curify_tc_${teleconsultId.slice(0, 8)}_${Date.now()}`,
+      payment_capture: this.capture as any,
+      notes: { userId, purpose: 'TELECONSULT', teleconsultId },
+    });
+
+    await this.prisma.payment.create({
+      data: {
+        userId,
+        razorpayOrderId: order.id,
+        amount,
+        currency: this.currency,
+        status: 'CREATED',
+        notes: { userId, purpose: 'TELECONSULT', teleconsultId },
+      },
+    });
+
+    return {
+      orderId: order.id,
+      amount,
+      currency: this.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      method: METHOD_CONFIG.all,
+    };
+  }
 
   // ── Step 1: create a Razorpay order + local Payment(CREATED) ──────────────
   async createOrder(userId: string, dto: CreateOrderDto) {
@@ -125,10 +186,10 @@ export class PaymentsService {
       signature: dto.razorpay_signature,
     });
 
-    // Winner of the CAPTURED transition confirms the booking. If the webhook beat
-    // us to it, `won` is false and we just return whatever booking it created.
+    // Winner of the CAPTURED transition fulfils the order. If the webhook beat us
+    // to it, `won` is false and we just return whatever it produced.
     if (won) {
-      const bookingId = await this.confirmBooking(payment.id, {
+      const bookingId = await this.fulfil(payment.id, {
         downPayment: dto.downPayment,
         installments: dto.installments,
       });
@@ -218,6 +279,28 @@ export class PaymentsService {
     return res.count === 1;
   }
 
+  /**
+   * Deliver what a captured Payment bought. Runs exactly once per payment (the
+   * caller must have won the CAPTURED gate). Branches on the `purpose` stamped
+   * into notes at order time; a missing purpose means a treatment plan, which is
+   * what every payment written before teleconsult top-ups existed is.
+   */
+  private async fulfil(
+    paymentId: string,
+    extra?: { downPayment?: number; installments?: number },
+  ): Promise<string | null> {
+    const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    const notes = (payment?.notes ?? {}) as any;
+    if (notes.purpose === 'TELECONSULT') {
+      // Turns the held slot into a real booking + sends the join links. Returns
+      // false if it was already activated or the slot was lost — both are logged
+      // there, and neither should fail the payment response.
+      await this.teleconsults.activatePaidConsult(notes.teleconsultId, paymentId);
+      return null; // teleconsult top-ups create no Booking
+    }
+    return this.confirmBooking(paymentId, extra);
+  }
+
   // Create the Booking for a captured Payment, exactly once. Reuses BookingsService
   // (milestones, status updates). Guarded by the caller winning the CAPTURED gate.
   // ponytail: booking create + bookingId link aren't a single DB transaction; the
@@ -271,7 +354,7 @@ export class PaymentsService {
           paymentId: entity.id,
           method: entity.method,
         });
-        if (won) await this.confirmBooking(paymentId); // fallback if sync verify never ran
+        if (won) await this.fulfil(paymentId); // fallback if sync verify never ran
         break;
       }
       case 'payment.failed':

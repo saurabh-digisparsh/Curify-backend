@@ -9,7 +9,6 @@ import {
   RegionKey,
   scoreIntent,
   regionFromCode,
-  YT_SEARCH_COST,
   AI_MIN_CONFIDENCE,
 } from './leads.config';
 

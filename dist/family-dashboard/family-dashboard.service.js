@@ -108,7 +108,7 @@ let FamilyDashboardService = class FamilyDashboardService {
             source: 'demo',
         };
     }
-    async getUpdates(params) {
+    async getUpdates(_params) {
         return this.getDemoState();
     }
 };

@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var TeleconsultService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TeleconsultService = void 0;
 exports.zonedWallToUtc = zonedWallToUtc;
@@ -17,21 +18,34 @@ const common_1 = require("@nestjs/common");
 const path_1 = require("path");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
+const settings_service_1 = require("../admin/settings/settings.service");
 const video_service_1 = require("./video.service");
 const notification_service_1 = require("./notification.service");
 const docs_storage_1 = require("./docs.storage");
+const FREE_CONSULTS_PER_JOURNEY = 2;
+const QUOTA_STATUSES = [
+    client_1.TeleconsultStatus.SCHEDULED,
+    client_1.TeleconsultStatus.IN_PROGRESS,
+    client_1.TeleconsultStatus.COMPLETED,
+];
+const HOLD_MINUTES = 15;
+const FREE_CONSULT_MINUTES = 15;
+const JOIN_GRACE_MS = 30_000;
 const DOC_SELECT = {
     id: true, sender: true, kind: true, originalName: true, createdAt: true,
 };
 const TELECONSULT_SELECT = {
     id: true, scheduledAt: true, status: true, startedAt: true, endedAt: true, journeyId: true,
+    holdExpiresAt: true,
     quoteAmount: true, quoteCurrency: true, quoteNote: true, quotedAt: true, quoteAcceptedAt: true,
+    cancelledBy: true, cancelReason: true,
     doctor: { select: { id: true, name: true, specialty: true, application: { select: { legalName: true } } } },
     documents: { select: DOC_SELECT, orderBy: { createdAt: 'asc' } },
 };
 const MONITOR_SELECT = {
     id: true, scheduledAt: true, status: true, startedAt: true, endedAt: true,
     quoteAmount: true, quoteCurrency: true, quoteNote: true, quotedAt: true,
+    cancelledBy: true, cancelReason: true,
     patient: { select: { name: true } },
     doctor: { select: { id: true, name: true, specialty: true } },
     documents: { select: DOC_SELECT, orderBy: { createdAt: 'asc' } },
@@ -85,17 +99,23 @@ function computeSlots(timeZone, windows, bookedMs) {
     }
     return [...seen].sort();
 }
-let TeleconsultService = class TeleconsultService {
-    constructor(prisma, video, notif) {
+let TeleconsultService = TeleconsultService_1 = class TeleconsultService {
+    constructor(prisma, video, notif, settings) {
         this.prisma = prisma;
         this.video = video;
         this.notif = notif;
+        this.settings = settings;
+        this.log = new common_1.Logger(TeleconsultService_1.name);
     }
     async bookedMs(doctorId) {
+        const now = new Date();
         const rows = await this.prisma.teleconsult.findMany({
             where: {
-                doctorId, scheduledAt: { gte: new Date() },
-                status: { in: [client_1.TeleconsultStatus.SCHEDULED, client_1.TeleconsultStatus.IN_PROGRESS] },
+                doctorId, scheduledAt: { gte: now },
+                OR: [
+                    { status: { in: [client_1.TeleconsultStatus.SCHEDULED, client_1.TeleconsultStatus.IN_PROGRESS] } },
+                    { status: client_1.TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { gt: now } },
+                ],
             },
             select: { scheduledAt: true },
         });
@@ -112,6 +132,21 @@ let TeleconsultService = class TeleconsultService {
             throw new common_1.NotFoundException('This doctor is not available for teleconsults.');
         return computeSlots(doc.timezone, doc.windows, await this.bookedMs(doctorId));
     }
+    async quota(userId, journeyId) {
+        const used = await this.prisma.teleconsult.count({
+            where: { patientId: userId, journeyId: journeyId ?? null, status: { in: [...QUOTA_STATUSES] } },
+        });
+        const remaining = Math.max(0, FREE_CONSULTS_PER_JOURNEY - used);
+        const fee = await this.settings.getNumber('TELECONSULT_FEE');
+        return {
+            used,
+            limit: FREE_CONSULTS_PER_JOURNEY,
+            remaining,
+            requiresPayment: remaining === 0 && fee > 0,
+            fee,
+            currency: process.env.RAZORPAY_CURRENCY || 'USD',
+        };
+    }
     async book(userId, dto) {
         if (!(await this.video.enabled())) {
             throw new common_1.BadRequestException('Video consultations are currently unavailable.');
@@ -123,36 +158,101 @@ let TeleconsultService = class TeleconsultService {
         if (!doc)
             throw new common_1.NotFoundException('This doctor is not available for teleconsults.');
         if (dto.journeyId) {
+            const now = new Date();
             const existing = await this.prisma.teleconsult.findFirst({
-                where: { journeyId: dto.journeyId, status: { in: [client_1.TeleconsultStatus.SCHEDULED, client_1.TeleconsultStatus.IN_PROGRESS] } },
-                select: { id: true },
+                where: {
+                    journeyId: dto.journeyId,
+                    OR: [
+                        { status: { in: [client_1.TeleconsultStatus.SCHEDULED, client_1.TeleconsultStatus.IN_PROGRESS] } },
+                        { status: client_1.TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { gt: now } },
+                    ],
+                },
+                select: { id: true, status: true, patientId: true },
             });
-            if (existing)
+            if (existing?.status === client_1.TeleconsultStatus.PENDING_PAYMENT && existing.patientId === userId) {
+                await this.prisma.teleconsult.update({
+                    where: { id: existing.id },
+                    data: { status: client_1.TeleconsultStatus.CANCELLED, holdExpiresAt: null },
+                });
+            }
+            else if (existing) {
                 throw new common_1.BadRequestException('You already have a consultation booked for this journey. Cancel it first to rebook.');
+            }
         }
         const wanted = new Date(dto.scheduledAt).toISOString();
         const open = computeSlots(doc.timezone, doc.windows, await this.bookedMs(doc.id));
         if (!open.includes(wanted))
             throw new common_1.BadRequestException('That time is no longer available. Please pick another slot.');
+        const q = await this.quota(userId, dto.journeyId);
         const tc = await this.prisma.teleconsult.create({
-            data: { patientId: userId, doctorId: doc.id, journeyId: dto.journeyId ?? null, scheduledAt: new Date(wanted) },
+            data: {
+                patientId: userId, doctorId: doc.id, journeyId: dto.journeyId ?? null,
+                scheduledAt: new Date(wanted),
+                ...(q.requiresPayment
+                    ? {
+                        status: client_1.TeleconsultStatus.PENDING_PAYMENT,
+                        holdExpiresAt: new Date(Date.now() + HOLD_MINUTES * 60_000),
+                    }
+                    : {}),
+            },
             select: TELECONSULT_SELECT,
         });
+        if (q.requiresPayment) {
+            return { ...tc, requiresPayment: true, fee: q.fee, currency: q.currency, holdMinutes: HOLD_MINUTES };
+        }
         const patient = await this.prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
         this.notif.sendTeleconsultBooked({
             teleconsultId: tc.id, scheduledAt: new Date(wanted),
             patient: { email: patient?.email, name: patient?.name },
             doctor: { name: doc.name, email: doc.email, availabilityToken: doc.availabilityToken, timezone: doc.timezone },
         }).catch(() => { });
-        return tc;
+        return { ...tc, requiresPayment: false };
     }
-    async cancel(userId, id) {
+    async activatePaidConsult(teleconsultId, paymentId) {
+        const tc = await this.prisma.teleconsult.findUnique({
+            where: { id: teleconsultId },
+            select: {
+                id: true, status: true, doctorId: true, scheduledAt: true,
+                patient: { select: { email: true, name: true } },
+                doctor: { select: { name: true, email: true, availabilityToken: true, timezone: true } },
+            },
+        });
+        if (!tc || tc.status !== client_1.TeleconsultStatus.PENDING_PAYMENT)
+            return false;
+        const clash = await this.prisma.teleconsult.findFirst({
+            where: {
+                id: { not: tc.id }, doctorId: tc.doctorId, scheduledAt: tc.scheduledAt,
+                status: { in: [client_1.TeleconsultStatus.SCHEDULED, client_1.TeleconsultStatus.IN_PROGRESS] },
+            },
+            select: { id: true },
+        });
+        if (clash) {
+            this.log.error(`Paid teleconsult ${tc.id} lost its held slot to ${clash.id}; payment ${paymentId} needs a refund or reschedule.`);
+            return false;
+        }
+        const res = await this.prisma.teleconsult.updateMany({
+            where: { id: tc.id, status: client_1.TeleconsultStatus.PENDING_PAYMENT },
+            data: { status: client_1.TeleconsultStatus.SCHEDULED, paymentId, holdExpiresAt: null },
+        });
+        if (res.count !== 1)
+            return false;
+        this.notif.sendTeleconsultBooked({
+            teleconsultId: tc.id, scheduledAt: tc.scheduledAt,
+            patient: { email: tc.patient?.email, name: tc.patient?.name },
+            doctor: tc.doctor,
+        }).catch(() => { });
+        return true;
+    }
+    async cancel(userId, id, reason) {
         const tc = await this.prisma.teleconsult.findUnique({ where: { id }, select: { patientId: true, status: true } });
         if (!tc || tc.patientId !== userId)
             throw new common_1.NotFoundException('Consultation not found');
         if (tc.status === client_1.TeleconsultStatus.COMPLETED)
             throw new common_1.BadRequestException('This consultation is already completed.');
-        await this.prisma.teleconsult.update({ where: { id }, data: { status: client_1.TeleconsultStatus.CANCELLED } });
+        await this.prisma.teleconsult.update({
+            where: { id },
+            data: { status: client_1.TeleconsultStatus.CANCELLED, cancelledBy: 'PATIENT', cancelReason: reason?.trim() || null },
+        });
         return this.mine(userId);
     }
     async acceptQuote(userId, id) {
@@ -169,23 +269,52 @@ let TeleconsultService = class TeleconsultService {
         return this.mine(userId);
     }
     mine(userId) {
+        const now = new Date();
         return this.prisma.teleconsult.findMany({
-            where: { patientId: userId },
+            where: {
+                patientId: userId,
+                NOT: { status: client_1.TeleconsultStatus.PENDING_PAYMENT, holdExpiresAt: { lte: now } },
+            },
             orderBy: { scheduledAt: 'asc' },
             select: TELECONSULT_SELECT,
         });
     }
+    assertJoinWindowOpen(scheduledAt) {
+        const msAway = scheduledAt.getTime() - Date.now();
+        if (msAway > JOIN_GRACE_MS) {
+            throw new common_1.BadRequestException(`This consultation starts at ${scheduledAt.toISOString()}. You can join once it begins.`);
+        }
+    }
+    async callDeadline(tc) {
+        if (tc.paymentId)
+            return null;
+        let startedAt = tc.startedAt;
+        if (!startedAt) {
+            await this.prisma.teleconsult.updateMany({
+                where: { id: tc.id, startedAt: null }, data: { startedAt: new Date() },
+            });
+            startedAt = (await this.prisma.teleconsult.findUnique({
+                where: { id: tc.id }, select: { startedAt: true },
+            }))?.startedAt ?? new Date();
+        }
+        return new Date(startedAt.getTime() + FREE_CONSULT_MINUTES * 60_000).toISOString();
+    }
     async patientVideoToken(userId, id) {
         const tc = await this.prisma.teleconsult.findUnique({
             where: { id },
-            select: { patientId: true, status: true, roomName: true, patient: { select: { name: true } } },
+            select: {
+                id: true, patientId: true, status: true, roomName: true, scheduledAt: true,
+                paymentId: true, startedAt: true, patient: { select: { name: true } },
+            },
         });
         if (!tc || tc.patientId !== userId)
             throw new common_1.NotFoundException('Consultation not found');
         if (tc.status !== client_1.TeleconsultStatus.SCHEDULED && tc.status !== client_1.TeleconsultStatus.IN_PROGRESS) {
             throw new common_1.BadRequestException('This consultation is not active.');
         }
-        return this.video.mintJitsi(tc.roomName, { id: userId, name: tc.patient?.name || 'Patient' }, false);
+        this.assertJoinWindowOpen(tc.scheduledAt);
+        const token = await this.video.mintJitsi(tc.roomName, { id: userId, name: tc.patient?.name || 'Patient' }, false);
+        return { ...token, endsAt: await this.callDeadline(tc) };
     }
     async patientAddDoc(userId, id, file, kind) {
         if (!file)
@@ -205,19 +334,23 @@ let TeleconsultService = class TeleconsultService {
         if (!doc)
             throw new common_1.NotFoundException('Invalid or expired link');
         const tc = await this.prisma.teleconsult.findUnique({
-            where: { id }, select: { doctorId: true, status: true, roomName: true, startedAt: true },
+            where: { id },
+            select: { id: true, doctorId: true, status: true, roomName: true, scheduledAt: true, startedAt: true, paymentId: true },
         });
         if (!tc || tc.doctorId !== doc.id)
             throw new common_1.NotFoundException('Consultation not found');
         if (tc.status === client_1.TeleconsultStatus.COMPLETED || tc.status === client_1.TeleconsultStatus.CANCELLED) {
             throw new common_1.BadRequestException('This consultation is not active.');
         }
+        this.assertJoinWindowOpen(tc.scheduledAt);
         if (tc.status === client_1.TeleconsultStatus.SCHEDULED) {
             await this.prisma.teleconsult.update({
-                where: { id }, data: { status: client_1.TeleconsultStatus.IN_PROGRESS, startedAt: tc.startedAt ?? new Date() },
+                where: { id }, data: { status: client_1.TeleconsultStatus.IN_PROGRESS },
             });
         }
-        return this.video.mintJitsi(tc.roomName, { id: doc.id, name: `Dr ${doc.name}` }, true);
+        const display = /^dr\.?\s/i.test(doc.name) ? doc.name : `Dr. ${doc.name}`;
+        const token = await this.video.mintJitsi(tc.roomName, { id: doc.id, name: display }, true);
+        return { ...token, endsAt: await this.callDeadline(tc) };
     }
     async doctorTcOrThrow(token, id) {
         const doc = await this.prisma.onboardingDoctor.findUnique({ where: { availabilityToken: token }, select: { id: true } });
@@ -242,6 +375,32 @@ let TeleconsultService = class TeleconsultService {
             where: { id },
             data: { quoteAmount: dto.amount, quoteCurrency: dto.currency || 'USD', quoteNote: dto.note ?? null, quotedAt: new Date() },
         });
+        return this.doctorConsults(token);
+    }
+    async doctorCancel(token, id, reason) {
+        await this.doctorTcOrThrow(token, id);
+        const tc = await this.prisma.teleconsult.findUnique({
+            where: { id },
+            select: {
+                id: true, status: true, scheduledAt: true, journeyId: true,
+                patient: { select: { email: true, name: true } },
+                doctor: { select: { name: true } },
+            },
+        });
+        if (!tc)
+            throw new common_1.NotFoundException('Consultation not found');
+        if (tc.status === client_1.TeleconsultStatus.COMPLETED)
+            throw new common_1.BadRequestException('This consultation is already completed.');
+        if (tc.status === client_1.TeleconsultStatus.CANCELLED)
+            return this.doctorConsults(token);
+        await this.prisma.teleconsult.update({
+            where: { id },
+            data: { status: client_1.TeleconsultStatus.CANCELLED, cancelledBy: 'DOCTOR', cancelReason: reason?.trim() || null, holdExpiresAt: null },
+        });
+        this.notif.sendTeleconsultCancelled({
+            teleconsultId: tc.id, scheduledAt: tc.scheduledAt, reason: reason?.trim(),
+            patient: tc.patient, doctorName: tc.doctor.name,
+        }).catch(() => { });
         return this.doctorConsults(token);
     }
     async doctorComplete(token, id) {
@@ -322,8 +481,11 @@ let TeleconsultService = class TeleconsultService {
     }
 };
 exports.TeleconsultService = TeleconsultService;
-exports.TeleconsultService = TeleconsultService = __decorate([
+exports.TeleconsultService = TeleconsultService = TeleconsultService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, video_service_1.VideoService, notification_service_1.NotificationService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        video_service_1.VideoService,
+        notification_service_1.NotificationService,
+        settings_service_1.SettingsService])
 ], TeleconsultService);
 //# sourceMappingURL=teleconsult.service.js.map

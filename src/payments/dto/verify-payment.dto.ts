@@ -7,7 +7,10 @@ export class VerifyPaymentDto {
   @IsString() razorpay_payment_id!: string;
   @IsString() razorpay_signature!: string;
 
-  @IsString() hospitalId!: string;
+  // Optional: the server re-reads the real context from the Payment's own notes
+  // (set at order time), so this is only ever a hint. Teleconsult top-ups have no
+  // hospital at all, hence not required.
+  @IsOptional() @IsString() hospitalId?: string;
 
   @IsOptional() @IsString() reportId?: string;
 

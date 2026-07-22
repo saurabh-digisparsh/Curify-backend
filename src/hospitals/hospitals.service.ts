@@ -10,7 +10,11 @@ import { isRealCountry, natRegion } from '../common/regions';
 // admin approves them. Scraped/legacy rows have approvalStatus = null and stay
 // visible; onboarded rows only surface once APPROVED.
 // ponytail: onboarded rows hidden from matching until approvalStatus = APPROVED
+// `visible` is the admin's manual override on top of that: an admin can hide ANY
+// hospital (scraped or approved) from the public catalog and the patient journey by
+// flipping it off, without deleting the row. Both conditions must hold.
 const VISIBLE: Prisma.HospitalWhereInput = {
+  visible: true,
   OR: [{ approvalStatus: null }, { approvalStatus: 'APPROVED' }],
 };
 // Same gate for surgeons: a doctor added during onboarding (hospitalId set) is
@@ -365,6 +369,7 @@ export class HospitalsService {
   async getComparison(params: {
     page?: number; pageSize?: number; city?: string; sort?: string;
     treatment?: string; urgency?: string; search?: string;
+    jci?: boolean; minRating?: number; maxPrice?: number;
   }) {
     const page = Math.max(1, Number(params.page) || 1);
     const pageSize = Math.min(50, Math.max(1, Number(params.pageSize) || 20));
@@ -381,8 +386,16 @@ export class HospitalsService {
     if (params.treatment) {
       const specialty = mapTreatmentToSpecialty(params.treatment);
       list = list
-        .map((h) => ({ ...h, aiMatchScore: scoreHospital(h, specialty, params.urgency || 'flexible') }))
-        .sort((a, b) => (b as any).aiMatchScore - (a as any).aiMatchScore);
+        .map((h) => ({
+          ...h,
+          inRegion: cityMatches(h.city, params.city),
+          aiMatchScore: scoreHospital(h, specialty, params.urgency || 'flexible'),
+        }))
+        // Same tiebreak order as matchForPatient: preferred city, then admin
+        // Priority partners, then quality — so the journey step and the public
+        // feed can't disagree about who the top pick is.
+        .sort((a: any, b: any) =>
+          (Number(b.inRegion) - Number(a.inRegion)) || (Number(!!b.priority) - Number(!!a.priority)) || (b.aiMatchScore - a.aiMatchScore));
       const top = list[0];
       topRecommendation = top?.id ?? null;
       recommendationReason = top
@@ -393,17 +406,32 @@ export class HospitalsService {
     // Distinct cities (first word) for the filter — from the full set, not the page.
     const cities = [...new Set(all.map((h) => h.city.split(' ')[0]).filter(Boolean))].sort();
 
+    // cityMatches, not a bare substring, so a clubbed id ('delhi') also picks up
+    // Gurgaon/Noida/NCR. Plain city names ('Mumbai') fall through to the same
+    // substring behaviour the public page has always had.
     if (params.city && params.city !== 'all') {
-      const c = params.city.toLowerCase();
-      list = list.filter((h) => h.city.toLowerCase().includes(c));
+      list = list.filter((h) => cityMatches(h.city, params.city));
     }
 
     // Free-text search by hospital name (substring, case-insensitive).
     const q = params.search?.trim().toLowerCase();
     if (q) list = list.filter((h) => h.name.toLowerCase().includes(q));
 
+    if (params.jci) list = list.filter((h) => h.jciAccredited);
+    const minRating = Number(params.minRating) || 0;
+    if (minRating) list = list.filter((h) => (h.overallRating ?? 0) >= minRating);
+    // Hospitals with no quoted price can't satisfy a budget, so they drop out.
+    const maxPrice = Number(params.maxPrice) || 0;
+    if (maxPrice) list = list.filter((h) => h.quotedPriceUsd != null && h.quotedPriceUsd <= maxPrice);
+
+    // Unpriced hospitals sort last either way — a missing price is neither the
+    // cheapest nor the most expensive, it's just unknown.
+    const asc = (h: any) => (h.quotedPriceUsd == null ? Infinity : h.quotedPriceUsd);
+    const desc = (h: any) => (h.quotedPriceUsd == null ? -Infinity : h.quotedPriceUsd);
     if (params.sort === 'rating') list.sort((a, b) => (b.overallRating ?? 0) - (a.overallRating ?? 0));
     else if (params.sort === 'reviews') list.sort((a, b) => b.reviewCount - a.reviewCount);
+    else if (params.sort === 'price') list.sort((a, b) => asc(a) - asc(b));
+    else if (params.sort === 'price-desc') list.sort((a, b) => desc(b) - desc(a));
     // else: keep relevance/match order (journey) or DB order.
 
     const total = list.length;

@@ -21,7 +21,29 @@ export declare class DashboardController {
         sent: boolean;
     }>;
     pricing(dto: PricingDto, req: any): Promise<any>;
+    templateAll(format: string | undefined, res: Response): Promise<string | StreamableFile>;
+    importAll(file: Express.Multer.File, req: any): Promise<{
+        imported: number;
+        errors: import("./bulk-import.service").ImportError[];
+        data: any;
+        detail: any;
+    } | {
+        imported: number;
+        errors: any[];
+        data: any;
+        detail: {
+            profile: number;
+            doctors: number;
+            doctorsSkipped: number;
+            packages: number;
+        };
+    }>;
     template(kind: ImportKind, res: Response): string;
+    importProfile(file: Express.Multer.File, req: any): Promise<{
+        imported: number;
+        errors: import("./bulk-import.service").ImportError[];
+        data: any;
+    }>;
     importDoctors(file: Express.Multer.File, req: any): Promise<{
         imported: number;
         errors: import("./bulk-import.service").ImportError[];
@@ -66,9 +88,6 @@ export declare class DashboardController {
                 kind: string;
                 originalName: string;
             }[];
-            patient: {
-                name: string;
-            };
             scheduledAt: Date;
             doctor: {
                 specialty: string;
@@ -80,6 +99,11 @@ export declare class DashboardController {
             quoteCurrency: string;
             quoteNote: string;
             quotedAt: Date;
+            cancelledBy: string;
+            cancelReason: string;
+            patient: {
+                name: string;
+            };
         }[];
         stats: {
             total: number;

@@ -7,3 +7,7 @@ export declare class TriggerScrapeDto {
     region?: string;
     minReviews?: number;
 }
+declare const ScrapeAllDto_base: import("@nestjs/common").Type<Partial<TriggerScrapeDto>>;
+export declare class ScrapeAllDto extends ScrapeAllDto_base {
+}
+export {};

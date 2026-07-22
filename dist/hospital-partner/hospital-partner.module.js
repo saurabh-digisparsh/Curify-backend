@@ -31,6 +31,7 @@ exports.HospitalPartnerModule = HospitalPartnerModule = __decorate([
         imports: [prisma_module_1.PrismaModule, auth_module_1.AuthModule, admin_module_1.AdminModule, jwt_1.JwtModule.register({})],
         controllers: [dashboard_controller_1.DashboardController, application_controller_1.ApplicationController, availability_controller_1.AvailabilityController, teleconsult_controller_1.TeleconsultController, admin_controller_1.PartnerAdminController],
         providers: [partner_service_1.PartnerService, bulk_import_service_1.BulkImportService, notification_service_1.NotificationService, accreditation_service_1.AccreditationService, video_service_1.VideoService, teleconsult_service_1.TeleconsultService],
+        exports: [teleconsult_service_1.TeleconsultService],
     })
 ], HospitalPartnerModule);
 //# sourceMappingURL=hospital-partner.module.js.map

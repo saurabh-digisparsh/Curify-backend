@@ -7,11 +7,11 @@ export class ResetPasswordDto {
   token: string;
 
   // Same policy as signup — a reset must not be a way to weaken the password.
-  @ApiProperty({ example: 'Str0ng!Passw0rd', minLength: 12 })
+  @ApiProperty({ example: 'Str0ng!Pwd', minLength: 8 })
   @IsString()
-  @MinLength(12)
+  @MinLength(8)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
-    message: 'Password must be at least 12 characters and include uppercase, lowercase, a number and a symbol.',
+    message: 'Password must be at least 8 characters and include uppercase, lowercase, a number and a symbol.',
   })
   password: string;
 }

@@ -57,10 +57,34 @@ export declare class PartnerService {
         errors: import("./bulk-import.service").ImportError[];
         data: any;
     }>;
+    private writeDoctors;
     importPackages(userId: string, file: Express.Multer.File): Promise<{
         imported: number;
         errors: import("./bulk-import.service").ImportError[];
         data: any;
+    }>;
+    private writePackages;
+    importProfile(userId: string, file: Express.Multer.File): Promise<{
+        imported: number;
+        errors: import("./bulk-import.service").ImportError[];
+        data: any;
+    }>;
+    private writeProfile;
+    importAll(userId: string, file: Express.Multer.File): Promise<{
+        imported: number;
+        errors: import("./bulk-import.service").ImportError[];
+        data: any;
+        detail: any;
+    } | {
+        imported: number;
+        errors: any[];
+        data: any;
+        detail: {
+            profile: number;
+            doctors: number;
+            doctorsSkipped: number;
+            packages: number;
+        };
     }>;
     private doctorOfMine;
     updateDoctor(userId: string, doctorId: string, dto: DoctorDto): Promise<any>;
@@ -110,10 +134,10 @@ export declare class PartnerService {
         name: string;
         teleconsults: {
             id: string;
+            scheduledAt: Date;
             patient: {
                 name: string;
             };
-            scheduledAt: Date;
         }[];
         teleconsultEnabled: boolean;
         application: {
@@ -139,10 +163,10 @@ export declare class PartnerService {
         name: string;
         teleconsults: {
             id: string;
+            scheduledAt: Date;
             patient: {
                 name: string;
             };
-            scheduledAt: Date;
         }[];
         teleconsultEnabled: boolean;
         application: {
@@ -162,6 +186,10 @@ export declare class PartnerService {
     }>;
     listApplications(status?: OnboardingStatus): Promise<{
         applications: ({
+            _count: {
+                doctors: number;
+                documents: number;
+            };
             contact: {
                 name: string;
                 emailVerifiedAt: Date;
@@ -175,10 +203,6 @@ export declare class PartnerService {
             agreement: {
                 signatoryName: string;
                 signedAt: Date;
-            };
-            _count: {
-                doctors: number;
-                documents: number;
             };
         } & {
             id: string;
@@ -225,12 +249,12 @@ export declare class PartnerService {
         status: import(".prisma/client").$Enums.DocStatus;
         applicationId: string;
         note: string | null;
-        reviewedBy: string | null;
-        reviewedAt: Date | null;
         doctorId: string | null;
         autoClassifiedType: import(".prisma/client").$Enums.OnboardingDocType | null;
         fileUrl: string;
         originalName: string | null;
+        reviewedBy: string | null;
+        reviewedAt: Date | null;
     }>;
     adminResendOtp(id: string): Promise<any>;
     adminResendCredentials(id: string): Promise<any>;

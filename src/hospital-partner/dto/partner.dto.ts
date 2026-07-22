@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsArray, IsBoolean, IsDateString, IsEmail, IsEnum, IsInt, IsNotEmpty, IsNumber,
+  IsArray, IsBoolean, IsDateString, IsEmail, IsEnum, IsInt, IsNotEmpty,
   IsOptional, IsString, Matches, MaxLength, Min, MinLength,
 } from 'class-validator';
 import { AccreditationBody, OnboardingDocType } from '@prisma/client';
@@ -18,6 +18,13 @@ export class QuoteDto {
   @ApiProperty() @IsInt() @Min(0) amount: number;
   @ApiPropertyOptional({ example: 'USD' }) @IsOptional() @IsString() currency?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() note?: string;
+}
+
+// Why the consultation was called off — shown to the other side, so it is optional
+// but always carried through (patient reschedule note / doctor's reason).
+export class CancelTeleconsultDto {
+  @ApiPropertyOptional({ example: 'Something came up — I would like to rebook.' })
+  @IsOptional() @IsString() @MaxLength(500) reason?: string;
 }
 
 // Multipart body field for a shared consult document (its type/kind).
